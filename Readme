@@ -1,0 +1,8 @@
+# Jester
+
+## Flags and Configuration
+Jester leverages [Viper](https://github.com/spf13/viper).
+
+This means you can configure Jester via a config file (see: `jester config init`) OR users can set env variables that match flag argument names.
+
+Note: env vars take precedent over the config file.
