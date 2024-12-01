@@ -3,13 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/noble-assets/jester/configuration"
+	"github.com/noble-assets/jester/appstate"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // startCmd represents the start command
-func startCmd() *cobra.Command {
+func startCmd(a *appstate.AppState) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "TODO",
@@ -17,13 +16,11 @@ func startCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("start called")
 
-			v := viper.GetString("ethereum_websocket")
-			fmt.Println(v)
-
+			fmt.Println(a.Config.Ethereum_websocket)
 		},
 	}
 
-	configuration.AddConfigurationFlags(cmd)
+	appstate.AddConfigurationFlags(cmd)
 
 	return cmd
 }

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/noble-assets/jester/configuration"
+	"github.com/noble-assets/jester/appstate"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -15,7 +15,7 @@ import (
 )
 
 // initCmd represents the init command
-func initCmd() *cobra.Command {
+func initCmd(a *appstate.AppState) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize the config file",
@@ -23,7 +23,7 @@ func initCmd() *cobra.Command {
 populate values.`,
 
 		RunE: func(_ *cobra.Command, _ []string) error {
-			configPath := filepath.Join(viper.GetString(configuration.FlagHome), ".jester", "config.toml")
+			configPath := filepath.Join(viper.GetString(appstate.FlagHome), ".jester", "config.toml")
 
 			if fileExists(configPath) {
 				// Ask the user if they want to overwrite
@@ -39,14 +39,6 @@ populate values.`,
 				fmt.Println("Overwriting config...")
 			}
 
-			config := configuration.Config{}
-
-			// parse options
-			webSocket := viper.GetString("ethereum_websocket")
-			if webSocket != "" {
-				config.Ethereum_websocket = webSocket
-			}
-
 			// create config file
 			dir := filepath.Dir(configPath)
 			if err := os.MkdirAll(dir, 0755); err != nil {
@@ -60,7 +52,7 @@ populate values.`,
 
 			// ensure valid toml
 			encoder := toml.NewEncoder(file)
-			err = encoder.Encode(config)
+			err = encoder.Encode(a.Config)
 			if err != nil {
 				return fmt.Errorf("invalid config created: %v", err)
 			}

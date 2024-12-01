@@ -4,6 +4,7 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/noble-assets/jester/cmd"
@@ -13,7 +14,11 @@ import (
 func main() {
 	cobra.EnableCommandSorting = false
 	cmd := cmd.NewRootCommand()
-	if err := cmd.Execute(); err != nil {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := cmd.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
 }

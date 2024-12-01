@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/noble-assets/jester/configuration"
+	"github.com/noble-assets/jester/appstate"
 	"github.com/spf13/cobra"
 )
 
 // configCmd represents the config command
-func ConfigCmd() *cobra.Command {
+func ConfigCmd(a *appstate.AppState) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "Configuration commands",
@@ -15,10 +15,10 @@ func ConfigCmd() *cobra.Command {
 		},
 	}
 
-	configuration.AddConfigurationFlags(cmd)
+	appstate.AddConfigurationFlags(cmd)
 
 	cmd.AddCommand(
-		initCmd(),
+		initCmd(a),
 	)
 
 	return cmd
