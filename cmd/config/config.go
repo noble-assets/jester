@@ -1,18 +1,25 @@
 package config
 
 import (
+	"github.com/noble-assets/jester/configuration"
 	"github.com/spf13/cobra"
 )
 
 // configCmd represents the config command
-var ConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Configuration related commands",
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
-}
+func ConfigCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Configuration commands",
+		Run: func(cmd *cobra.Command, _ []string) {
+			cmd.Help()
+		},
+	}
 
-func init() {
-	ConfigCmd.AddCommand(initCmd)
+	configuration.AddConfigurationFlags(cmd)
+
+	cmd.AddCommand(
+		initCmd(),
+	)
+
+	return cmd
 }

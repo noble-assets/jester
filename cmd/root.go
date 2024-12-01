@@ -5,61 +5,62 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/noble-assets/jester/cmd/config"
+	"github.com/noble-assets/jester/configuration"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "jester",
-	Short: "Jester is a 'sidecar' meant to run alongside the nobled binary.",
-	Long: `Jester is a 'sidecar' meant to run alongside the nobled binary.
-
-Jester is only necessary if you are a validator.`,
-}
-
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+func NewRootCommand() *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "jester",
+		Short: "Jester is a 'sidecar' meant to run alongside the nobled binary.",
+		Long: `Jester is a 'sidecar' meant to run alongside the nobled binary.
+	
+Jester is only necessary if you are also a validator.`,
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+			// Inside persistent pre-run because this takes effect after flags are parsed.
+			initConfig()
+		},
 	}
+
+	rootCmd.PersistentFlags().String(configuration.FlagHome, defaultHome(),
+		"directory for config and data \n (optinoal env Var = JESTER_HOME)")
+	if err := viper.BindPFlag(configuration.FlagHome, rootCmd.PersistentFlags().Lookup(configuration.FlagHome)); err != nil {
+		panic(err)
+	}
+	// manually bind "home" instead of using viper.AutomaticEnv
+	viper.BindEnv(configuration.FlagHome, "JESTER_HOME")
+
+	rootCmd.AddCommand(
+		config.ConfigCmd(),
+		startCmd(),
+		versionCmd(),
+	)
+
+	return rootCmd
 }
 
-func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Sub commands
-	rootCmd.AddCommand(config.ConfigCmd)
-	rootCmd.AddCommand(versionCmd)
-
-	// Set config path.
+func defaultHome() string {
 	userHome, err := os.UserHomeDir()
 	cobra.CheckErr(err)
-	home := filepath.Join(userHome, ".jester", "config.toml")
-
-	// Global Flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", home, "config file path")
-
+	return filepath.Join(userHome, ".jester")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	viper.SetConfigFile(cfgFile)
+	home := viper.GetString(configuration.FlagHome)
 
-	// TODO: Ensure this works! Currently not sure if viper.Get() is detecting flags arguments
-	viper.AutomaticEnv() // read in environment variables that match
+	// Search config in home directory with name ".cobra" (without extension).
+	viper.AddConfigPath(home)
+	viper.SetConfigType("toml")
+	viper.SetConfigName("config")
 
-	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
-	viper.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Println("Config file changed:", e.Name)
-	})
-	viper.WatchConfig()
+	viper.AutomaticEnv() // after reading in config, check for matching env vars
+
+	return
 }

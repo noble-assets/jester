@@ -10,7 +10,7 @@ ldflags := $(strip $(ldflags))
 
 build:
 	@echo "🤖 Building jester..."
-	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/jester"
+	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/jesterd"
 	@echo "✅ Completed build!"
 
 .PHONY: build

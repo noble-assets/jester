@@ -20,25 +20,28 @@ type versionInfo struct {
 	Go      string `json:"go" yaml:"go"`
 }
 
-var versionCmd = &cobra.Command{
-	Use:     "version",
-	Aliases: []string{"v"},
-	Short:   "Print relayer version info",
-	RunE: func(cmd *cobra.Command, args []string) error {
+func versionCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "version",
+		Aliases: []string{"v"},
+		Short:   "Print relayer version info",
+		RunE: func(_ *cobra.Command, _ []string) error {
 
-		verInfo := versionInfo{
-			Version: Version,
-			Commit:  Commit,
-			Go:      fmt.Sprintf("%s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-		}
+			verInfo := versionInfo{
+				Version: Version,
+				Commit:  Commit,
+				Go:      fmt.Sprintf("%s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
+			}
 
-		json, err := json.MarshalIndent(verInfo, "", "  ")
-		if err != nil {
-			return err
-		}
+			json, err := json.MarshalIndent(verInfo, "", "  ")
+			if err != nil {
+				return err
+			}
 
-		fmt.Print(string(json))
+			fmt.Print(string(json))
+			return nil
+		},
+	}
 
-		return nil
-	},
+	return cmd
 }

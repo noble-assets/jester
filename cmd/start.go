@@ -3,28 +3,27 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/noble-assets/jester/config"
+	"github.com/noble-assets/jester/configuration"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // startCmd represents the start command
-var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+func startCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "TODO",
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("start called")
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("start called")
 
-func init() {
-	rootCmd.AddCommand(startCmd)
+			v := viper.GetString("ethereum_websocket")
+			fmt.Println(v)
 
-	// add flags
-	config.AddConfigurationFlags(startCmd)
+		},
+	}
+
+	configuration.AddConfigurationFlags(cmd)
+
+	return cmd
 }
