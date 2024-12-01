@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/noble-assets/jester/appstate"
 	"github.com/spf13/cobra"
 )
@@ -14,9 +12,9 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 		Short: "TODO",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("start called")
+			a.Log.Info("Start Called!")
 
-			fmt.Println(a.Config.Ethereum_websocket)
+			a.Log.Error(a.Config.Ethereum_websocket)
 		},
 	}
 

@@ -10,7 +10,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-const appName = "jesterd"
+const (
+	appName         = "jesterd"
+	defaultLogLevel = "info"
+)
 
 func NewRootCommand() *cobra.Command {
 
@@ -25,6 +28,7 @@ Jester is only necessary if you are also a validator.`,
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			// Inside persistent pre-run because this takes effect after flags are parsed.
 			a.LoadConfig()
+			a.InitLogger()
 		},
 	}
 
@@ -35,6 +39,12 @@ Jester is only necessary if you are also a validator.`,
 	}
 	// manually bind "home" instead of using viper.AutomaticEnv
 	viper.BindEnv(appstate.FlagHome, "JESTER_HOME")
+
+	rootCmd.PersistentFlags().String(appstate.FlagLogLevel, defaultLogLevel,
+		"log level for app")
+	if err := viper.BindPFlag(appstate.FlagLogLevel, rootCmd.PersistentFlags().Lookup(appstate.FlagLogLevel)); err != nil {
+		panic(err)
+	}
 
 	rootCmd.AddCommand(
 		config.ConfigCmd(a),

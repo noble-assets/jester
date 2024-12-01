@@ -5,7 +5,7 @@
 Users have three options to configure Jester:
 
 - Flag - Use `--help` flag to see available flags for specific commands.
-- ENV Variables - these must match either a config file setting OR a flag. Must be UPPERCASE.
+- ENV Variables - these must match either a config file setting OR a flag. Must be UPPERCASE. If a flag uses "-", the env variable equivalent is "_".
 There is one unique environment variable of `JESTER_HOME` that mimics the  `--home` flag.
 - Config file - (see: `jester config init`).
 

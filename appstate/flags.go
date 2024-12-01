@@ -7,7 +7,8 @@ import (
 
 const (
 	FlagHome              = "home"
-	flagEthereumWebsocket = "ethereum_websocket"
+	FlagLogLevel          = "log-level"
+	flagEthereumWebsocket = "ethereum-websocket"
 )
 
 // AddConfigurationFlags adds configuration related flags to a command.
