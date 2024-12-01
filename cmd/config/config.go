@@ -11,7 +11,7 @@ func ConfigCmd(a *appstate.AppState) *cobra.Command {
 		Use:   "config",
 		Short: "Configuration commands",
 		Run: func(cmd *cobra.Command, _ []string) {
-			cmd.Help()
+			_ = cmd.Help()
 		},
 	}
 

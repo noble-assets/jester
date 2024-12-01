@@ -41,7 +41,7 @@ populate values.`,
 
 			// create config file
 			dir := filepath.Dir(configPath)
-			if err := os.MkdirAll(dir, 0755); err != nil {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return fmt.Errorf("failed to create directories: %w", err)
 			}
 			file, err := os.Create(configPath)

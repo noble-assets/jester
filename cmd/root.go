@@ -16,7 +16,6 @@ const (
 )
 
 func NewRootCommand() *cobra.Command {
-
 	a := new(appstate.AppState)
 
 	rootCmd := &cobra.Command{
@@ -38,7 +37,9 @@ Jester is only necessary if you are also a validator.`,
 		panic(err)
 	}
 	// manually bind "home" instead of using viper.AutomaticEnv
-	viper.BindEnv(appstate.FlagHome, "JESTER_HOME")
+	if err := viper.BindEnv(appstate.FlagHome, "JESTER_HOME"); err != nil {
+		panic(err)
+	}
 
 	rootCmd.PersistentFlags().String(appstate.FlagLogLevel, defaultLogLevel,
 		"log level for app")

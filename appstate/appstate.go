@@ -42,8 +42,6 @@ func (a *AppState) InitLogger() {
 	if err != nil {
 		a.Log.Error(fmt.Sprintf("invalid log-level (%s) using 'info'", logLevel))
 	}
-
-	return
 }
 
 // loadConfigFile reads configuration from file, env, OR args into a.Config
@@ -66,6 +64,4 @@ func (a *AppState) LoadConfig() {
 		Log_level:          viper.GetString(FlagLogLevel),
 		Ethereum_websocket: viper.GetString(flagEthereumWebsocket),
 	}
-
-	return
 }

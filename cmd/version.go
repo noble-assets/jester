@@ -26,7 +26,6 @@ func versionCmd() *cobra.Command {
 		Aliases: []string{"v"},
 		Short:   "Print relayer version info",
 		RunE: func(_ *cobra.Command, _ []string) error {
-
 			verInfo := versionInfo{
 				Version: Version,
 				Commit:  Commit,
