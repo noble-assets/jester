@@ -1,11 +1,10 @@
 package config
 
 import (
-	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/noble-assets/jester/appstate"
 
@@ -25,18 +24,10 @@ populate values.`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			configPath := filepath.Join(viper.GetString(appstate.FlagHome), ".jester", "config.toml")
 
+			// programmatically overwriting config file does not treat viper keys ase expected
+			// instead, notify user and have them delete config manually
 			if fileExists(configPath) {
-				// Ask the user if they want to overwrite
-				fmt.Printf("File '%s' already exists. Do you want to overwrite it? (y/N): ", configPath)
-				reader := bufio.NewReader(os.Stdin)
-				response, _ := reader.ReadString('\n')
-				response = strings.TrimSpace(strings.ToLower(response))
-
-				if response != "y" {
-					fmt.Println("Aborting!")
-					return nil
-				}
-				fmt.Println("Overwriting config...")
+				return errors.New(fmt.Sprintf("file '%s' already exists", configPath))
 			}
 
 			// create config file

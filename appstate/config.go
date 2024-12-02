@@ -1,7 +1,7 @@
 package appstate
 
 type Config struct {
-	Log_level string `toml:"log_level"`
+	Log_level string `toml:"log-level"`
 
-	Ethereum_websocket string `toml:"ethereum_websocket"`
+	Ethereum_websocket string `toml:"ethereum-websocket"`
 }

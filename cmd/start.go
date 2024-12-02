@@ -15,6 +15,7 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 			a.Log.Info("Start Called!")
 
 			a.Log.Error(a.Config.Ethereum_websocket)
+			a.Log.Info(a.Config.Log_level)
 		},
 	}
 

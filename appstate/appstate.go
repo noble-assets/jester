@@ -1,7 +1,6 @@
 package appstate
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -18,10 +17,9 @@ type AppState struct {
 }
 
 func (a *AppState) InitLogger() {
-	var err error
-	logLevel := strings.ToLower(viper.GetString("log-level"))
-
 	var level slog.Level
+
+	logLevel := strings.ToLower(viper.GetString(FlagLogLevel))
 
 	switch logLevel {
 	case "debug":
@@ -33,15 +31,14 @@ func (a *AppState) InitLogger() {
 	case "error":
 		level = slog.LevelError
 	default:
-		err = errors.New("invalid log-lovel")
+		fmt.Printf("invalid log-level (%s); using 'info", logLevel)
 		level = slog.LevelInfo
 	}
 
-	a.Log = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level}))
-
-	if err != nil {
-		a.Log.Error(fmt.Sprintf("invalid log-level (%s) using 'info'", logLevel))
-	}
+	a.Log = slog.New(slog.NewTextHandler(os.Stderr,
+		&slog.HandlerOptions{
+			Level: level,
+		}))
 }
 
 // loadConfigFile reads configuration from file, env, OR args into a.Config
