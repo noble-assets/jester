@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/noble-assets/jester/ethereum"
 	"github.com/spf13/viper"
 )
 
@@ -14,6 +15,8 @@ type AppState struct {
 	Config *Config
 
 	Log *slog.Logger
+
+	*ethereum.Eth
 }
 
 func (a *AppState) InitLogger() {
@@ -58,7 +61,10 @@ func (a *AppState) LoadConfig() {
 	viper.EnvKeyReplacer(strings.NewReplacer("-", "_"))
 
 	a.Config = &Config{
-		Log_level:          viper.GetString(FlagLogLevel),
-		Ethereum_websocket: viper.GetString(flagEthereumWebsocket),
+		Log_level: viper.GetString(FlagLogLevel),
+		Ethereum: &Ethereum{
+			WebsocketURL: viper.GetString("Ethereum." + flagEthWebsocket),
+			RPCURL:       viper.GetString("Ethereum." + flagEthRPC),
+		},
 	}
 }

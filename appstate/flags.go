@@ -6,14 +6,18 @@ import (
 )
 
 const (
-	FlagHome              = "home"
-	FlagLogLevel          = "log-level"
-	flagEthereumWebsocket = "ethereum-websocket"
+	FlagHome         = "home"
+	FlagLogLevel     = "log-level"
+	flagEthWebsocket = "websocket-url"
+	flagEthRPC       = "rpc-url"
 )
 
-// if the flag is being added to multiple commands, you must use the flags that accept points
+// if the flag is being added to multiple commands, you must use the flags that accepts pointers
 // example `StringVar` instead of `String`
-var ethereum_websocket string
+var (
+	eth_websocket string
+	eth_rpc       string
+)
 
 // AddConfigurationFlags adds configuration related flags to a command.
 // This helps streamline configuration with viper. The user has the option
@@ -23,9 +27,13 @@ var ethereum_websocket string
 // These are persistent flags.
 // Ideally there is a flag for each config setting.
 func AddConfigurationFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&ethereum_websocket, flagEthereumWebsocket, "w", "", "ethereum websocket")
-	if err := viper.BindPFlag(flagEthereumWebsocket, cmd.Flags().Lookup(flagEthereumWebsocket)); err != nil {
+	cmd.PersistentFlags().StringVarP(&eth_websocket, flagEthWebsocket, "w", "", "ethereum websocket")
+	if err := viper.BindPFlag(flagEthWebsocket, cmd.PersistentFlags().Lookup(flagEthWebsocket)); err != nil {
 		panic(err)
 	}
-	return
+
+	cmd.PersistentFlags().StringVarP(&eth_rpc, flagEthRPC, "r", "", "ethereum rpc")
+	if err := viper.BindPFlag(flagEthRPC, cmd.PersistentFlags().Lookup(flagEthRPC)); err != nil {
+		panic(err)
+	}
 }

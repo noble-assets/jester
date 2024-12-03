@@ -24,7 +24,7 @@ func versionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "version",
 		Aliases: []string{"v"},
-		Short:   "Print relayer version info",
+		Short:   "Print version info",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			verInfo := versionInfo{
 				Version: Version,

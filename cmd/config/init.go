@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,7 +26,7 @@ populate values.`,
 			// programmatically overwriting config file does not treat viper keys ase expected
 			// instead, notify user and have them delete config manually
 			if fileExists(configPath) {
-				return errors.New(fmt.Sprintf("file '%s' already exists", configPath))
+				return fmt.Errorf("file '%s' already exists", configPath)
 			}
 
 			// create config file

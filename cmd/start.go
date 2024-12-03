@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"github.com/noble-assets/jester/appstate"
+	"github.com/noble-assets/jester/ethereum"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,12 +12,17 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "TODO",
+		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
+			a.Eth, err = ethereum.InitializeEth(a.Config.Ethereum.WebsocketURL, a.Config.Ethereum.RPCURL, cmd.Context())
+			if err != nil {
+				return err
+			}
+			defer a.Eth.CloseClients()
 
-		Run: func(cmd *cobra.Command, args []string) {
-			a.Log.Info("Start Called!")
-
-			a.Log.Error(a.Config.Ethereum_websocket)
-			a.Log.Info(a.Config.Log_level)
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return nil
 		},
 	}
 
