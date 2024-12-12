@@ -8,6 +8,7 @@ import (
 const (
 	FlagHome         = "home"
 	FlagLogLevel     = "log-level"
+	FlagLogStyle     = "log-style"
 	flagEthWebsocket = "websocket-url"
 	flagEthRPC       = "rpc-url"
 )

@@ -13,6 +13,7 @@ import (
 const (
 	appName         = "jesterd"
 	defaultLogLevel = "info"
+	defaultLogStyle = "text"
 )
 
 func NewRootCommand() *cobra.Command {
@@ -44,6 +45,12 @@ Jester is only necessary if you are also a validator.`,
 	rootCmd.PersistentFlags().String(appstate.FlagLogLevel, defaultLogLevel,
 		"log level format (info, debug, warn, error)")
 	if err := viper.BindPFlag(appstate.FlagLogLevel, rootCmd.PersistentFlags().Lookup(appstate.FlagLogLevel)); err != nil {
+		panic(err)
+	}
+
+	rootCmd.PersistentFlags().String(appstate.FlagLogStyle, defaultLogStyle,
+		"log style format (text, json, console)")
+	if err := viper.BindPFlag(appstate.FlagLogStyle, rootCmd.PersistentFlags().Lookup(appstate.FlagLogStyle)); err != nil {
 		panic(err)
 	}
 

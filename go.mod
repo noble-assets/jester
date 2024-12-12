@@ -7,6 +7,7 @@ require (
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/golangci/golangci-lint v1.62.2
+	github.com/phsym/console-slog v0.3.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0

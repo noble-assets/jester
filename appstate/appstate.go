@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/noble-assets/jester/ethereum"
+	"github.com/phsym/console-slog"
 	"github.com/spf13/viper"
 )
 
@@ -22,7 +23,6 @@ type AppState struct {
 
 func (a *AppState) InitLogger() {
 	var level slog.Level
-
 	logLevel := strings.ToLower(viper.GetString(FlagLogLevel))
 
 	switch logLevel {
@@ -39,10 +39,24 @@ func (a *AppState) InitLogger() {
 		level = slog.LevelInfo
 	}
 
-	a.Log = slog.New(slog.NewTextHandler(os.Stderr,
-		&slog.HandlerOptions{
-			Level: level,
-		}))
+	opts := &slog.HandlerOptions{Level: level}
+
+	var logHandler slog.Handler
+	logStyle := strings.ToLower(viper.GetString(FlagLogStyle))
+
+	switch logStyle {
+	case "text":
+		logHandler = slog.NewTextHandler(os.Stderr, opts)
+	case "json":
+		logHandler = slog.NewJSONHandler(os.Stderr, opts)
+	case "console":
+		logHandler = console.NewHandler(os.Stderr, &console.HandlerOptions{Level: level})
+	default:
+		fmt.Printf("invalid log-style (%s); using 'text", logStyle)
+		logHandler = slog.NewTextHandler(os.Stderr, opts)
+	}
+
+	a.Log = slog.New(logHandler)
 }
 
 // loadConfigFile reads configuration from file, env, OR args into a.Config
@@ -63,6 +77,7 @@ func (a *AppState) LoadConfig() {
 
 	a.Config = &Config{
 		Log_level: viper.GetString(FlagLogLevel),
+		Log_style: viper.GetString(FlagLogStyle),
 		Ethereum: &Ethereum{
 			WebsocketURL: viper.GetString("Ethereum." + flagEthWebsocket),
 			RPCURL:       viper.GetString("Ethereum." + flagEthRPC),
