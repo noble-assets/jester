@@ -4,10 +4,13 @@ go 1.23.3
 
 require (
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
+	github.com/avast/retry-go/v4 v4.6.0
 	github.com/ethereum/go-ethereum v1.14.12
 	github.com/golangci/golangci-lint v1.62.2
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	github.com/stretchr/testify v1.10.0
+	golang.org/x/sync v0.9.0
 	mvdan.cc/gofumpt v0.7.0
 )
 
@@ -172,7 +175,6 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
@@ -202,7 +204,6 @@ require (
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect

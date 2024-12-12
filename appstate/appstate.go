@@ -16,6 +16,7 @@ type AppState struct {
 
 	Log *slog.Logger
 
+	// ethereum clients
 	*ethereum.Eth
 }
 

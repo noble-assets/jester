@@ -10,7 +10,7 @@ import (
 type Eth struct {
 	Config             *Config
 	EthWebsocketClient *ethclient.Client
-	EthRPCClient       *ethclient.Client // rpc.Client wrapped in ethclient.NewClient
+	EthRPCClient       *ethclient.Client
 }
 
 type Config struct {
@@ -27,22 +27,19 @@ func newEth(websocketurl string, rpcurl string) *Eth {
 	}
 }
 
+// InitializeEth initializes Ethereum with a websocket and rpc client.
+// The intent behind this is to have this command run during cobras `PreRunE` or
+// `PersistentPreRunE`.
+// The returned *Eth pointer should be added to the app state.
 func InitializeEth(websocketurl string, rpcurl string, ctx context.Context) (*Eth, error) {
 	eth := newEth(websocketurl, rpcurl)
 	if err := eth.initWebsocket(ctx); err != nil {
 		return nil, err
 	}
-	// TODO init RPC client
-
+	if err := eth.initRPC(ctx); err != nil {
+		return nil, err
+	}
 	return eth, nil
-}
-
-func (e *Eth) WebsocketURL() string {
-	return e.Config.WebsocketURL
-}
-
-func (e *Eth) RpcUrl() string {
-	return e.Config.RPCURL
 }
 
 // initWebsocket creates an Ethereum websocket client
@@ -62,8 +59,28 @@ func (e *Eth) initWebsocket(ctx context.Context) (err error) {
 	return nil
 }
 
+// initRPC creates an Ethereum RPC client
+// If a WS client already exists, nothing is done.
+func (e *Eth) initRPC(ctx context.Context) (err error) {
+	if e.EthRPCClient != nil {
+		fmt.Println("eth RPC client already inialized")
+		return nil
+	}
+
+	e.EthRPCClient, err = ethclient.DialContext(ctx, e.Config.RPCURL)
+	if err != nil {
+		return fmt.Errorf("failed to connect to Ethereum RPC: %v", err)
+	}
+	fmt.Println("Successfully dialed Ethereum RPC")
+
+	return nil
+}
+
 func (e *Eth) CloseClients() {
 	if e.EthWebsocketClient != nil {
 		e.EthWebsocketClient.Close()
+	}
+	if e.EthRPCClient != nil {
+		e.EthRPCClient.Close()
 	}
 }

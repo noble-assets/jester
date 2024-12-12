@@ -23,7 +23,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-signalChan
-		fmt.Println("Received interrupt signal, shutting down...")
+		fmt.Println("\nReceived interrupt signal, shutting down...")
 		cancel()
 	}()
 
