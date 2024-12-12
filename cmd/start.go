@@ -18,8 +18,9 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 		Short: "TODO",
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
 			a.Eth, err = eth.InitializeEth(a.Config.Ethereum.WebsocketURL, a.Config.Ethereum.RPCURL, cmd.Context())
-			return err
+			return
 		},
+		PostRun: func(_ *cobra.Command, _ []string) { a.Eth.CloseClients() },
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			log := a.Log
@@ -42,7 +43,7 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 			// a corresponding MTokenSent event.
 			logMessagePublishedMap := eth.NewLogMessagePublishedMap()
 
-			var processingQueue = make(chan *eth.QueryData)
+			processingQueue := make(chan *eth.QueryData)
 
 			g.Go(func() error {
 				return eth.WormholeListener(ctx, logMessagePublishedMap, log, ws)
@@ -67,7 +68,6 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 					dequeued := <-processingQueue
 					fmt.Println("READY TO QUERY", dequeued.Sequence)
 				}
-
 			}()
 
 			if err := g.Wait(); err != nil {

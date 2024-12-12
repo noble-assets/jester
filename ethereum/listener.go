@@ -88,13 +88,13 @@ func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePub
 	sink := make(chan *wormhole.AbiLogMessagePublished)
 	// TODO: How can we derrive this sender. Will it always be the same?
 	logMessagePublishedSender := common.HexToAddress("0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470")
-	wormholeSub, err := wormholeBinding.WatchLogMessagePublished(opts, sink, []common.Address{logMessagePublishedSender})
+	sub, err := wormholeBinding.WatchLogMessagePublished(opts, sink, []common.Address{logMessagePublishedSender})
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to wormhole events %w", err)
 	}
-	defer wormholeSub.Unsubscribe()
+	defer sub.Unsubscribe()
 
-	fmt.Println("Successfully subscribed to LogMessagePublished events.")
+	fmt.Println("Successfully subscribed to LogMessagePublished events")
 
 	for {
 		select {
@@ -103,7 +103,7 @@ func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePub
 		case event := <-sink:
 			log.Debug("observed wormhole LogMessagePublished event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
 			logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
-		case err := <-wormholeSub.Err():
+		case err := <-sub.Err():
 			// TODO: handle subscription interruption
 			log.Error("Subscription error", "error", err)
 		}
@@ -133,24 +133,24 @@ func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublished
 	}
 	defer sub.Unsubscribe()
 
-	fmt.Println("Successfully subscribed to MTokenSent events.")
+	fmt.Println("Successfully subscribed to MTokenSent events")
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case event := <-sink:
-			// TODO Potentially put in own go routine to not block with retrys
-			log.Debug("observed m0 MTokenSent event", "txHash", event.Raw.TxHash.String())
+			txHash := event.Raw.TxHash.String()
+			log.Info("observed m0 MTokenSent event", "txHash", txHash)
 
-			// LotMessagedPublished and MToken sent events happen in the same transaction. We use
+			// LogMessagedPublished and MToken sent events happen in the same transaction. We use
 			// separate websockets to subscribe to each event. In cases where we happen observe the
 			// MTokenSent event before the LotMessagedPublished event, we will be unable to query for
 			// the sequence number emitted by LotMessagedPublished. For that reason, we retry.
 			var seq uint64
 			var found bool
 			err := retry.Do(func() error {
-				seq, found = logMessagePublishedMap.GetSequence(event.Raw.TxHash.String())
+				seq, found = logMessagePublishedMap.GetSequence(txHash)
 				if !found {
 					return errors.New("not found")
 				}
@@ -158,21 +158,27 @@ func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublished
 			},
 				retry.Attempts(3),
 				retry.Delay(5*time.Millisecond),
+				retry.OnRetry(func(attempt uint, _ error) {
+					log.Debug("retry attempt: logMessagePublished lookup", "attempt", attempt+1, "txHash", txHash)
+				}),
 			)
 			if err != nil {
-				log.Error("logMessagePublished sequence not found in correlation to MTokenSent event", "txHash", event.Raw.TxHash.String())
+				log.Error("logMessagePublished sequence not found in correlation to MTokenSent event", "txHash", txHash)
+			}
+			if err == nil {
+				log.Info("found correlating logMessagePublished event", "txHash", txHash, "sequence", seq)
+
+				processingQueue <- &QueryData{
+					WormHoleChainID: 10002,                                        // TODO
+					Emitter:         "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470", // TODO
+					Sequence:        seq,
+				}
+				logMessagePublishedMap.Delete(event.Raw.TxHash.String())
 			}
 
-			processingQueue <- &QueryData{
-				WormHoleChainID: 10002,                                        // TODO
-				Emitter:         "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470", // TODO
-				Sequence:        seq,
-			}
-			logMessagePublishedMap.Delete(event.Raw.TxHash.String())
 		case err := <-sub.Err():
 			// TODO: handle subscription interruption
 			log.Error("Subscription error", "error", err)
 		}
 	}
-
 }

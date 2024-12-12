@@ -35,7 +35,7 @@ func (a *AppState) InitLogger() {
 	case "error":
 		level = slog.LevelError
 	default:
-		fmt.Printf("invalid log-level (%s); using 'info", logLevel)
+		fmt.Printf("\ninvalid log-level (%s); using 'info", logLevel)
 		level = slog.LevelInfo
 	}
 
@@ -49,11 +49,11 @@ func (a *AppState) InitLogger() {
 		logHandler = slog.NewTextHandler(os.Stderr, opts)
 	case "json":
 		logHandler = slog.NewJSONHandler(os.Stderr, opts)
-	case "console":
+	case "pretty":
 		logHandler = console.NewHandler(os.Stderr, &console.HandlerOptions{Level: level})
 	default:
-		fmt.Printf("invalid log-style (%s); using 'text", logStyle)
-		logHandler = slog.NewTextHandler(os.Stderr, opts)
+		fmt.Printf("\ninvalid log-style (%s); using 'pretty'", logStyle)
+		logHandler = console.NewHandler(os.Stderr, &console.HandlerOptions{Level: level})
 	}
 
 	a.Log = slog.New(logHandler)
