@@ -17,6 +17,11 @@ build:
 	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/$(APPNAME)"
 	@echo "✅ Completed build!"
 
+build-race:
+	@echo "🤖 Building jester..."
+	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/$(APPNAME)" -race
+	@echo "✅ Completed build!"
+
 ###############################################################################
 ###                                 Tooling                                 ###
 ###############################################################################

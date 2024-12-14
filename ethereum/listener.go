@@ -70,7 +70,9 @@ func (m *LogMessagePublishedMap) Cleanup() {
 
 //
 
+// WormholeListener listens for `LogMessagePublished` events
 func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePublishedMap, log *slog.Logger, ws *ethclient.Client) error {
+	log = log.With(slog.String("listener", "wormhole"))
 	// TODO: Add to config
 	wormholeSepoliaContract := "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
 
@@ -86,22 +88,22 @@ func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePub
 	}
 
 	sink := make(chan *wormhole.AbiLogMessagePublished)
-	// TODO: How can we derrive this sender. Will it always be the same?
+	// TODO: How can we derive  this sender. Will it always be the same?
 	logMessagePublishedSender := common.HexToAddress("0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470")
 	sub, err := wormholeBinding.WatchLogMessagePublished(opts, sink, []common.Address{logMessagePublishedSender})
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to wormhole events %w", err)
+		return fmt.Errorf("failed to subscribe to `LogMessagePublished` events %w", err)
 	}
 	defer sub.Unsubscribe()
 
-	fmt.Println("Successfully subscribed to LogMessagePublished events")
+	fmt.Println("Successfully subscribed to `LogMessagePublished` events")
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case event := <-sink:
-			log.Debug("observed wormhole LogMessagePublished event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
+			log.Debug("observed `LogMessagePublished` event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
 			logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
 		case err := <-sub.Err():
 			// TODO: handle subscription interruption
@@ -110,7 +112,9 @@ func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePub
 	}
 }
 
+// M0Listener listens for MTokenSent events
 func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublishedMap, log *slog.Logger, ws *ethclient.Client, processingQueue chan *QueryData) error {
+	log = log.With(slog.String("listener", "m0"))
 	// Todo add to config
 	// example tx hash on sepolia: "0xc2594725d7262d99b9ee523e70457cf614292ac9e8467d6fc92a79cca92a735c"
 	m0SepoliaContract := "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
@@ -129,11 +133,11 @@ func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublished
 	sink := make(chan *mportal.BindingsMTokenSent)
 	sub, err := binding.WatchMTokenSent(opts, sink, []uint16{}, nil, nil)
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to mportal events: %w", err)
+		return fmt.Errorf("failed to subscribe to `MTokenSent` events: %w", err)
 	}
 	defer sub.Unsubscribe()
 
-	fmt.Println("Successfully subscribed to MTokenSent events")
+	fmt.Println("Successfully subscribed to `MTokenSent` events")
 
 	for {
 		select {
@@ -141,7 +145,7 @@ func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublished
 			return nil
 		case event := <-sink:
 			txHash := event.Raw.TxHash.String()
-			log.Info("observed m0 MTokenSent event", "txHash", txHash)
+			log.Info("observed `MTokenSent` event", "txHash", txHash)
 
 			// LogMessagedPublished and MToken sent events happen in the same transaction. We use
 			// separate websockets to subscribe to each event. In cases where we happen observe the
@@ -163,15 +167,16 @@ func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublished
 				}),
 			)
 			if err != nil {
-				log.Error("logMessagePublished sequence not found in correlation to MTokenSent event", "txHash", txHash)
+				log.Error("`logMessagePublished` sequence not found in correlation to `MTokenSent` event", "txHash", txHash)
 			}
 			if err == nil {
-				log.Info("found correlating logMessagePublished event", "txHash", txHash, "sequence", seq)
+				log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
 
 				processingQueue <- &QueryData{
 					WormHoleChainID: 10002,                                        // TODO
 					Emitter:         "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470", // TODO
 					Sequence:        seq,
+					txHash:          txHash,
 				}
 				logMessagePublishedMap.Delete(event.Raw.TxHash.String())
 			}
