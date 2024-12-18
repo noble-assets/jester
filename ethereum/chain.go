@@ -3,6 +3,7 @@ package ethereum
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -31,12 +32,12 @@ func newEth(websocketurl string, rpcurl string) *Eth {
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
 // The returned *Eth pointer should be added to the app state.
-func InitializeEth(websocketurl string, rpcurl string, ctx context.Context) (*Eth, error) {
+func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl string, rpcurl string) (*Eth, error) {
 	eth := newEth(websocketurl, rpcurl)
-	if err := eth.initWebsocket(ctx); err != nil {
+	if err := eth.initWebsocket(ctx, log); err != nil {
 		return nil, err
 	}
-	if err := eth.initRPC(ctx); err != nil {
+	if err := eth.initRPC(ctx, log); err != nil {
 		return nil, err
 	}
 	return eth, nil
@@ -44,7 +45,7 @@ func InitializeEth(websocketurl string, rpcurl string, ctx context.Context) (*Et
 
 // initWebsocket creates an Ethereum websocket client
 // If a WS client already exists, nothing is done.
-func (e *Eth) initWebsocket(ctx context.Context) (err error) {
+func (e *Eth) initWebsocket(ctx context.Context, log *slog.Logger) (err error) {
 	if e.EthWebsocketClient != nil {
 		fmt.Println("eth websocket client already inialized")
 		return nil
@@ -54,14 +55,14 @@ func (e *Eth) initWebsocket(ctx context.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to connect to Ethereum WebSocket: %v", err)
 	}
-	fmt.Println("Successfully dialed Ethereum websocket")
+	log.Info("successfully dialed Ethereum websocket")
 
 	return nil
 }
 
 // initRPC creates an Ethereum RPC client
 // If a WS client already exists, nothing is done.
-func (e *Eth) initRPC(ctx context.Context) (err error) {
+func (e *Eth) initRPC(ctx context.Context, log *slog.Logger) (err error) {
 	if e.EthRPCClient != nil {
 		fmt.Println("eth RPC client already inialized")
 		return nil
@@ -71,7 +72,7 @@ func (e *Eth) initRPC(ctx context.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to connect to Ethereum RPC: %v", err)
 	}
-	fmt.Println("Successfully dialed Ethereum RPC")
+	log.Info("successfully dialed Ethereum RPC")
 
 	return nil
 }

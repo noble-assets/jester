@@ -71,7 +71,7 @@ func (m *LogMessagePublishedMap) Cleanup() {
 //
 
 // WormholeListener listens for `LogMessagePublished` events
-func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePublishedMap, log *slog.Logger, ws *ethclient.Client) error {
+func WormholeListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *LogMessagePublishedMap, ws *ethclient.Client) error {
 	log = log.With(slog.String("listener", "wormhole"))
 	// TODO: Add to config
 	wormholeSepoliaContract := "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
@@ -96,7 +96,7 @@ func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePub
 	}
 	defer sub.Unsubscribe()
 
-	fmt.Println("Successfully subscribed to `LogMessagePublished` events")
+	log.Info("successfully subscribed to `LogMessagePublished` events")
 
 	for {
 		select {
@@ -113,7 +113,7 @@ func WormholeListener(ctx context.Context, logMessagePublishedMap *LogMessagePub
 }
 
 // M0Listener listens for MTokenSent events
-func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublishedMap, log *slog.Logger, ws *ethclient.Client, processingQueue chan *QueryData) error {
+func M0Listener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *LogMessagePublishedMap, ws *ethclient.Client, processingQueue chan *QueryData) error {
 	log = log.With(slog.String("listener", "m0"))
 	// Todo add to config
 	// example tx hash on sepolia: "0xc2594725d7262d99b9ee523e70457cf614292ac9e8467d6fc92a79cca92a735c"
@@ -137,7 +137,7 @@ func M0Listener(ctx context.Context, logMessagePublishedMap *LogMessagePublished
 	}
 	defer sub.Unsubscribe()
 
-	fmt.Println("Successfully subscribed to `MTokenSent` events")
+	log.Info("successfully subscribed to `MTokenSent` events")
 
 	for {
 		select {

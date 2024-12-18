@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/noble-assets/jester/server"
 )
 
 type QueryData struct {
@@ -45,15 +46,17 @@ var (
 	errNotFound        = fmt.Errorf("%d:%s - waiting for wormhole to pickup tx", http.StatusNotFound, http.StatusText(http.StatusNotFound))
 )
 
-// StartQueryWorker starts a worker to query Wormhole VAA's
-func StartQueryWorker(ctx context.Context, log *slog.Logger, dequeued *QueryData) {
+// StartQueryWorker starts a worker to query Wormhole VAA's.
+// Once found, the VAA is added to the vaaList which is queryable
+// via GRPC
+func StartQueryWorker(ctx context.Context, log *slog.Logger, dequeued *QueryData, vaaList *server.VaaList) {
 	resp, err := fetchVaa(ctx, log, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.txHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
 	}
 
-	// TODO: Store
-	fmt.Println("VAA Found:", resp.Data.VAA)
+	log.Info("found VAA", "txHash", dequeued.txHash)
+	vaaList.Add(resp.Data.VAA)
 }
 
 // fetchVaa sends a GET request with retry logic to the wormhole API

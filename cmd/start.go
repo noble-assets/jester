@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/noble-assets/jester/appstate"
 	eth "github.com/noble-assets/jester/ethereum"
+	"github.com/noble-assets/jester/server"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 
@@ -16,9 +17,15 @@ import (
 func startCmd(a *appstate.AppState) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
-		Short: "TODO",
+		Short: "Start Jester",
+		Long: `Jester is a "sidecar" application meant to be run by the Noble validator set.
+		
+Jester supports the implementation of the Noble Dollar, powered by M0.
+
+NOTE: The gRPC port for Jester is intended for use only by the Noble binary. 
+Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and clears the state.`,
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
-			a.Eth, err = eth.InitializeEth(a.Config.Ethereum.WebsocketURL, a.Config.Ethereum.RPCURL, cmd.Context())
+			a.Eth, err = eth.InitializeEth(cmd.Context(), a.Log, a.Config.Ethereum.WebsocketURL, a.Config.Ethereum.RPCURL)
 			return
 		},
 		PostRun: func(_ *cobra.Command, _ []string) { a.Eth.CloseClients() },
@@ -26,46 +33,56 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 			ctx := cmd.Context()
 			log := a.Log
 			ws := a.EthWebsocketClient
-			g, _ := errgroup.WithContext(ctx) // TODO: should we use context returned here?
+			g, ctx := errgroup.WithContext(ctx)
 
-			// To get the data needed to query wormhole, we need to subscribe to two events:
-			// 	1) MTokenSent
-			// 	2) LogMessagePublished
+			// Event Subscription:
+			// To query Wormhole data, we need to subscribe to two events:
+			// 1. MTokenSent
+			// 2. LogMessagePublished
 			//
-			// Log MessagePublished events are generic to the Wormhole, we only care about the
-			// LogMessagePublished events that are also tied to a MTokenSent event.
+			// LogMessagePublished events are generic to Wormhole; we only process ones
+			// tied to an MTokenSent event.
 			//
-			// As we observe LogMessagePublished events, we map transaction hashes to the
-			// sequence number emitted by the logMessagePublished event in the logMessagePublishedMap.
-			// When we witness MTokenSent events, we query the map by the transaction hash
-			// to get the relevant sequence number.
+			// As LogMessagePublished events are observed, their transaction hashes are mapped
+			// to the sequence number emitted. This mapping is stored in `logMessagePublishedMap`.
+			// When MTokenSent events occur, the map is queried using the transaction hash
+			// to retrieve the associated sequence number.
 			//
-			// We occasionally cleanup and delete LogMessagePublished events that do not have
-			// a corresponding MTokenSent event.
+			// Irrelevant LogMessagePublished events without corresponding MTokenSent events
+			// are periodically cleaned up.
 			logMessagePublishedMap := eth.NewLogMessagePublishedMap()
 
 			processingQueue := make(chan *eth.QueryData, 1000)
 
 			g.Go(func() error {
-				return eth.WormholeListener(ctx, logMessagePublishedMap, log, ws)
+				return eth.WormholeListener(ctx, log, logMessagePublishedMap, ws)
 			})
 
 			g.Go(func() error {
-				return eth.M0Listener(ctx, logMessagePublishedMap, log, ws, processingQueue)
+				return eth.M0Listener(ctx, log, logMessagePublishedMap, ws, processingQueue)
 			})
 
 			// Cleanup irrelevant LogMessagePublished events
 			go func() {
 				ticker := time.NewTicker(10 * time.Second)
 				defer ticker.Stop()
-				for range ticker.C {
-					logMessagePublishedMap.Cleanup()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-ticker.C:
+						logMessagePublishedMap.Cleanup()
+					}
 				}
 			}()
 
-			// Kick off workers to handle querying wormhole API to retrieve VAA's.
-			// Due to rate limits with with the wormhole API, there is a fine balance between
-			// workers and "GET" retries in `fetchVaa` function.
+			// Start GRPC server
+			vaaList := server.InitVaaList()
+			go server.StartServer(ctx, log)
+
+			// Worker pool to query the Wormhole API for VAAs.
+			// Due to rate limits with wormhole's API, there is a fine balance between
+			// `maxWorkers`` and "GET" retries in `fetchVaa`.
 			maxWorkers := int64(3)
 			sem := semaphore.NewWeighted(maxWorkers)
 			g.Go(func() error {
@@ -75,21 +92,22 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 						return nil
 					case dequeued, ok := <-processingQueue:
 						if !ok {
-							panic("processingQueue channel closed")
+							return errors.New("processingQueue channel closed unexpectedly")
 						}
 						if err := sem.Acquire(ctx, 1); err != nil {
-							panic(fmt.Errorf("failed to acquire semaphore %w", err))
+							return errors.Join(errors.New("failed to acquire semaphore"), err)
 						}
 
 						go func(data *eth.QueryData) {
 							defer sem.Release(1)
-							eth.StartQueryWorker(ctx, log, data)
+							eth.StartQueryWorker(ctx, log, data, vaaList)
 						}(dequeued)
 					}
 				}
 			})
 
 			if err := g.Wait(); err != nil {
+				log.Error("fatal error", "error", err)
 				return err
 			}
 

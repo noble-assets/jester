@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package query.v1;
+
+option go_package = "github.com/noble-assets/jester/v1";
+
+service QueryService {
+  rpc GetVaas(GetVaasRequest) returns (GetVaasResponse);
+}
+
+message GetVaasRequest {}
+
+message GetVaasResponse {
+  repeated string vaa = 1;
+}
