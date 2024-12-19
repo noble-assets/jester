@@ -23,12 +23,17 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 		
 Jester supports the implementation of the Noble Dollar, powered by M0.
 
+Starting Jester will listen for events on the Ethereum blockchain and query the Wormhole API for VAAs.
+Those VAAs are then accumulated and served via a gRPC endpoint.
+
+Jesters default gRPC address/port is localhost:9091. This assumes that port 9090 is being used by the 
+Noble binary. This can be overridden with the --server_address flag.
+
 NOTE: The gRPC port for Jester is intended for use only by the Noble binary. 
 Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and clears the state.
 
 The Ethereum contracts are hard coded and can be toggled between mainnet and testnet via the --testnet flag.
-The contracts can be overridden with the --override_mportal_contract, --override_wormhole_contract,
-and --override_lmp_sender flags.
+Contracts and configurations can be overridden with the relevant "override" flags.
 `,
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
 			a.Eth, err = eth.InitializeEth(
@@ -68,11 +73,25 @@ and --override_lmp_sender flags.
 			processingQueue := make(chan *eth.QueryData, 1000)
 
 			g.Go(func() error {
-				return eth.WormholeListener(ctx, log, logMessagePublishedMap, ws, a.Eth.Config.WormholeContract, a.Eth.Config.LogMessagePublishedSender)
+				return eth.WormholeListener(
+					ctx, log,
+					logMessagePublishedMap,
+					ws,
+					a.Eth.Config.WormholeContract,
+					a.Eth.Config.LogMessagePublishedSender,
+				)
 			})
 
 			g.Go(func() error {
-				return eth.M0Listener(ctx, log, logMessagePublishedMap, ws, processingQueue, a.Eth.Config.MPortalContract, a.Eth.Config.LogMessagePublishedSender)
+				return eth.M0Listener(
+					ctx, log,
+					logMessagePublishedMap,
+					ws,
+					processingQueue,
+					a.Eth.Config.WormholeSrcChainId,
+					a.Eth.Config.MPortalContract,
+					a.Eth.Config.LogMessagePublishedSender,
+				)
 			})
 
 			// Cleanup irrelevant LogMessagePublished events
@@ -113,7 +132,7 @@ and --override_lmp_sender flags.
 
 						go func(data *eth.QueryData) {
 							defer sem.Release(1)
-							eth.StartQueryWorker(ctx, log, data, vaaList)
+							eth.StartQueryWorker(ctx, log, a.Eth.Config.WormholeApiUrl, data, vaaList)
 						}(dequeued)
 					}
 				}
@@ -129,6 +148,7 @@ and --override_lmp_sender flags.
 						a.EthRPCClient,
 						processingQueue,
 						startBlock, endBlock,
+						a.Eth.Config.WormholeSrcChainId,
 						a.Eth.Config.MPortalContract,
 						a.Eth.Config.WormholeContract,
 						a.Eth.Config.LogMessagePublishedSender,
@@ -157,7 +177,12 @@ and --override_lmp_sender flags.
 		panic(err)
 	}
 
-	// Contract override flags
+	// Contract and configuration override flags
+	cmd.Flags().String(appstate.FlagOverrideWormholeApiUrl, "", "override wormhole API URL")
+	if err := viper.BindPFlag(appstate.FlagOverrideWormholeApiUrl, cmd.Flags().Lookup(appstate.FlagOverrideWormholeApiUrl)); err != nil {
+		panic(err)
+	}
+
 	cmd.Flags().String(appstate.FlagOverrideWormholeContract, "", "override wormhole contract address")
 	if err := viper.BindPFlag(appstate.FlagOverrideWormholeContract, cmd.Flags().Lookup(appstate.FlagOverrideWormholeContract)); err != nil {
 		panic(err)
@@ -176,6 +201,8 @@ and --override_lmp_sender flags.
 
 func getEthOverrides() eth.Overrides {
 	return eth.Overrides{
+		WormholeSrcChainId:        viper.GetUint64(appstate.FlagOverrideWormholeSrcChainId),
+		WormholeApiUrl:            viper.GetString(appstate.FlagOverrideWormholeApiUrl),
 		MPortalContract:           viper.GetString(appstate.FlagOverrideMPortalContract),
 		WormholeContract:          viper.GetString(appstate.FlagOverrideWormholeContract),
 		LogMessagePublishedSender: viper.GetString(appstate.FlagOverrideLMPSender),

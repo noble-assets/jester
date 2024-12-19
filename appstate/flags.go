@@ -6,18 +6,20 @@ import (
 )
 
 const (
-	FlagHome                     = "home"
-	FlagLogLevel                 = "log_level"
-	FlagLogStyle                 = "log_style"
-	flagTestnet                  = "testnet"
-	flagEthWebsocket             = "ethereum.websocket_url"
-	flagEthRPC                   = "ethereum.rpc_url"
-	flagServerAddr               = "server_address"
-	FlagStartBlock               = "start_block"
-	FlagEndBlock                 = "end_block"
-	FlagOverrideWormholeContract = "override_wormhole_contract"
-	FlagOverrideMPortalContract  = "override_mportal_contract"
-	FlagOverrideLMPSender        = "override_lmp_sender"
+	FlagHome                       = "home"
+	FlagLogLevel                   = "log_level"
+	FlagLogStyle                   = "log_style"
+	flagTestnet                    = "testnet"
+	flagEthWebsocket               = "ethereum.websocket_url"
+	flagEthRPC                     = "ethereum.rpc_url"
+	flagServerAddr                 = "server_address"
+	FlagStartBlock                 = "start_block"
+	FlagEndBlock                   = "end_block"
+	FlagOverrideWormholeSrcChainId = "override_wormhole_src_chain_id"
+	FlagOverrideWormholeApiUrl     = "override_wormhole_api_url"
+	FlagOverrideWormholeContract   = "override_wormhole_contract"
+	FlagOverrideMPortalContract    = "override_mportal_contract"
+	FlagOverrideLMPSender          = "override_lmp_sender"
 )
 
 // if the flag is being added to multiple commands, you must use the flags that accepts pointers

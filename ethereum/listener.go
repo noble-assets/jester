@@ -75,7 +75,12 @@ func (m *LogMessagePublishedMap) Cleanup() {
 //
 
 // WormholeListener listens for `LogMessagePublished` events
-func WormholeListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *LogMessagePublishedMap, ws *ethclient.Client, wormholeContract, logMessagePublishedSender string) error {
+func WormholeListener(
+	ctx context.Context, log *slog.Logger,
+	logMessagePublishedMap *LogMessagePublishedMap,
+	ws *ethclient.Client,
+	wormholeContract, logMessagePublishedSender string,
+) error {
 	log = log.With(slog.String("listener", "wormhole"))
 
 	backend := NewContractBackendWrapper(ws)
@@ -116,7 +121,14 @@ func WormholeListener(ctx context.Context, log *slog.Logger, logMessagePublished
 }
 
 // M0Listener listens for MTokenSent events
-func M0Listener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *LogMessagePublishedMap, ws *ethclient.Client, processingQueue chan *QueryData, mPortalContract, logMessagePublishedSender string) error {
+func M0Listener(
+	ctx context.Context, log *slog.Logger,
+	logMessagePublishedMap *LogMessagePublishedMap,
+	ws *ethclient.Client,
+	processingQueue chan *QueryData,
+	wormholeSrcChainId uint64,
+	mPortalContract, logMessagePublishedSender string,
+) error {
 	log = log.With(slog.String("listener", "m0"))
 
 	backend := NewContractBackendWrapper(ws)
@@ -173,7 +185,7 @@ func M0Listener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *L
 				log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
 
 				processingQueue <- &QueryData{
-					WormHoleChainID: 10002, // TODO
+					WormHoleChainID: wormholeSrcChainId,
 					Emitter:         logMessagePublishedSender,
 					Sequence:        seq,
 					txHash:          txHash,
@@ -188,7 +200,14 @@ func M0Listener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *L
 	}
 }
 
-func GetHistory(ctx context.Context, log *slog.Logger, rpc *ethclient.Client, processingQueue chan *QueryData, startBlock int64, endBlock int64, mPortalContract, wormholeContract, logMessagePublishedSender string) {
+func GetHistory(
+	ctx context.Context, log *slog.Logger,
+	rpc *ethclient.Client,
+	processingQueue chan *QueryData,
+	startBlock int64, endBlock int64,
+	wormholeSrcChainId uint64,
+	mPortalContract, wormholeContract, logMessagePublishedSender string,
+) {
 	from := big.NewInt(startBlock)
 	var end *big.Int
 	if endBlock != 0 {
@@ -255,7 +274,7 @@ func GetHistory(ctx context.Context, log *slog.Logger, rpc *ethclient.Client, pr
 				}
 				log.Debug("vaa found during historical query", "seq", event.Sequence)
 				processingQueue <- &QueryData{
-					WormHoleChainID: 10002, // TODO
+					WormHoleChainID: wormholeSrcChainId,
 					Emitter:         logMessagePublishedSender,
 					Sequence:        event.Sequence,
 					txHash:          txHash.String(),

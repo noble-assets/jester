@@ -22,22 +22,7 @@ type QueryData struct {
 }
 
 type WormholeResp struct {
-	Data struct {
-		Sequence          int       `json:"sequence"`
-		ID                string    `json:"id"`
-		Version           int       `json:"version"`
-		EmitterChain      int       `json:"emitterChain"`
-		EmitterAddr       string    `json:"emitterAddr"`
-		EmitterNativeAddr string    `json:"emitterNativeAddr"`
-		GuardianSetIndex  int       `json:"guardianSetIndex"`
-		VAA               string    `json:"vaa"`
-		Timestamp         time.Time `json:"timestamp"`
-		UpdatedAt         time.Time `json:"updatedAt"`
-		IndexedAt         time.Time `json:"indexedAt"`
-		TxHash            string    `json:"txHash"`
-		Digest            string    `json:"digest"`
-		IsDuplicated      bool      `json:"isDuplicated"`
-	} `json:"data"`
+	VaaBytes string `json:"vaaBytes"`
 }
 
 var (
@@ -49,25 +34,23 @@ var (
 // StartQueryWorker starts a worker to query Wormhole VAA's.
 // Once found, the VAA is added to the vaaList which is queryable
 // via GRPC
-func StartQueryWorker(ctx context.Context, log *slog.Logger, dequeued *QueryData, vaaList *server.VaaList) {
-	resp, err := fetchVaa(ctx, log, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.txHash)
+func StartQueryWorker(ctx context.Context, log *slog.Logger, wormholeApiUrl string, dequeued *QueryData, vaaList *server.VaaList) {
+	resp, err := fetchVaa(ctx, log, wormholeApiUrl, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.txHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
 	}
 
 	log.Info("found VAA", "txHash", dequeued.txHash)
-	vaaList.Add(resp.Data.VAA)
+	vaaList.Add(resp.VaaBytes)
 }
 
 // fetchVaa sends a GET request with retry logic to the wormhole API
 //
 // `txHash` is used for logging purposes only
-func fetchVaa(ctx context.Context, log *slog.Logger, chainID, seq uint64, emitter, txHash string) (WormholeResp, error) {
-	baseURL := "https://api.testnet.wormscan.io/api/v1/vaas" // TODO: testnet/mainnet
-
+func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chainID, seq uint64, emitter, txHash string) (WormholeResp, error) {
 	chainIdStr := strconv.FormatUint(chainID, 10)
 	seqStr := strconv.FormatUint(seq, 10)
-	url := fmt.Sprintf("%s/%s/%s/%s", baseURL, chainIdStr, emitter, seqStr)
+	url := fmt.Sprintf("%s/%s/%s/%s", wormholeApiUrl, chainIdStr, emitter, seqStr)
 
 	var wormholeResp WormholeResp
 

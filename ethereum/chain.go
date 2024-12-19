@@ -18,12 +18,16 @@ type Config struct {
 	WebsocketURL string
 	RPCURL       string
 
+	WormholeSrcChainId        uint64
+	WormholeApiUrl            string
 	WormholeContract          string
 	MPortalContract           string
 	LogMessagePublishedSender string
 }
 
 type Overrides struct {
+	WormholeSrcChainId        uint64
+	WormholeApiUrl            string
 	WormholeContract          string
 	MPortalContract           string
 	LogMessagePublishedSender string
@@ -103,16 +107,28 @@ func (e *Eth) CloseClients() {
 func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) {
 	switch testnet {
 	case true:
-
+		e.Config.WormholeSrcChainId = 10002
+		e.Config.WormholeApiUrl = "https://api.testnet.wormscan.io/v1/signed_vaa"
 		e.Config.WormholeContract = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
 		e.Config.MPortalContract = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
 		e.Config.LogMessagePublishedSender = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
 	default:
+		e.Config.WormholeSrcChainId = 2
+		e.Config.WormholeApiUrl = ""            // TODO
 		e.Config.WormholeContract = ""          // TODO
 		e.Config.MPortalContract = ""           // TODO
 		e.Config.LogMessagePublishedSender = "" // TODO
 	}
 
+	// Overrides
+	if overrides.WormholeSrcChainId != 0 {
+		log.Info("overriding wormhole source chain ID", "chainID", overrides.WormholeSrcChainId)
+		e.Config.WormholeSrcChainId = overrides.WormholeSrcChainId
+	}
+	if overrides.WormholeApiUrl != "" {
+		log.Info("overriding wormhole API URL", "url", overrides.WormholeApiUrl)
+		e.Config.WormholeApiUrl = overrides.WormholeApiUrl
+	}
 	if overrides.WormholeContract != "" {
 		log.Info("overriding wormhole contract address", "address", overrides.WormholeContract)
 		e.Config.WormholeContract = overrides.WormholeContract
