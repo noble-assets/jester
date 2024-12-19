@@ -35,7 +35,7 @@ func (a *AppState) InitLogger() {
 	case "error":
 		level = slog.LevelError
 	default:
-		fmt.Printf("\ninvalid log-level (%s); using 'info", logLevel)
+		fmt.Printf("\ninvalid log_level (%s); using 'info", logLevel)
 		level = slog.LevelInfo
 	}
 
@@ -52,7 +52,7 @@ func (a *AppState) InitLogger() {
 	case "pretty":
 		logHandler = console.NewHandler(os.Stderr, &console.HandlerOptions{Level: level})
 	default:
-		fmt.Printf("\ninvalid log-style (%s); using 'pretty'", logStyle)
+		fmt.Printf("\ninvalid log_style (%s); using 'pretty'", logStyle)
 		logHandler = console.NewHandler(os.Stderr, &console.HandlerOptions{Level: level})
 	}
 
@@ -74,13 +74,16 @@ func (a *AppState) LoadConfig() {
 
 	viper.AutomaticEnv() // after reading in config, check for matching env vars
 	viper.EnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.EnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	a.Config = &Config{
-		Log_level: viper.GetString(FlagLogLevel),
-		Log_style: viper.GetString(FlagLogStyle),
+		Log_level:     viper.GetString(FlagLogLevel),
+		Log_style:     viper.GetString(FlagLogStyle),
+		Testnet:       viper.GetBool(flagTestnet),
+		ServerAddress: viper.GetString(flagServerAddr),
 		Ethereum: &Ethereum{
-			WebsocketURL: viper.GetString("Ethereum." + flagEthWebsocket),
-			RPCURL:       viper.GetString("Ethereum." + flagEthRPC),
+			WebsocketURL: viper.GetString(flagEthWebsocket),
+			RPCURL:       viper.GetString(flagEthRPC),
 		},
 	}
 }

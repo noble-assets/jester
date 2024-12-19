@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sync/semaphore"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // startCmd represents the start command
@@ -23,9 +24,21 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 Jester supports the implementation of the Noble Dollar, powered by M0.
 
 NOTE: The gRPC port for Jester is intended for use only by the Noble binary. 
-Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and clears the state.`,
+Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and clears the state.
+
+The Ethereum contracts are hard coded and can be toggled between mainnet and testnet via the --testnet flag.
+The contracts can be overridden with the --override_mportal_contract, --override_wormhole_contract,
+and --override_lmp_sender flags.
+`,
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
-			a.Eth, err = eth.InitializeEth(cmd.Context(), a.Log, a.Config.Ethereum.WebsocketURL, a.Config.Ethereum.RPCURL)
+			a.Eth, err = eth.InitializeEth(
+				cmd.Context(),
+				a.Log,
+				a.Config.Ethereum.WebsocketURL,
+				a.Config.Ethereum.RPCURL,
+				a.Config.Testnet,
+				getEthOverrides(),
+			)
 			return
 		},
 		PostRun: func(_ *cobra.Command, _ []string) { a.Eth.CloseClients() },
@@ -55,11 +68,11 @@ Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and cle
 			processingQueue := make(chan *eth.QueryData, 1000)
 
 			g.Go(func() error {
-				return eth.WormholeListener(ctx, log, logMessagePublishedMap, ws)
+				return eth.WormholeListener(ctx, log, logMessagePublishedMap, ws, a.Eth.Config.WormholeContract, a.Eth.Config.LogMessagePublishedSender)
 			})
 
 			g.Go(func() error {
-				return eth.M0Listener(ctx, log, logMessagePublishedMap, ws, processingQueue)
+				return eth.M0Listener(ctx, log, logMessagePublishedMap, ws, processingQueue, a.Eth.Config.MPortalContract, a.Eth.Config.LogMessagePublishedSender)
 			})
 
 			// Cleanup irrelevant LogMessagePublished events
@@ -78,7 +91,7 @@ Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and cle
 
 			// Start GRPC server
 			vaaList := server.InitVaaList()
-			go server.StartServer(ctx, log)
+			go server.StartServer(ctx, log, a.Config.ServerAddress)
 
 			// Worker pool to query the Wormhole API for VAAs.
 			// Due to rate limits with wormhole's API, there is a fine balance between
@@ -106,6 +119,23 @@ Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and cle
 				}
 			})
 
+			// Historical query
+			startBlock := viper.GetInt64(appstate.FlagStartBlock)
+			if startBlock != 0 {
+				endBlock := viper.GetInt64(appstate.FlagEndBlock)
+				go func() {
+					eth.GetHistory(
+						ctx, log,
+						a.EthRPCClient,
+						processingQueue,
+						startBlock, endBlock,
+						a.Eth.Config.MPortalContract,
+						a.Eth.Config.WormholeContract,
+						a.Eth.Config.LogMessagePublishedSender,
+					)
+				}()
+			}
+
 			if err := g.Wait(); err != nil {
 				log.Error("fatal error", "error", err)
 				return err
@@ -117,5 +147,37 @@ Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and cle
 
 	appstate.AddConfigurationFlags(cmd)
 
+	// Historical query flags
+	cmd.Flags().Int64(appstate.FlagStartBlock, 0, "block number to start ethereum historical query, 0 for latest height")
+	if err := viper.BindPFlag(appstate.FlagStartBlock, cmd.Flags().Lookup(appstate.FlagStartBlock)); err != nil {
+		panic(err)
+	}
+	cmd.Flags().Int64(appstate.FlagEndBlock, 0, "block number to end ethereum historical query")
+	if err := viper.BindPFlag(appstate.FlagEndBlock, cmd.Flags().Lookup(appstate.FlagEndBlock)); err != nil {
+		panic(err)
+	}
+
+	// Contract override flags
+	cmd.Flags().String(appstate.FlagOverrideWormholeContract, "", "override wormhole contract address")
+	if err := viper.BindPFlag(appstate.FlagOverrideWormholeContract, cmd.Flags().Lookup(appstate.FlagOverrideWormholeContract)); err != nil {
+		panic(err)
+	}
+	cmd.Flags().String(appstate.FlagOverrideMPortalContract, "", "override M0's MPortal contract address")
+	if err := viper.BindPFlag(appstate.FlagOverrideMPortalContract, cmd.Flags().Lookup(appstate.FlagOverrideMPortalContract)); err != nil {
+		panic(err)
+	}
+	cmd.Flags().String(appstate.FlagOverrideLMPSender, "", "override LogMessagePublished event sender")
+	if err := viper.BindPFlag(appstate.FlagOverrideLMPSender, cmd.Flags().Lookup(appstate.FlagOverrideLMPSender)); err != nil {
+		panic(err)
+	}
+
 	return cmd
+}
+
+func getEthOverrides() eth.Overrides {
+	return eth.Overrides{
+		MPortalContract:           viper.GetString(appstate.FlagOverrideMPortalContract),
+		WormholeContract:          viper.GetString(appstate.FlagOverrideWormholeContract),
+		LogMessagePublishedSender: viper.GetString(appstate.FlagOverrideLMPSender),
+	}
 }

@@ -6,18 +6,27 @@ import (
 )
 
 const (
-	FlagHome         = "home"
-	FlagLogLevel     = "log-level"
-	FlagLogStyle     = "log-style"
-	flagEthWebsocket = "websocket-url"
-	flagEthRPC       = "rpc-url"
+	FlagHome                     = "home"
+	FlagLogLevel                 = "log_level"
+	FlagLogStyle                 = "log_style"
+	flagTestnet                  = "testnet"
+	flagEthWebsocket             = "ethereum.websocket_url"
+	flagEthRPC                   = "ethereum.rpc_url"
+	flagServerAddr               = "server_address"
+	FlagStartBlock               = "start_block"
+	FlagEndBlock                 = "end_block"
+	FlagOverrideWormholeContract = "override_wormhole_contract"
+	FlagOverrideMPortalContract  = "override_mportal_contract"
+	FlagOverrideLMPSender        = "override_lmp_sender"
 )
 
 // if the flag is being added to multiple commands, you must use the flags that accepts pointers
 // example `StringVar` instead of `String`
 var (
-	eth_websocket string
-	eth_rpc       string
+	eth_websocket  string
+	eth_rpc        string
+	server_address string
+	testnet        bool
 )
 
 // AddConfigurationFlags adds configuration related flags to a command.
@@ -35,6 +44,16 @@ func AddConfigurationFlags(cmd *cobra.Command) {
 
 	cmd.PersistentFlags().StringVarP(&eth_rpc, flagEthRPC, "r", "", "ethereum rpc")
 	if err := viper.BindPFlag(flagEthRPC, cmd.PersistentFlags().Lookup(flagEthRPC)); err != nil {
+		panic(err)
+	}
+
+	cmd.PersistentFlags().BoolVar(&testnet, flagTestnet, false, "use testnet Ethereum contracts")
+	if err := viper.BindPFlag(flagTestnet, cmd.PersistentFlags().Lookup(flagTestnet)); err != nil {
+		panic(err)
+	}
+
+	cmd.PersistentFlags().StringVar(&server_address, flagServerAddr, "localhost:9091", "gRPC server address")
+	if err := viper.BindPFlag(flagServerAddr, cmd.PersistentFlags().Lookup(flagServerAddr)); err != nil {
 		panic(err)
 	}
 }

@@ -33,7 +33,7 @@ Jester is only necessary if you are also a validator.`,
 	}
 
 	rootCmd.PersistentFlags().String(appstate.FlagHome, defaultHome(),
-		"directory for config and data \n (optional env Var = JESTER_HOME)")
+		"directory for config and data \n (optional env var = JESTER_HOME)")
 	if err := viper.BindPFlag(appstate.FlagHome, rootCmd.PersistentFlags().Lookup(appstate.FlagHome)); err != nil {
 		panic(err)
 	}

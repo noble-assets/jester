@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -63,7 +62,7 @@ func (s *JesterServer) GetVaas(
 }
 
 // StartServer initializes and starts the HTTP/2 gRPC server
-func StartServer(ctx context.Context, log *slog.Logger) {
+func StartServer(ctx context.Context, log *slog.Logger, serverAddress string) {
 	server := &JesterServer{}
 	mux := http.NewServeMux()
 	path, handler := queryv1connect.NewQueryServiceHandler(server)
@@ -74,16 +73,14 @@ func StartServer(ctx context.Context, log *slog.Logger) {
 		grpcreflect.NewStaticReflector(queryv1connect.QueryServiceName),
 	))
 
-	port := "9091" // TODO: add to config
-	addr := fmt.Sprintf("localhost:%s", port)
 	srv := &http.Server{
-		Addr:        addr,
+		Addr:        serverAddress,
 		Handler:     h2c.NewHandler(mux, &http2.Server{}),
 		ReadTimeout: 45 * time.Second,
 	}
 
 	go func() {
-		log.Info("started server", "address", addr)
+		log.Info("started gRPC server", "address", serverAddress)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("server error", "err", err)
 			os.Exit(1)

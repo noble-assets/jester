@@ -17,6 +17,16 @@ type Eth struct {
 type Config struct {
 	WebsocketURL string
 	RPCURL       string
+
+	WormholeContract          string
+	MPortalContract           string
+	LogMessagePublishedSender string
+}
+
+type Overrides struct {
+	WormholeContract          string
+	MPortalContract           string
+	LogMessagePublishedSender string
 }
 
 func newEth(websocketurl string, rpcurl string) *Eth {
@@ -32,7 +42,7 @@ func newEth(websocketurl string, rpcurl string) *Eth {
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
 // The returned *Eth pointer should be added to the app state.
-func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl string, rpcurl string) (*Eth, error) {
+func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl, rpcurl string, testnet bool, overrides Overrides) (*Eth, error) {
 	eth := newEth(websocketurl, rpcurl)
 	if err := eth.initWebsocket(ctx, log); err != nil {
 		return nil, err
@@ -40,6 +50,9 @@ func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl string, r
 	if err := eth.initRPC(ctx, log); err != nil {
 		return nil, err
 	}
+
+	eth.setContracts(log, testnet, overrides)
+
 	return eth, nil
 }
 
@@ -83,5 +96,33 @@ func (e *Eth) CloseClients() {
 	}
 	if e.EthRPCClient != nil {
 		e.EthRPCClient.Close()
+	}
+}
+
+// setContracts sets the contract addresses for the Ethereum network.
+func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) {
+	switch testnet {
+	case true:
+
+		e.Config.WormholeContract = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
+		e.Config.MPortalContract = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
+		e.Config.LogMessagePublishedSender = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
+	default:
+		e.Config.WormholeContract = ""          // TODO
+		e.Config.MPortalContract = ""           // TODO
+		e.Config.LogMessagePublishedSender = "" // TODO
+	}
+
+	if overrides.WormholeContract != "" {
+		log.Info("overriding wormhole contract address", "address", overrides.WormholeContract)
+		e.Config.WormholeContract = overrides.WormholeContract
+	}
+	if overrides.MPortalContract != "" {
+		log.Info("overriding MPortal contract address", "address", overrides.MPortalContract)
+		e.Config.MPortalContract = overrides.MPortalContract
+	}
+	if overrides.LogMessagePublishedSender != "" {
+		log.Info("overriding LogMessagePublished event sender", "address", overrides.LogMessagePublishedSender)
+		e.Config.LogMessagePublishedSender = overrides.LogMessagePublishedSender
 	}
 }

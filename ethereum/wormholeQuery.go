@@ -62,12 +62,12 @@ func StartQueryWorker(ctx context.Context, log *slog.Logger, dequeued *QueryData
 // fetchVaa sends a GET request with retry logic to the wormhole API
 //
 // `txHash` is used for logging purposes only
-func fetchVaa(ctx context.Context, log *slog.Logger, chainID, seq uint64, address, txHash string) (WormholeResp, error) {
+func fetchVaa(ctx context.Context, log *slog.Logger, chainID, seq uint64, emitter, txHash string) (WormholeResp, error) {
 	baseURL := "https://api.testnet.wormscan.io/api/v1/vaas" // TODO: testnet/mainnet
 
 	chainIdStr := strconv.FormatUint(chainID, 10)
 	seqStr := strconv.FormatUint(seq, 10)
-	url := fmt.Sprintf("%s/%s/%s/%s", baseURL, chainIdStr, address, seqStr)
+	url := fmt.Sprintf("%s/%s/%s/%s", baseURL, chainIdStr, emitter, seqStr)
 
 	var wormholeResp WormholeResp
 
