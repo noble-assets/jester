@@ -141,5 +141,4 @@ func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) 
 		log.Info("overriding wormhole transceiver contract", "address", overrides.WormholeTransceiver)
 		e.Config.WormholeTransceiver = overrides.WormholeTransceiver
 	}
-
 }

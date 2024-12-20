@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/noble-assets/jester/ethereum/abi/mportal"
 	"github.com/noble-assets/jester/ethereum/abi/wormhole"
 )
@@ -84,38 +85,54 @@ func WormholeListener(
 	log = log.With(slog.String("listener", "wormhole"))
 
 	backend := NewContractBackendWrapper(ws)
-	opts := &bind.WatchOpts{
-		Start:   nil,
-		Context: ctx,
-	}
-
 	wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(wormholeCoreContract), backend)
 	if err != nil {
 		return fmt.Errorf("failed to bind client to wormhole contract: %w", err)
 	}
 
 	sink := make(chan *wormhole.AbiLogMessagePublished)
-	sub, err := wormholeBinding.WatchLogMessagePublished(
-		opts, sink,
-		[]common.Address{common.HexToAddress(wormholeTransceiverContract)},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to subscribe to `LogMessagePublished` events %w", err)
-	}
-	defer sub.Unsubscribe()
 
-	log.Info("successfully subscribed to `LogMessagePublished` events")
-
+	// Subscribe to LogMessagePublished events.
+	// The for loop ensures we continue to re-subscribe in case of a subscription error.
 	for {
-		select {
-		case <-ctx.Done():
+		var sub event.Subscription
+		err := retry.Do(func() error {
+			sub, err = wormholeBinding.WatchLogMessagePublished(
+				&bind.WatchOpts{Context: ctx},
+				sink,
+				[]common.Address{common.HexToAddress(wormholeTransceiverContract)},
+			)
+			if err != nil {
+				return err
+			}
 			return nil
-		case event := <-sink:
-			log.Debug("observed `LogMessagePublished` event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
-			logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
-		case err := <-sub.Err():
-			// TODO: handle subscription interruption
-			log.Error("Subscription error", "error", err)
+		},
+			retry.Context(ctx),
+			retry.OnRetry(func(attempt uint, err error) {
+				log.Error("retry: subscription", "attempt", attempt+1, "error", err)
+			}),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to subscribe to `LogMessagePublished` events %w", err)
+		}
+		defer sub.Unsubscribe()
+
+		log.Info("successfully subscribed to `LogMessagePublished` events")
+
+		// listen and store data from events
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case event := <-sink:
+				log.Debug("observed `LogMessagePublished` event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
+				logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
+			case err := <-sub.Err():
+				log.Error("subscription error. Re-subscribing.", "error", err)
+				sub.Unsubscribe()
+				// TODO: small historical query to catch up during re-subscription
+				break
+			}
 		}
 	}
 }
@@ -132,74 +149,97 @@ func M0Listener(
 	log = log.With(slog.String("listener", "m0"))
 
 	backend := NewContractBackendWrapper(ws)
-	opts := &bind.WatchOpts{
-		Start:   nil,
-		Context: ctx,
-	}
-
 	binding, err := mportal.NewBindings(common.HexToAddress(hubPortalContract), backend)
 	if err != nil {
 		return fmt.Errorf("failed to bind client to mportal contract: %w", err)
 	}
 
 	sink := make(chan *mportal.BindingsMTokenSent)
-	sub, err := binding.WatchMTokenSent(opts, sink, []uint16{}, nil, nil)
-	if err != nil {
-		return fmt.Errorf("failed to subscribe to `MTokenSent` events: %w", err)
-	}
-	defer sub.Unsubscribe()
 
-	log.Info("successfully subscribed to `MTokenSent` events")
-
+	// Subscribe to MTokenSent events.
+	// The for loop ensures we continue to re-subscribe in case of a subscription error.
 	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case event := <-sink:
-			txHash := event.Raw.TxHash.String()
-			log.Info("observed `MTokenSent` event", "txHash", txHash)
-
-			// LogMessagedPublished and MToken sent events happen in the same transaction. We use
-			// separate websockets to subscribe to each event. In cases where we happen observe the
-			// MTokenSent event before the LotMessagedPublished event, we will be unable to query for
-			// the sequence number emitted by LotMessagedPublished. For that reason, we retry.
-			var seq uint64
-			var found bool
-			err := retry.Do(func() error {
-				seq, found = logMessagePublishedMap.GetSequence(txHash)
-				if !found {
-					return errors.New("not found")
-				}
-				return nil
-			},
-				retry.Attempts(3),
-				retry.Delay(5*time.Millisecond),
-				retry.OnRetry(func(attempt uint, _ error) {
-					log.Debug("retry attempt: logMessagePublished lookup", "attempt", attempt+1, "txHash", txHash)
-				}),
+		var sub event.Subscription
+		err := retry.Do(func() error {
+			sub, err = binding.WatchMTokenSent(
+				&bind.WatchOpts{Context: ctx},
+				sink,
+				[]uint16{}, // TODO: update with destination chain ID
+				nil, nil,
 			)
 			if err != nil {
-				log.Error("`logMessagePublished` sequence not found in correlation to `MTokenSent` event", "txHash", txHash)
+				return err
 			}
-			if err == nil {
-				log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
+			return nil
+		},
+			retry.Context(ctx),
+			retry.OnRetry(func(attempt uint, err error) {
+				log.Error("retry: subscription", "attempt", attempt+1, "error", err)
+			}),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to subscribe to `MTokenSent` events: %w", err)
+		}
 
-				processingQueue <- &QueryData{
-					WormHoleChainID: wormholeSrcChainId,
-					Emitter:         wormholeTransceiverContract,
-					Sequence:        seq,
-					txHash:          txHash,
+		defer sub.Unsubscribe()
+
+		log.Info("successfully subscribed to `MTokenSent` events")
+
+		// listen and process data from events
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case event := <-sink:
+				txHash := event.Raw.TxHash.String()
+				log.Info("observed `MTokenSent` event", "txHash", txHash)
+
+				// LogMessagedPublished and MToken sent events happen in the same transaction. We use
+				// separate websockets to subscribe to each event. In cases where we happen observe the
+				// MTokenSent event before the LotMessagedPublished event, we will be unable to query for
+				// the sequence number emitted by LotMessagedPublished. For that reason, we retry.
+				var seq uint64
+				var found bool
+				err := retry.Do(func() error {
+					seq, found = logMessagePublishedMap.GetSequence(txHash)
+					if !found {
+						return errors.New("not found")
+					}
+					return nil
+				},
+					retry.Context(ctx),
+					retry.Attempts(3),
+					retry.Delay(5*time.Millisecond),
+					retry.OnRetry(func(attempt uint, _ error) {
+						log.Debug("retry: logMessagePublished lookup", "attempt", attempt+1, "txHash", txHash)
+					}),
+				)
+				if err != nil {
+					log.Error("`logMessagePublished` sequence not found in correlation to `MTokenSent` event", "txHash", txHash)
 				}
-				logMessagePublishedMap.Delete(event.Raw.TxHash.String())
-			}
+				if err == nil {
+					log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
 
-		case err := <-sub.Err():
-			// TODO: handle subscription interruption
-			log.Error("Subscription error", "error", err)
+					processingQueue <- &QueryData{
+						WormHoleChainID: wormholeSrcChainId,
+						Emitter:         wormholeTransceiverContract,
+						Sequence:        seq,
+						txHash:          txHash,
+					}
+					logMessagePublishedMap.Delete(event.Raw.TxHash.String())
+				}
+
+			case err := <-sub.Err():
+				log.Error("subscription error. Re-subscribing.", "error", err)
+				sub.Unsubscribe()
+				// TODO: small historical query to catch up during re-subscription
+				break
+			}
 		}
 	}
 }
 
+// GetHistory queries historical data.
 func GetHistory(
 	ctx context.Context, log *slog.Logger,
 	rpc *ethclient.Client,
