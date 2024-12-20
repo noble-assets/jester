@@ -79,7 +79,7 @@ func WormholeListener(
 	ctx context.Context, log *slog.Logger,
 	logMessagePublishedMap *LogMessagePublishedMap,
 	ws *ethclient.Client,
-	wormholeContract, logMessagePublishedSender string,
+	wormholeCoreContract, wormholeTransceiverContract string,
 ) error {
 	log = log.With(slog.String("listener", "wormhole"))
 
@@ -89,7 +89,7 @@ func WormholeListener(
 		Context: ctx,
 	}
 
-	wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(wormholeContract), backend)
+	wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(wormholeCoreContract), backend)
 	if err != nil {
 		return fmt.Errorf("failed to bind client to wormhole contract: %w", err)
 	}
@@ -97,7 +97,7 @@ func WormholeListener(
 	sink := make(chan *wormhole.AbiLogMessagePublished)
 	sub, err := wormholeBinding.WatchLogMessagePublished(
 		opts, sink,
-		[]common.Address{common.HexToAddress(logMessagePublishedSender)},
+		[]common.Address{common.HexToAddress(wormholeTransceiverContract)},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to `LogMessagePublished` events %w", err)
@@ -127,7 +127,7 @@ func M0Listener(
 	ws *ethclient.Client,
 	processingQueue chan *QueryData,
 	wormholeSrcChainId uint64,
-	mPortalContract, logMessagePublishedSender string,
+	hubPortalContract, wormholeTransceiverContract string,
 ) error {
 	log = log.With(slog.String("listener", "m0"))
 
@@ -137,7 +137,7 @@ func M0Listener(
 		Context: ctx,
 	}
 
-	binding, err := mportal.NewBindings(common.HexToAddress(mPortalContract), backend)
+	binding, err := mportal.NewBindings(common.HexToAddress(hubPortalContract), backend)
 	if err != nil {
 		return fmt.Errorf("failed to bind client to mportal contract: %w", err)
 	}
@@ -186,7 +186,7 @@ func M0Listener(
 
 				processingQueue <- &QueryData{
 					WormHoleChainID: wormholeSrcChainId,
-					Emitter:         logMessagePublishedSender,
+					Emitter:         wormholeTransceiverContract,
 					Sequence:        seq,
 					txHash:          txHash,
 				}
@@ -206,7 +206,7 @@ func GetHistory(
 	processingQueue chan *QueryData,
 	startBlock int64, endBlock int64,
 	wormholeSrcChainId uint64,
-	mPortalContract, wormholeContract, logMessagePublishedSender string,
+	hubPortalContract, wormholeCoreContract, wormholeTransceiverContract string,
 ) {
 	from := big.NewInt(startBlock)
 	var end *big.Int
@@ -228,7 +228,7 @@ func GetHistory(
 	query := ethereum.FilterQuery{
 		FromBlock: from,
 		ToBlock:   end,
-		Addresses: []common.Address{common.HexToAddress(mPortalContract)},
+		Addresses: []common.Address{common.HexToAddress(hubPortalContract)},
 		Topics:    [][]common.Hash{{mTokenSentFuncSig}},
 	}
 
@@ -251,8 +251,8 @@ func GetHistory(
 	logMessagePublishedFuncSig := wormholeAbi.Events["LogMessagePublished"].ID
 
 	// update query
-	query.Addresses = []common.Address{common.HexToAddress(wormholeContract)}
-	query.Topics = [][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(logMessagePublishedSender)}}
+	query.Addresses = []common.Address{common.HexToAddress(wormholeCoreContract)}
+	query.Topics = [][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(wormholeTransceiverContract)}}
 
 	logMessagePublishedLogs, err := rpc.FilterLogs(ctx, query)
 	if err != nil {
@@ -275,7 +275,7 @@ func GetHistory(
 				log.Debug("vaa found during historical query", "seq", event.Sequence)
 				processingQueue <- &QueryData{
 					WormHoleChainID: wormholeSrcChainId,
-					Emitter:         logMessagePublishedSender,
+					Emitter:         wormholeTransceiverContract,
 					Sequence:        event.Sequence,
 					txHash:          txHash.String(),
 				}

@@ -18,19 +18,19 @@ type Config struct {
 	WebsocketURL string
 	RPCURL       string
 
-	WormholeSrcChainId        uint64
-	WormholeApiUrl            string
-	WormholeContract          string
-	MPortalContract           string
-	LogMessagePublishedSender string
+	WormholeSrcChainId  uint64
+	WormholeApiUrl      string
+	HubPortal           string
+	WormholeCore        string
+	WormholeTransceiver string // LogMessagePublished topic sender
 }
 
 type Overrides struct {
-	WormholeSrcChainId        uint64
-	WormholeApiUrl            string
-	WormholeContract          string
-	MPortalContract           string
-	LogMessagePublishedSender string
+	WormholeSrcChainId  uint64
+	WormholeApiUrl      string
+	HubPortal           string
+	WormholeCore        string
+	WormholeTransceiver string
 }
 
 func newEth(websocketurl string, rpcurl string) *Eth {
@@ -109,15 +109,15 @@ func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) 
 	case true:
 		e.Config.WormholeSrcChainId = 10002
 		e.Config.WormholeApiUrl = "https://api.testnet.wormscan.io/v1/signed_vaa"
-		e.Config.WormholeContract = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
-		e.Config.MPortalContract = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
-		e.Config.LogMessagePublishedSender = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
+		e.Config.HubPortal = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
+		e.Config.WormholeCore = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
+		e.Config.WormholeTransceiver = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
 	default:
 		e.Config.WormholeSrcChainId = 2
-		e.Config.WormholeApiUrl = ""            // TODO
-		e.Config.WormholeContract = ""          // TODO
-		e.Config.MPortalContract = ""           // TODO
-		e.Config.LogMessagePublishedSender = "" // TODO
+		e.Config.WormholeApiUrl = ""      // TODO
+		e.Config.HubPortal = ""           // TODO
+		e.Config.WormholeCore = ""        // TODO
+		e.Config.WormholeTransceiver = "" // TODO
 	}
 
 	// Overrides
@@ -129,16 +129,17 @@ func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) 
 		log.Info("overriding wormhole API URL", "url", overrides.WormholeApiUrl)
 		e.Config.WormholeApiUrl = overrides.WormholeApiUrl
 	}
-	if overrides.WormholeContract != "" {
-		log.Info("overriding wormhole contract address", "address", overrides.WormholeContract)
-		e.Config.WormholeContract = overrides.WormholeContract
+	if overrides.HubPortal != "" {
+		log.Info("overriding hub portal contract", "address", overrides.HubPortal)
+		e.Config.HubPortal = overrides.HubPortal
 	}
-	if overrides.MPortalContract != "" {
-		log.Info("overriding MPortal contract address", "address", overrides.MPortalContract)
-		e.Config.MPortalContract = overrides.MPortalContract
+	if overrides.WormholeCore != "" {
+		log.Info("overriding wormhole core contract", "address", overrides.WormholeCore)
+		e.Config.WormholeCore = overrides.WormholeCore
 	}
-	if overrides.LogMessagePublishedSender != "" {
-		log.Info("overriding LogMessagePublished event sender", "address", overrides.LogMessagePublishedSender)
-		e.Config.LogMessagePublishedSender = overrides.LogMessagePublishedSender
+	if overrides.WormholeTransceiver != "" {
+		log.Info("overriding wormhole transceiver contract", "address", overrides.WormholeTransceiver)
+		e.Config.WormholeTransceiver = overrides.WormholeTransceiver
 	}
+
 }

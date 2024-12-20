@@ -77,8 +77,8 @@ Contracts and configurations can be overridden with the relevant "override" flag
 					ctx, log,
 					logMessagePublishedMap,
 					ws,
-					a.Eth.Config.WormholeContract,
-					a.Eth.Config.LogMessagePublishedSender,
+					a.Eth.Config.WormholeCore,
+					a.Eth.Config.WormholeTransceiver,
 				)
 			})
 
@@ -89,8 +89,8 @@ Contracts and configurations can be overridden with the relevant "override" flag
 					ws,
 					processingQueue,
 					a.Eth.Config.WormholeSrcChainId,
-					a.Eth.Config.MPortalContract,
-					a.Eth.Config.LogMessagePublishedSender,
+					a.Eth.Config.HubPortal,
+					a.Eth.Config.WormholeTransceiver,
 				)
 			})
 
@@ -149,9 +149,9 @@ Contracts and configurations can be overridden with the relevant "override" flag
 						processingQueue,
 						startBlock, endBlock,
 						a.Eth.Config.WormholeSrcChainId,
-						a.Eth.Config.MPortalContract,
-						a.Eth.Config.WormholeContract,
-						a.Eth.Config.LogMessagePublishedSender,
+						a.Eth.Config.HubPortal,
+						a.Eth.Config.WormholeCore,
+						a.Eth.Config.WormholeTransceiver,
 					)
 				}()
 			}
@@ -182,17 +182,16 @@ Contracts and configurations can be overridden with the relevant "override" flag
 	if err := viper.BindPFlag(appstate.FlagOverrideWormholeApiUrl, cmd.Flags().Lookup(appstate.FlagOverrideWormholeApiUrl)); err != nil {
 		panic(err)
 	}
-
-	cmd.Flags().String(appstate.FlagOverrideWormholeContract, "", "override wormhole contract address")
-	if err := viper.BindPFlag(appstate.FlagOverrideWormholeContract, cmd.Flags().Lookup(appstate.FlagOverrideWormholeContract)); err != nil {
+	cmd.Flags().String(appstate.FlagOverrideHubPortal, "", "override the hub portal contract address")
+	if err := viper.BindPFlag(appstate.FlagOverrideHubPortal, cmd.Flags().Lookup(appstate.FlagOverrideHubPortal)); err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(appstate.FlagOverrideMPortalContract, "", "override M0's MPortal contract address")
-	if err := viper.BindPFlag(appstate.FlagOverrideMPortalContract, cmd.Flags().Lookup(appstate.FlagOverrideMPortalContract)); err != nil {
+	cmd.Flags().String(appstate.FlagOverrideWormholeCore, "", "override the wormhole core contract address")
+	if err := viper.BindPFlag(appstate.FlagOverrideWormholeCore, cmd.Flags().Lookup(appstate.FlagOverrideWormholeCore)); err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(appstate.FlagOverrideLMPSender, "", "override LogMessagePublished event sender")
-	if err := viper.BindPFlag(appstate.FlagOverrideLMPSender, cmd.Flags().Lookup(appstate.FlagOverrideLMPSender)); err != nil {
+	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
+	if err := viper.BindPFlag(appstate.FlagOverrideWormholeTransceiver, cmd.Flags().Lookup(appstate.FlagOverrideWormholeTransceiver)); err != nil {
 		panic(err)
 	}
 
@@ -201,10 +200,10 @@ Contracts and configurations can be overridden with the relevant "override" flag
 
 func getEthOverrides() eth.Overrides {
 	return eth.Overrides{
-		WormholeSrcChainId:        viper.GetUint64(appstate.FlagOverrideWormholeSrcChainId),
-		WormholeApiUrl:            viper.GetString(appstate.FlagOverrideWormholeApiUrl),
-		MPortalContract:           viper.GetString(appstate.FlagOverrideMPortalContract),
-		WormholeContract:          viper.GetString(appstate.FlagOverrideWormholeContract),
-		LogMessagePublishedSender: viper.GetString(appstate.FlagOverrideLMPSender),
+		WormholeSrcChainId:  viper.GetUint64(appstate.FlagOverrideWormholeSrcChainId),
+		WormholeApiUrl:      viper.GetString(appstate.FlagOverrideWormholeApiUrl),
+		HubPortal:           viper.GetString(appstate.FlagOverrideHubPortal),
+		WormholeCore:        viper.GetString(appstate.FlagOverrideWormholeCore),
+		WormholeTransceiver: viper.GetString(appstate.FlagOverrideWormholeTransceiver),
 	}
 }
