@@ -10,6 +10,10 @@ service QueryService {
 
 message GetVaasRequest {}
 
+message Dollar {
+  repeated string vaas = 1;
+}
+
 message GetVaasResponse {
-  repeated string vaa = 1;
+  Dollar dollar = 1;
 }

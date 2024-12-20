@@ -56,7 +56,9 @@ func (s *JesterServer) GetVaas(
 ) (*connect.Response[queryv1.GetVaasResponse], error) {
 	vaas := l.GetThenClearAll()
 	res := connect.NewResponse(&queryv1.GetVaasResponse{
-		Vaa: vaas,
+		Dollar: &queryv1.Dollar{
+			Vaas: vaas,
+		},
 	})
 	return res, nil
 }
