@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
+	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -12,6 +15,8 @@ type Eth struct {
 	Config             *Config
 	EthWebsocketClient *ethclient.Client
 	EthRPCClient       *ethclient.Client
+
+	redial redial
 }
 
 type Config struct {
@@ -23,6 +28,13 @@ type Config struct {
 	HubPortal           string
 	WormholeCore        string
 	WormholeTransceiver string // LogMessagePublished topic sender
+}
+
+type redial struct {
+	inProgressMutex sync.Mutex
+	inProgress      bool
+	done            chan error
+	getHistory      chan struct{} // redial done, trigger historical lookup
 }
 
 type Overrides struct {
@@ -48,50 +60,126 @@ func newEth(websocketurl string, rpcurl string) *Eth {
 // The returned *Eth pointer should be added to the app state.
 func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl, rpcurl string, testnet bool, overrides Overrides) (*Eth, error) {
 	eth := newEth(websocketurl, rpcurl)
-	if err := eth.initWebsocket(ctx, log); err != nil {
+	if err := eth.dialWebsocket(ctx, log); err != nil {
 		return nil, err
 	}
-	if err := eth.initRPC(ctx, log); err != nil {
+	if err := eth.dialRPC(ctx, log); err != nil {
 		return nil, err
 	}
 
 	eth.setContracts(log, testnet, overrides)
 
+	eth.redial.getHistory = make(chan struct{})
+
 	return eth, nil
 }
 
-// initWebsocket creates an Ethereum websocket client
-// If a WS client already exists, nothing is done.
-func (e *Eth) initWebsocket(ctx context.Context, log *slog.Logger) (err error) {
-	if e.EthWebsocketClient != nil {
-		fmt.Println("eth websocket client already inialized")
+// dialRPC creates an Ethereum RPC client
+func (e *Eth) dialRPC(ctx context.Context, log *slog.Logger) (err error) {
+	err = retry.Do(func() error {
+		e.EthRPCClient, err = ethclient.DialContext(ctx, e.Config.RPCURL)
+		if err != nil {
+			return err
+		}
 		return nil
+	},
+		retry.Context(ctx),
+		retry.OnRetry(func(attempt uint, err error) {
+			log.Warn("retrying to dial Ethereum RPC", "attempt", attempt, "err", err)
+		}))
+	if err != nil {
+		return fmt.Errorf("failed to connect to Ethereum RPC: %v", err)
 	}
 
-	e.EthWebsocketClient, err = ethclient.DialContext(ctx, e.Config.WebsocketURL)
+	log.Info("successfully dialed Ethereum RPC")
+
+	return nil
+}
+
+// dialWebsocket creates an Ethereum websocket client
+func (e *Eth) dialWebsocket(ctx context.Context, log *slog.Logger) (err error) {
+	err = retry.Do(func() error {
+		e.EthWebsocketClient, err = ethclient.DialContext(ctx, e.Config.WebsocketURL)
+		if err != nil {
+			return err
+		}
+		return nil
+	},
+		retry.Context(ctx),
+		retry.OnRetry(func(attempt uint, err error) {
+			log.Warn("retrying to dial Ethereum websocket", "attempt", attempt, "err", err)
+		}))
 	if err != nil {
 		return fmt.Errorf("failed to connect to Ethereum WebSocket: %v", err)
 	}
+
 	log.Info("successfully dialed Ethereum websocket")
 
 	return nil
 }
 
-// initRPC creates an Ethereum RPC client
-// If a WS client already exists, nothing is done.
-func (e *Eth) initRPC(ctx context.Context, log *slog.Logger) (err error) {
-	if e.EthRPCClient != nil {
-		fmt.Println("eth RPC client already inialized")
-		return nil
+func (e *Eth) HandleRedial(ctx context.Context, log *slog.Logger) error {
+	redial := &e.redial
+	redial.inProgressMutex.Lock()
+
+	// Another goroutine is already handling redial
+	if redial.inProgress {
+		log.Info("client redial already in progress")
+		redialDone := redial.done // create own reference to avoid races
+		redial.inProgressMutex.Unlock()
+		err := <-redialDone
+		errExists := false
+		if err != nil {
+			errExists = true
+		}
+		log.Info("received client redial complete", "error-exists", errExists)
+		return err
 	}
 
-	e.EthRPCClient, err = ethclient.DialContext(ctx, e.Config.RPCURL)
-	if err != nil {
-		return fmt.Errorf("failed to connect to Ethereum RPC: %v", err)
-	}
-	log.Info("successfully dialed Ethereum RPC")
+	// Mark redial as in progress and prepare a new signal channel
+	redial.inProgress = true
+	redial.done = make(chan error)
+	redialDone := redial.done // create own reference to avoid races
+	redial.inProgressMutex.Unlock()
 
+	defer func() {
+		redial.inProgressMutex.Lock()
+		redial.inProgress = false
+		close(redialDone)
+		redial.inProgressMutex.Unlock()
+	}()
+
+	if err := e.dialWebsocket(ctx, log); err != nil {
+		redialDone <- err
+		return err
+	}
+
+	time.Sleep(2 * time.Second)     // Allow other redial signals to accumulate
+	redial.getHistory <- struct{}{} // Trigger historical lookup to catch up on missed events
 	return nil
+}
+
+// GetHistoricalOnRedial is used to catch up on any block data missed during an event
+// subscription interruption. It is hardcoded to look back 50 blocks.
+//
+// It is meant to be run in a goroutine.
+func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, processingQueue chan *QueryData) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-e.redial.getHistory:
+			lookback := uint64(50) // TODO: make lookback configurable
+			log.Info(fmt.Sprintf("getting historical events for %d blocks", lookback))
+			latest, err := e.EthRPCClient.BlockNumber(ctx)
+			if err != nil {
+				log.Error("failed to get latest block number", "error", err)
+				continue
+			}
+			start := latest - lookback
+			GetHistory(ctx, log, e, processingQueue, int64(start), 0)
+		}
+	}
 }
 
 func (e *Eth) CloseClients() {

@@ -50,7 +50,6 @@ Contracts and configurations can be overridden with the relevant "override" flag
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			log := a.Log
-			ws := a.EthWebsocketClient
 			g, ctx := errgroup.WithContext(ctx)
 
 			// Event Subscription:
@@ -73,26 +72,17 @@ Contracts and configurations can be overridden with the relevant "override" flag
 			processingQueue := make(chan *eth.QueryData, 1000)
 
 			g.Go(func() error {
-				return eth.WormholeListener(
-					ctx, log,
-					logMessagePublishedMap,
-					ws,
-					a.Eth.Config.WormholeCore,
-					a.Eth.Config.WormholeTransceiver,
-				)
+				return eth.WormholeListener(ctx, log, logMessagePublishedMap, a.Eth)
 			})
 
 			g.Go(func() error {
-				return eth.M0Listener(
-					ctx, log,
-					logMessagePublishedMap,
-					ws,
-					processingQueue,
-					a.Eth.Config.WormholeSrcChainId,
-					a.Eth.Config.HubPortal,
-					a.Eth.Config.WormholeTransceiver,
-				)
+				return eth.M0Listener(ctx, log, logMessagePublishedMap, a.Eth, processingQueue)
 			})
+
+			// Watch for event subscriptions and get historical data
+			go func() {
+				a.Eth.GetHistoricalOnRedial(ctx, log, processingQueue)
+			}()
 
 			// Cleanup irrelevant LogMessagePublished events
 			go func() {
@@ -143,16 +133,7 @@ Contracts and configurations can be overridden with the relevant "override" flag
 			if startBlock != 0 {
 				endBlock := viper.GetInt64(appstate.FlagEndBlock)
 				go func() {
-					eth.GetHistory(
-						ctx, log,
-						a.EthRPCClient,
-						processingQueue,
-						startBlock, endBlock,
-						a.Eth.Config.WormholeSrcChainId,
-						a.Eth.Config.HubPortal,
-						a.Eth.Config.WormholeCore,
-						a.Eth.Config.WormholeTransceiver,
-					)
+					eth.GetHistory(ctx, log, a.Eth, processingQueue, startBlock, endBlock)
 				}()
 			}
 

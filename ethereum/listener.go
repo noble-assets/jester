@@ -15,7 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/noble-assets/jester/ethereum/abi/mportal"
 	"github.com/noble-assets/jester/ethereum/abi/wormhole"
@@ -79,47 +78,41 @@ func (m *LogMessagePublishedMap) Cleanup() {
 func WormholeListener(
 	ctx context.Context, log *slog.Logger,
 	logMessagePublishedMap *LogMessagePublishedMap,
-	ws *ethclient.Client,
-	wormholeCoreContract, wormholeTransceiverContract string,
+	eth *Eth,
 ) error {
 	log = log.With(slog.String("listener", "wormhole"))
-
-	backend := NewContractBackendWrapper(ws)
-	wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(wormholeCoreContract), backend)
-	if err != nil {
-		return fmt.Errorf("failed to bind client to wormhole contract: %w", err)
-	}
 
 	sink := make(chan *wormhole.AbiLogMessagePublished)
 
 	// Subscribe to LogMessagePublished events.
-	// The for loop ensures we continue to re-subscribe in case of a subscription error.
+	// The for loop ensures we continue to re-subscribe and/or redial the
+	// websocket client in case of a subscription error.
 	for {
-		var sub event.Subscription
-		err := retry.Do(func() error {
-			sub, err = wormholeBinding.WatchLogMessagePublished(
-				&bind.WatchOpts{Context: ctx},
-				sink,
-				[]common.Address{common.HexToAddress(wormholeTransceiverContract)},
-			)
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-			retry.Context(ctx),
-			retry.OnRetry(func(attempt uint, err error) {
-				log.Error("retry: subscription", "attempt", attempt+1, "error", err)
-			}),
+		backend := NewContractBackendWrapper(eth.EthWebsocketClient)
+		wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(eth.Config.WormholeCore), backend)
+		if err != nil {
+			return fmt.Errorf("failed to bind client to wormhole contract: %w", err)
+		}
+
+		sub, err := wormholeBinding.WatchLogMessagePublished(
+			&bind.WatchOpts{Context: ctx},
+			sink,
+			[]common.Address{common.HexToAddress(eth.Config.WormholeTransceiver)},
 		)
 		if err != nil {
-			return fmt.Errorf("failed to subscribe to `LogMessagePublished` events %w", err)
+			log.Error("failed to subscribe to `LogMessagePublished` events. Attempting to redial client", "error", err)
+			err = eth.HandleRedial(ctx, log)
+			if err != nil {
+				return errors.Join(errors.New("failed to redial Ethereum client"), err)
+			}
+			continue
 		}
 		defer sub.Unsubscribe()
 
 		log.Info("successfully subscribed to `LogMessagePublished` events")
 
 		// listen and store data from events
+	listenloop:
 		for {
 			select {
 			case <-ctx.Done():
@@ -130,8 +123,8 @@ func WormholeListener(
 			case err := <-sub.Err():
 				log.Error("subscription error. Re-subscribing.", "error", err)
 				sub.Unsubscribe()
-				// TODO: small historical query to catch up during re-subscription
-				break
+				break listenloop
+				// continue mainloop
 			}
 		}
 	}
@@ -141,51 +134,44 @@ func WormholeListener(
 func M0Listener(
 	ctx context.Context, log *slog.Logger,
 	logMessagePublishedMap *LogMessagePublishedMap,
-	ws *ethclient.Client,
+	eth *Eth,
 	processingQueue chan *QueryData,
-	wormholeSrcChainId uint64,
-	hubPortalContract, wormholeTransceiverContract string,
 ) error {
 	log = log.With(slog.String("listener", "m0"))
-
-	backend := NewContractBackendWrapper(ws)
-	binding, err := mportal.NewBindings(common.HexToAddress(hubPortalContract), backend)
-	if err != nil {
-		return fmt.Errorf("failed to bind client to mportal contract: %w", err)
-	}
 
 	sink := make(chan *mportal.BindingsMTokenSent)
 
 	// Subscribe to MTokenSent events.
-	// The for loop ensures we continue to re-subscribe in case of a subscription error.
+	// The for loop ensures we continue to re-subscribe and/or redial the
+	// websocket client in case of a subscription error.
 	for {
-		var sub event.Subscription
-		err := retry.Do(func() error {
-			sub, err = binding.WatchMTokenSent(
-				&bind.WatchOpts{Context: ctx},
-				sink,
-				[]uint16{}, // TODO: update with destination chain ID
-				nil, nil,
-			)
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-			retry.Context(ctx),
-			retry.OnRetry(func(attempt uint, err error) {
-				log.Error("retry: subscription", "attempt", attempt+1, "error", err)
-			}),
-		)
+		backend := NewContractBackendWrapper(eth.EthWebsocketClient)
+		binding, err := mportal.NewBindings(common.HexToAddress(eth.Config.HubPortal), backend)
 		if err != nil {
-			return fmt.Errorf("failed to subscribe to `MTokenSent` events: %w", err)
+			return fmt.Errorf("failed to bind client to mportal contract: %w", err)
 		}
 
+		var sub event.Subscription
+		sub, err = binding.WatchMTokenSent(
+			&bind.WatchOpts{Context: ctx},
+			sink,
+			[]uint16{}, // TODO: update with destination chain ID
+			nil, nil,
+		)
+		if err != nil {
+			log.Error("failed to subscribe to `MTokenSent` events. Attempting to redial client", "error", err)
+			err = eth.HandleRedial(ctx, log)
+			if err != nil {
+				return errors.Join(errors.New("failed to redial Ethereum client"), err)
+			}
+			continue
+		}
 		defer sub.Unsubscribe()
 
 		log.Info("successfully subscribed to `MTokenSent` events")
 
 		// listen and process data from events
+	listenloop:
 		for {
 			select {
 			case <-ctx.Done():
@@ -221,8 +207,8 @@ func M0Listener(
 					log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
 
 					processingQueue <- &QueryData{
-						WormHoleChainID: wormholeSrcChainId,
-						Emitter:         wormholeTransceiverContract,
+						WormHoleChainID: eth.Config.WormholeSrcChainId,
+						Emitter:         eth.Config.WormholeTransceiver,
 						Sequence:        seq,
 						txHash:          txHash,
 					}
@@ -232,8 +218,7 @@ func M0Listener(
 			case err := <-sub.Err():
 				log.Error("subscription error. Re-subscribing.", "error", err)
 				sub.Unsubscribe()
-				// TODO: small historical query to catch up during re-subscription
-				break
+				break listenloop
 			}
 		}
 	}
@@ -242,11 +227,9 @@ func M0Listener(
 // GetHistory queries historical data.
 func GetHistory(
 	ctx context.Context, log *slog.Logger,
-	rpc *ethclient.Client,
+	eth *Eth,
 	processingQueue chan *QueryData,
 	startBlock int64, endBlock int64,
-	wormholeSrcChainId uint64,
-	hubPortalContract, wormholeCoreContract, wormholeTransceiverContract string,
 ) {
 	from := big.NewInt(startBlock)
 	var end *big.Int
@@ -256,6 +239,13 @@ func GetHistory(
 
 	log = log.With(slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
 	log.Info("starting to query history")
+
+	rpc := eth.EthRPCClient
+
+	var totalVaas int
+	defer func() {
+		log.Info("finished querying history", "vaas-found", totalVaas)
+	}()
 
 	// load mPortal ABI and get MTokenSent function signature
 	mPortalAbi, err := abi.JSON(strings.NewReader(mportal.BindingsMetaData.ABI))
@@ -268,7 +258,7 @@ func GetHistory(
 	query := ethereum.FilterQuery{
 		FromBlock: from,
 		ToBlock:   end,
-		Addresses: []common.Address{common.HexToAddress(hubPortalContract)},
+		Addresses: []common.Address{common.HexToAddress(eth.Config.HubPortal)},
 		Topics:    [][]common.Hash{{mTokenSentFuncSig}},
 	}
 
@@ -291,8 +281,8 @@ func GetHistory(
 	logMessagePublishedFuncSig := wormholeAbi.Events["LogMessagePublished"].ID
 
 	// update query
-	query.Addresses = []common.Address{common.HexToAddress(wormholeCoreContract)}
-	query.Topics = [][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(wormholeTransceiverContract)}}
+	query.Addresses = []common.Address{common.HexToAddress(eth.Config.WormholeCore)}
+	query.Topics = [][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(eth.Config.WormholeTransceiver)}}
 
 	logMessagePublishedLogs, err := rpc.FilterLogs(ctx, query)
 	if err != nil {
@@ -304,7 +294,6 @@ func GetHistory(
 		wormhole.AbiLogMessagePublished
 	}{}
 
-	var totalVaas int
 	for _, mLog := range mTokenSentLogs {
 		txHash := mLog.TxHash
 		for _, lLog := range logMessagePublishedLogs {
@@ -314,8 +303,8 @@ func GetHistory(
 				}
 				log.Debug("vaa found during historical query", "seq", event.Sequence)
 				processingQueue <- &QueryData{
-					WormHoleChainID: wormholeSrcChainId,
-					Emitter:         wormholeTransceiverContract,
+					WormHoleChainID: eth.Config.WormholeSrcChainId,
+					Emitter:         eth.Config.WormholeTransceiver,
 					Sequence:        event.Sequence,
 					txHash:          txHash.String(),
 				}
@@ -323,6 +312,4 @@ func GetHistory(
 			}
 		}
 	}
-
-	defer log.Info("finished querying history", "vaas-found", totalVaas)
 }
