@@ -88,7 +88,9 @@ func WormholeListener(
 	// The for loop ensures we continue to re-subscribe and/or redial the
 	// websocket client in case of a subscription error.
 	for {
-		backend := NewContractBackendWrapper(eth.EthWebsocketClient)
+		eth.WebsocketClientMutex.Lock()
+		backend := NewContractBackendWrapper(eth.WebsocketClient)
+		eth.WebsocketClientMutex.Unlock()
 		wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(eth.Config.WormholeCore), backend)
 		if err != nil {
 			return fmt.Errorf("failed to bind client to wormhole contract: %w", err)
@@ -145,7 +147,9 @@ func M0Listener(
 	// The for loop ensures we continue to re-subscribe and/or redial the
 	// websocket client in case of a subscription error.
 	for {
-		backend := NewContractBackendWrapper(eth.EthWebsocketClient)
+		eth.WebsocketClientMutex.Lock()
+		backend := NewContractBackendWrapper(eth.WebsocketClient)
+		eth.WebsocketClientMutex.Unlock()
 		binding, err := mportal.NewBindings(common.HexToAddress(eth.Config.HubPortal), backend)
 		if err != nil {
 			return fmt.Errorf("failed to bind client to mportal contract: %w", err)
@@ -241,7 +245,7 @@ func GetHistory(
 	log = log.With(slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
 	log.Info("starting to query history")
 
-	rpc := eth.EthRPCClient
+	rpc := eth.RPCClient
 
 	var totalVaas int
 	defer func() {

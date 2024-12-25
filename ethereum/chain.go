@@ -12,9 +12,10 @@ import (
 )
 
 type Eth struct {
-	Config             *Config
-	EthWebsocketClient *ethclient.Client
-	EthRPCClient       *ethclient.Client
+	Config               *Config
+	WebsocketClient      *ethclient.Client
+	WebsocketClientMutex sync.Mutex
+	RPCClient            *ethclient.Client
 
 	redial redial
 }
@@ -79,7 +80,7 @@ func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl, rpcurl s
 // dialRPC creates an Ethereum RPC client
 func (e *Eth) dialRPC(ctx context.Context, log *slog.Logger) (err error) {
 	err = retry.Do(func() error {
-		e.EthRPCClient, err = ethclient.DialContext(ctx, e.Config.RPCURL)
+		e.RPCClient, err = ethclient.DialContext(ctx, e.Config.RPCURL)
 		if err != nil {
 			return err
 		}
@@ -101,7 +102,10 @@ func (e *Eth) dialRPC(ctx context.Context, log *slog.Logger) (err error) {
 // dialWebsocket creates an Ethereum websocket client
 func (e *Eth) dialWebsocket(ctx context.Context, log *slog.Logger) (err error) {
 	err = retry.Do(func() error {
-		e.EthWebsocketClient, err = ethclient.DialContext(ctx, e.Config.WebsocketURL)
+		e.WebsocketClientMutex.Lock()
+		defer e.WebsocketClientMutex.Unlock()
+
+		e.WebsocketClient, err = ethclient.DialContext(ctx, e.Config.WebsocketURL)
 		if err != nil {
 			return err
 		}
@@ -173,7 +177,7 @@ func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, proce
 		case <-e.redial.getHistory:
 			lookback := uint64(50) // TODO: make lookback configurable
 			log.Info(fmt.Sprintf("getting historical events for %d blocks", lookback))
-			latest, err := e.EthRPCClient.BlockNumber(ctx)
+			latest, err := e.RPCClient.BlockNumber(ctx)
 			if err != nil {
 				log.Error("failed to get latest block number", "error", err)
 				continue
@@ -185,11 +189,11 @@ func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, proce
 }
 
 func (e *Eth) CloseClients() {
-	if e.EthWebsocketClient != nil {
-		e.EthWebsocketClient.Close()
+	if e.WebsocketClient != nil {
+		e.WebsocketClient.Close()
 	}
-	if e.EthRPCClient != nil {
-		e.EthRPCClient.Close()
+	if e.RPCClient != nil {
+		e.RPCClient.Close()
 	}
 }
 
