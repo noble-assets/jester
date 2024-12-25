@@ -16,6 +16,7 @@ const (
 	FlagStartBlock                  = "start_block"
 	FlagEndBlock                    = "end_block"
 	FlagOverrideWormholeSrcChainId  = "override_wormhole_src_chain_id"
+	FlagOverrideNobleChainID        = "override_noble_chain_id"
 	FlagOverrideWormholeApiUrl      = "override_wormhole_api_url"
 	FlagOverrideHubPortal           = "override-hub-portal"
 	FlagOverrideWormholeTransceiver = "override-wormhole-transceiver"

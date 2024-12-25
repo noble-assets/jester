@@ -15,7 +15,7 @@ import (
 )
 
 type QueryData struct {
-	WormHoleChainID uint64
+	WormHoleChainID uint16
 	Emitter         string
 	Sequence        uint64
 	txHash          string // logging purposes only
@@ -47,14 +47,15 @@ func StartQueryWorker(ctx context.Context, log *slog.Logger, wormholeApiUrl stri
 // fetchVaa sends a GET request with retry logic to the wormhole API
 //
 // `txHash` is used for logging purposes only
-func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chainID, seq uint64, emitter, txHash string) (WormholeResp, error) {
-	chainIdStr := strconv.FormatUint(chainID, 10)
+func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chainID uint16, seq uint64, emitter, txHash string) (WormholeResp, error) {
+	chainIdStr := strconv.FormatUint(uint64(chainID), 10)
 	seqStr := strconv.FormatUint(seq, 10)
 	url := fmt.Sprintf("%s/%s/%s/%s", wormholeApiUrl, chainIdStr, emitter, seqStr)
 
 	var wormholeResp WormholeResp
 
 	fistAttempt := time.Now()
+	retryAttemps := 50
 
 	err := retry.Do(
 		func() error {
@@ -65,7 +66,7 @@ func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chai
 
 			req.Header.Set("accept", "application/json")
 
-			client := &http.Client{}
+			client := &http.Client{Timeout: 10 * time.Second}
 			resp, err := client.Do(req)
 			if err != nil {
 				return fmt.Errorf("request failed: %w", err)
@@ -104,14 +105,14 @@ func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chai
 		}),
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
-		retry.Attempts(50),
+		retry.Attempts(uint(retryAttemps)),
 		retry.Delay(30*time.Second),
 		retry.Context(ctx),
 		retry.DelayType(retry.FixedDelay),
 		retry.Delay(30*time.Second),
 		retry.OnRetry(func(attempt uint, err error) {
 			since := time.Since(fistAttempt).Round(time.Second)
-			log.Info("retry: VAA lookup", "attempt", attempt+1, "seq", seq, "error", err, "since-first-attempt", since, "txHash", txHash)
+			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf("%d/%d", attempt+1, retryAttemps), "seq", seq, "error", err, "since-first-attempt", since, "txHash", txHash)
 		}),
 	)
 	if err != nil {

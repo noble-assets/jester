@@ -121,7 +121,7 @@ func WormholeListener(
 				log.Debug("observed `LogMessagePublished` event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
 				logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
 			case err := <-sub.Err():
-				log.Error("subscription error. Re-subscribing.", "error", err)
+				log.Error("subscription error. Attempting to re-subscribing.", "error", err)
 				sub.Unsubscribe()
 				break listenloop
 				// continue mainloop
@@ -155,7 +155,7 @@ func M0Listener(
 		sub, err = binding.WatchMTokenSent(
 			&bind.WatchOpts{Context: ctx},
 			sink,
-			[]uint16{}, // TODO: update with destination chain ID
+			[]uint16{eth.Config.WormholeNobleChainID},
 			nil, nil,
 		)
 		if err != nil {
@@ -186,6 +186,7 @@ func M0Listener(
 				// the sequence number emitted by LotMessagedPublished. For that reason, we retry.
 				var seq uint64
 				var found bool
+				retryAttemps := 3
 				err := retry.Do(func() error {
 					seq, found = logMessagePublishedMap.GetSequence(txHash)
 					if !found {
@@ -194,10 +195,10 @@ func M0Listener(
 					return nil
 				},
 					retry.Context(ctx),
-					retry.Attempts(3),
+					retry.Attempts(uint(retryAttemps)),
 					retry.Delay(5*time.Millisecond),
 					retry.OnRetry(func(attempt uint, _ error) {
-						log.Debug("retry: logMessagePublished lookup", "attempt", attempt+1, "txHash", txHash)
+						log.Debug("retry: logMessagePublished lookup", "attempt", fmt.Sprintf("%d/%d", attempt+1, retryAttemps), "txHash", txHash)
 					}),
 				)
 				if err != nil {
@@ -216,7 +217,7 @@ func M0Listener(
 				}
 
 			case err := <-sub.Err():
-				log.Error("subscription error. Re-subscribing.", "error", err)
+				log.Error("subscription error. Attempting to re-subscribing.", "error", err)
 				sub.Unsubscribe()
 				break listenloop
 			}
@@ -255,11 +256,13 @@ func GetHistory(
 	}
 	mTokenSentFuncSig := mPortalAbi.Events["MTokenSent"].ID
 
+	nobleChainIDHash := common.BigToHash(big.NewInt(int64(eth.Config.WormholeNobleChainID)))
+
 	query := ethereum.FilterQuery{
 		FromBlock: from,
 		ToBlock:   end,
 		Addresses: []common.Address{common.HexToAddress(eth.Config.HubPortal)},
-		Topics:    [][]common.Hash{{mTokenSentFuncSig}},
+		Topics:    [][]common.Hash{{mTokenSentFuncSig}, {nobleChainIDHash}},
 	}
 
 	mTokenSentLogs, err := rpc.FilterLogs(ctx, query)
@@ -301,7 +304,7 @@ func GetHistory(
 				if err := wormholeAbi.UnpackIntoInterface(&event, "LogMessagePublished", lLog.Data); err != nil {
 					log.Error("error unpacking wormhole abi into interface when querying history", "error", err)
 				}
-				log.Debug("vaa found during historical query", "seq", event.Sequence)
+				log.Debug("found relevant events during historical query", "block", event.Raw.BlockNumber, "seq", event.Sequence)
 				processingQueue <- &QueryData{
 					WormHoleChainID: eth.Config.WormholeSrcChainId,
 					Emitter:         eth.Config.WormholeTransceiver,

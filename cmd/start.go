@@ -159,6 +159,14 @@ Contracts and configurations can be overridden with the relevant "override" flag
 	}
 
 	// Contract and configuration override flags
+	cmd.Flags().Uint16(appstate.FlagOverrideWormholeSrcChainId, 0, "override Wormhole source chain ID. This is likely the chain ID associated with Ethereum on Wormhole")
+	if err := viper.BindPFlag(appstate.FlagOverrideWormholeSrcChainId, cmd.Flags().Lookup(appstate.FlagOverrideWormholeSrcChainId)); err != nil {
+		panic(err)
+	}
+	cmd.Flags().Uint16(appstate.FlagOverrideNobleChainID, 0, "override noble Wormhole chain ID")
+	if err := viper.BindPFlag(appstate.FlagOverrideNobleChainID, cmd.Flags().Lookup(appstate.FlagOverrideNobleChainID)); err != nil {
+		panic(err)
+	}
 	cmd.Flags().String(appstate.FlagOverrideWormholeApiUrl, "", "override wormhole API URL")
 	if err := viper.BindPFlag(appstate.FlagOverrideWormholeApiUrl, cmd.Flags().Lookup(appstate.FlagOverrideWormholeApiUrl)); err != nil {
 		panic(err)
@@ -181,10 +189,11 @@ Contracts and configurations can be overridden with the relevant "override" flag
 
 func getEthOverrides() eth.Overrides {
 	return eth.Overrides{
-		WormholeSrcChainId:  viper.GetUint64(appstate.FlagOverrideWormholeSrcChainId),
-		WormholeApiUrl:      viper.GetString(appstate.FlagOverrideWormholeApiUrl),
-		HubPortal:           viper.GetString(appstate.FlagOverrideHubPortal),
-		WormholeCore:        viper.GetString(appstate.FlagOverrideWormholeCore),
-		WormholeTransceiver: viper.GetString(appstate.FlagOverrideWormholeTransceiver),
+		WormholeSrcChainId:   viper.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
+		WormholeNobleChainID: viper.GetUint16(appstate.FlagOverrideNobleChainID),
+		WormholeApiUrl:       viper.GetString(appstate.FlagOverrideWormholeApiUrl),
+		HubPortal:            viper.GetString(appstate.FlagOverrideHubPortal),
+		WormholeCore:         viper.GetString(appstate.FlagOverrideWormholeCore),
+		WormholeTransceiver:  viper.GetString(appstate.FlagOverrideWormholeTransceiver),
 	}
 }

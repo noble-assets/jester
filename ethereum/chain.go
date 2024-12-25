@@ -23,11 +23,12 @@ type Config struct {
 	WebsocketURL string
 	RPCURL       string
 
-	WormholeSrcChainId  uint64
-	WormholeApiUrl      string
-	HubPortal           string
-	WormholeCore        string
-	WormholeTransceiver string // LogMessagePublished topic sender
+	WormholeSrcChainId   uint16
+	WormholeNobleChainID uint16
+	WormholeApiUrl       string
+	HubPortal            string
+	WormholeCore         string
+	WormholeTransceiver  string // LogMessagePublished topic sender
 }
 
 type redial struct {
@@ -38,11 +39,12 @@ type redial struct {
 }
 
 type Overrides struct {
-	WormholeSrcChainId  uint64
-	WormholeApiUrl      string
-	HubPortal           string
-	WormholeCore        string
-	WormholeTransceiver string
+	WormholeSrcChainId   uint16
+	WormholeNobleChainID uint16
+	WormholeApiUrl       string
+	HubPortal            string
+	WormholeCore         string
+	WormholeTransceiver  string
 }
 
 func newEth(websocketurl string, rpcurl string) *Eth {
@@ -85,7 +87,7 @@ func (e *Eth) dialRPC(ctx context.Context, log *slog.Logger) (err error) {
 	},
 		retry.Context(ctx),
 		retry.OnRetry(func(attempt uint, err error) {
-			log.Warn("retrying to dial Ethereum RPC", "attempt", attempt, "err", err)
+			log.Warn("retrying to dial Ethereum RPC", "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "err", err)
 		}))
 	if err != nil {
 		return fmt.Errorf("failed to connect to Ethereum RPC: %v", err)
@@ -107,7 +109,7 @@ func (e *Eth) dialWebsocket(ctx context.Context, log *slog.Logger) (err error) {
 	},
 		retry.Context(ctx),
 		retry.OnRetry(func(attempt uint, err error) {
-			log.Warn("retrying to dial Ethereum websocket", "attempt", attempt, "err", err)
+			log.Warn("retrying to dial Ethereum websocket", "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "err", err)
 		}))
 	if err != nil {
 		return fmt.Errorf("failed to connect to Ethereum WebSocket: %v", err)
@@ -208,10 +210,16 @@ func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) 
 		e.Config.WormholeTransceiver = "" // TODO
 	}
 
+	e.Config.WormholeNobleChainID = 4009
+
 	// Overrides
 	if overrides.WormholeSrcChainId != 0 {
 		log.Info("overriding wormhole source chain ID", "chainID", overrides.WormholeSrcChainId)
 		e.Config.WormholeSrcChainId = overrides.WormholeSrcChainId
+	}
+	if overrides.WormholeNobleChainID != 0 {
+		log.Info("overriding noble wormhole chain ID", "chainID", overrides.WormholeNobleChainID)
+		e.Config.WormholeNobleChainID = overrides.WormholeNobleChainID
 	}
 	if overrides.WormholeApiUrl != "" {
 		log.Info("overriding wormhole API URL", "url", overrides.WormholeApiUrl)
