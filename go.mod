@@ -1,6 +1,6 @@
 module github.com/noble-assets/jester
 
-go 1.23.3
+go 1.22.7
 
 require (
 	connectrpc.com/connect v1.17.0
