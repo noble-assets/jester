@@ -1,4 +1,3 @@
-APPNAME := jesterd
 COMMIT := $(shell git log -1 --format='%H')
 VERSION := $(shell echo $(shell git describe --tags --always --dirty --match "v*") | sed 's/^v//')
 
@@ -14,12 +13,12 @@ ldflags := $(strip $(ldflags))
 
 build:
 	@echo "🤖 Building jester..."
-	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/$(APPNAME)"
+	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/" ./cmd/jesterd
 	@echo "✅ Completed build!"
 
 build-race:
-	@echo "🤖 Building jester..."
-	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/$(APPNAME)" -race
+	@echo "🤖 Building jester with race detection"
+	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/" ./cmd/jesterd -race
 	@echo "✅ Completed build!"
 
 ###############################################################################
