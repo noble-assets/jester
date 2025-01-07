@@ -19,22 +19,21 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start Jester",
-		Long: `Jester is a "sidecar" application meant to be run by the Noble validator set.
-		
-Jester supports the implementation of the Noble Dollar, powered by M0.
+		Long: `Jester is a sidecar application designed to be run by the Noble validator set.
 
-Starting Jester will listen for events on the Ethereum blockchain and query the Wormhole API for VAAs.
-Those VAAs are then accumulated and served via a gRPC endpoint.
+Jester facilitates the implementation of the Noble Dollar, powered by M0.
 
-Jesters default gRPC address/port is localhost:9091. This assumes that port 9090 is being used by the 
-Noble binary. This can be overridden with the --server_address flag.
+When started, Jester listens for events on the Ethereum blockchain and queries the Wormhole API for VAAs (Verifiable Action Approvals).
+These VAAs are accumulated and served via a gRPC endpoint.
 
-NOTE: The gRPC port for Jester is intended for use only by the Noble binary. 
+By default, Jester's gRPC server listens on localhost:9091. This assumes that port 9090 is being used by the Noble binary. 
+You can override this default address with the --server_address flag.
+
+Note: The gRPC port for Jester is intended for use only by the Noble binary. 
 Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and clears the state.
 
-The Ethereum contracts are hard coded and can be toggled between mainnet and testnet via the --testnet flag.
-Contracts and configurations can be overridden with the relevant "override" flags.
-`,
+The Ethereum contracts are hardcoded and can be toggled between mainnet and testnet using the --testnet flag.
+You can override contracts and configurations with the relevant "override" flags.`,
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
 			a.Eth, err = eth.InitializeEth(
 				cmd.Context(),
@@ -79,7 +78,7 @@ Contracts and configurations can be overridden with the relevant "override" flag
 				return eth.M0Listener(ctx, log, logMessagePublishedMap, a.Eth, processingQueue)
 			})
 
-			// Watch for event subscriptions and get historical data
+			// Watch for event subscription interuptions and get historical data
 			go func() {
 				a.Eth.GetHistoricalOnRedial(ctx, log, processingQueue)
 			}()
@@ -149,11 +148,11 @@ Contracts and configurations can be overridden with the relevant "override" flag
 	appstate.AddConfigurationFlags(cmd)
 
 	// Historical query flags
-	cmd.Flags().Int64(appstate.FlagStartBlock, 0, "block number to start ethereum historical query, 0 for latest height")
+	cmd.Flags().Int64(appstate.FlagStartBlock, 0, "block number to start ethereum historical query")
 	if err := viper.BindPFlag(appstate.FlagStartBlock, cmd.Flags().Lookup(appstate.FlagStartBlock)); err != nil {
 		panic(err)
 	}
-	cmd.Flags().Int64(appstate.FlagEndBlock, 0, "block number to end ethereum historical query")
+	cmd.Flags().Int64(appstate.FlagEndBlock, 0, "block number to end ethereum historical query, 0 for latest height")
 	if err := viper.BindPFlag(appstate.FlagEndBlock, cmd.Flags().Lookup(appstate.FlagEndBlock)); err != nil {
 		panic(err)
 	}

@@ -1,0 +1,42 @@
+version: 2
+project_name: jesterd
+
+before:
+  hooks:
+    - go mod tidy
+builds:
+  -
+   main: ./cmd/jesterd
+   env:
+      - CGO_ENABLED=0
+   ldflags:
+      - -X github.com/noble-assets/jester/cmd.Version={{ .Version }}
+      - -X github.com/noble-assets/jester/cmd.Commit={{ .Commit }}
+   goos:
+      - linux
+      - darwin
+   goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: binary
+
+kos:
+   - 
+    repositories: 
+      - ghcr.io/noble-assets/jester
+    tags:
+      - "{{ .Tag }}"
+      - latest
+    base_image: alpine
+    user: "2000:2000"
+    bare: true
+    preserve_import_paths: false
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    sbom: none
+
+release:
+  draft: true
