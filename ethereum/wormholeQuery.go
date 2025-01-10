@@ -2,7 +2,6 @@ package ethereum
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	"github.com/noble-assets/jester/server"
+	"jester.noble.xyz/server"
 )
 
 type QueryData struct {
@@ -47,9 +46,7 @@ func StartQueryWorker(
 	}
 
 	log.Info("found VAA", "txHash", dequeued.txHash)
-
-	vaa, _ := base64.StdEncoding.DecodeString(resp.VaaBytes)
-	vaaList.Add(vaa)
+	vaaList.Add(resp.VaaBytes)
 }
 
 // fetchVaa sends a GET request with retry logic to the wormhole API

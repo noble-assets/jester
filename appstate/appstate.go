@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/noble-assets/jester/ethereum"
 	"github.com/phsym/console-slog"
 	"github.com/spf13/viper"
+	"jester.noble.xyz/ethereum"
 )
 
 // appState is the modifiable state of the application.

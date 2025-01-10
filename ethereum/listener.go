@@ -16,8 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/noble-assets/jester/ethereum/abi/mportal"
-	"github.com/noble-assets/jester/ethereum/abi/wormhole"
+	"jester.noble.xyz/ethereum/abi/mportal"
+	"jester.noble.xyz/ethereum/abi/wormhole"
 )
 
 type LogMessagePublishedMap struct {

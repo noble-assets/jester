@@ -1,0 +1,48 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    paths:
+      - 'vangen.json'
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+
+      - name: Install Vangen
+        run: |
+          git clone https://github.com/noble-assets/vangen
+          cd vangen && go install && cd ..
+          rm -rf vangen
+
+      - name: Build Site
+        run: | 
+            vangen
+            echo "jester.noble.xyz" > ./vangen/CNAME
+
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./vangen
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -4,10 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/noble-assets/jester/appstate"
-	"github.com/noble-assets/jester/cmd/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"jester.noble.xyz/appstate"
+	"jester.noble.xyz/cmd/config"
 )
 
 const (

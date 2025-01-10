@@ -1,4 +1,4 @@
-module github.com/noble-assets/jester
+module jester.noble.xyz
 
 go 1.22.7
 

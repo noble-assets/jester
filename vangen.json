@@ -1,0 +1,9 @@
+{
+  "domain": "jester.noble.xyz",
+  "repositories": [
+    {
+      "url": "https://github.com/noble-assets/jester",
+      "subs": ["api"]
+    }
+  ]
+}

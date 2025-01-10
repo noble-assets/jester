@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/noble-assets/jester/appstate"
 	"github.com/spf13/cobra"
+	"jester.noble.xyz/appstate"
 )
 
 // configCmd represents the config command

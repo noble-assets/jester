@@ -10,8 +10,8 @@ builds:
    env:
       - CGO_ENABLED=0
    ldflags:
-      - -X github.com/noble-assets/jester/cmd.Version={{ .Version }}
-      - -X github.com/noble-assets/jester/cmd.Commit={{ .Commit }}
+      - -X jester.noble.xyz/cmd.Version={{ .Version }}
+      - -X jester.noble.xyz/cmd.Commit={{ .Commit }}
    goos:
       - linux
       - darwin

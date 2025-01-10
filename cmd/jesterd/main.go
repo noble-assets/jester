@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/noble-assets/jester/cmd"
 	"github.com/spf13/cobra"
+	"jester.noble.xyz/cmd"
 )
 
 func main() {

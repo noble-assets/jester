@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/noble-assets/jester/appstate"
+	"jester.noble.xyz/appstate"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"

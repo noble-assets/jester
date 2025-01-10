@@ -4,11 +4,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/noble-assets/jester/appstate"
-	eth "github.com/noble-assets/jester/ethereum"
-	"github.com/noble-assets/jester/server"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
+	"jester.noble.xyz/appstate"
+	eth "jester.noble.xyz/ethereum"
+	"jester.noble.xyz/server"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
