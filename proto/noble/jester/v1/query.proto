@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package noble.jester.v1;
+
+import "noble/jester/v1/jester.proto";
+
+option go_package = "jester.noble.xyz/api;jester";
+
+service QueryService {
+  rpc GetVoteExtension(GetVoteExtensionRequest) returns (GetVoteExtensionResponse);
+}
+
+message GetVoteExtensionRequest {}
+
+message GetVoteExtensionResponse {
+  Dollar dollar = 1;
+}

@@ -11,17 +11,17 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
-	queryv1 "github.com/noble-assets/jester/gen/query/v1"
-	"github.com/noble-assets/jester/gen/query/v1/queryv1connect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+
+	api "jester.noble.xyz/api"
 )
 
 var l *VaaList
 
 type VaaList struct {
 	mu   sync.Mutex
-	list []string
+	list [][]byte
 }
 
 func InitVaaList() *VaaList {
@@ -29,16 +29,16 @@ func InitVaaList() *VaaList {
 	return l
 }
 
-func (v *VaaList) Add(item string) {
+func (v *VaaList) Add(item []byte) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	v.list = append(v.list, item)
 }
 
-func (v *VaaList) GetThenClearAll() []string {
+func (v *VaaList) GetThenClearAll() [][]byte {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	copyList := make([]string, len(v.list))
+	copyList := make([][]byte, len(v.list))
 	copy(copyList, v.list)
 	v.list = nil // clear list
 	return copyList
@@ -46,17 +46,17 @@ func (v *VaaList) GetThenClearAll() []string {
 
 //
 
-var _ queryv1connect.QueryServiceHandler = &JesterServer{}
+var _ api.QueryServiceHandler = &JesterServer{}
 
 type JesterServer struct{}
 
-func (s *JesterServer) GetVaas(
+func (s *JesterServer) GetVoteExtension(
 	ctx context.Context,
-	req *connect.Request[queryv1.GetVaasRequest],
-) (*connect.Response[queryv1.GetVaasResponse], error) {
+	req *connect.Request[api.GetVoteExtensionRequest],
+) (*connect.Response[api.GetVoteExtensionResponse], error) {
 	vaas := l.GetThenClearAll()
-	res := connect.NewResponse(&queryv1.GetVaasResponse{
-		Dollar: &queryv1.Dollar{
+	res := connect.NewResponse(&api.GetVoteExtensionResponse{
+		Dollar: &api.Dollar{
 			Vaas: vaas,
 		},
 	})
@@ -67,12 +67,12 @@ func (s *JesterServer) GetVaas(
 func StartServer(ctx context.Context, log *slog.Logger, serverAddress string) {
 	server := &JesterServer{}
 	mux := http.NewServeMux()
-	path, handler := queryv1connect.NewQueryServiceHandler(server)
+	path, handler := api.NewQueryServiceHandler(server)
 	mux.Handle(path, handler)
 
 	// enables reflection for gRPC support
 	mux.Handle(grpcreflect.NewHandlerV1(
-		grpcreflect.NewStaticReflector(queryv1connect.QueryServiceName),
+		grpcreflect.NewStaticReflector(api.QueryServiceName),
 	))
 
 	srv := &http.Server{
