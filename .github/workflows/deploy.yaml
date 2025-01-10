@@ -28,8 +28,8 @@ jobs:
 
       - name: Build Site
         run: | 
-            vangen
-            echo "jester.noble.xyz" > ./vangen/CNAME
+         vangen
+         echo "jester.noble.xyz" > ./vangen/CNAME
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
