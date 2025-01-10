@@ -33,19 +33,14 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// QueryServiceGetVaasProcedure is the fully-qualified name of the QueryService's GetVaas RPC.
-	QueryServiceGetVaasProcedure = "/query.v1.QueryService/GetVaas"
-)
-
-// These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
-var (
-	queryServiceServiceDescriptor       = v1.File_query_v1_query_proto.Services().ByName("QueryService")
-	queryServiceGetVaasMethodDescriptor = queryServiceServiceDescriptor.Methods().ByName("GetVaas")
+	// QueryServiceGetVoteExtentionProcedure is the fully-qualified name of the QueryService's
+	// GetVoteExtention RPC.
+	QueryServiceGetVoteExtentionProcedure = "/query.v1.QueryService/GetVoteExtention"
 )
 
 // QueryServiceClient is a client for the query.v1.QueryService service.
 type QueryServiceClient interface {
-	GetVaas(context.Context, *connect.Request[v1.GetVaasRequest]) (*connect.Response[v1.GetVaasResponse], error)
+	GetVoteExtention(context.Context, *connect.Request[v1.GetVoteExtentionRequest]) (*connect.Response[v1.GetVoteExtentionResponse], error)
 }
 
 // NewQueryServiceClient constructs a client for the query.v1.QueryService service. By default, it
@@ -57,11 +52,12 @@ type QueryServiceClient interface {
 // http://api.acme.com or https://acme.com/grpc).
 func NewQueryServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) QueryServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
+	queryServiceMethods := v1.File_query_v1_query_proto.Services().ByName("QueryService").Methods()
 	return &queryServiceClient{
-		getVaas: connect.NewClient[v1.GetVaasRequest, v1.GetVaasResponse](
+		getVoteExtention: connect.NewClient[v1.GetVoteExtentionRequest, v1.GetVoteExtentionResponse](
 			httpClient,
-			baseURL+QueryServiceGetVaasProcedure,
-			connect.WithSchema(queryServiceGetVaasMethodDescriptor),
+			baseURL+QueryServiceGetVoteExtentionProcedure,
+			connect.WithSchema(queryServiceMethods.ByName("GetVoteExtention")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -69,17 +65,17 @@ func NewQueryServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // queryServiceClient implements QueryServiceClient.
 type queryServiceClient struct {
-	getVaas *connect.Client[v1.GetVaasRequest, v1.GetVaasResponse]
+	getVoteExtention *connect.Client[v1.GetVoteExtentionRequest, v1.GetVoteExtentionResponse]
 }
 
-// GetVaas calls query.v1.QueryService.GetVaas.
-func (c *queryServiceClient) GetVaas(ctx context.Context, req *connect.Request[v1.GetVaasRequest]) (*connect.Response[v1.GetVaasResponse], error) {
-	return c.getVaas.CallUnary(ctx, req)
+// GetVoteExtention calls query.v1.QueryService.GetVoteExtention.
+func (c *queryServiceClient) GetVoteExtention(ctx context.Context, req *connect.Request[v1.GetVoteExtentionRequest]) (*connect.Response[v1.GetVoteExtentionResponse], error) {
+	return c.getVoteExtention.CallUnary(ctx, req)
 }
 
 // QueryServiceHandler is an implementation of the query.v1.QueryService service.
 type QueryServiceHandler interface {
-	GetVaas(context.Context, *connect.Request[v1.GetVaasRequest]) (*connect.Response[v1.GetVaasResponse], error)
+	GetVoteExtention(context.Context, *connect.Request[v1.GetVoteExtentionRequest]) (*connect.Response[v1.GetVoteExtentionResponse], error)
 }
 
 // NewQueryServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -88,16 +84,17 @@ type QueryServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewQueryServiceHandler(svc QueryServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	queryServiceGetVaasHandler := connect.NewUnaryHandler(
-		QueryServiceGetVaasProcedure,
-		svc.GetVaas,
-		connect.WithSchema(queryServiceGetVaasMethodDescriptor),
+	queryServiceMethods := v1.File_query_v1_query_proto.Services().ByName("QueryService").Methods()
+	queryServiceGetVoteExtentionHandler := connect.NewUnaryHandler(
+		QueryServiceGetVoteExtentionProcedure,
+		svc.GetVoteExtention,
+		connect.WithSchema(queryServiceMethods.ByName("GetVoteExtention")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/query.v1.QueryService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case QueryServiceGetVaasProcedure:
-			queryServiceGetVaasHandler.ServeHTTP(w, r)
+		case QueryServiceGetVoteExtentionProcedure:
+			queryServiceGetVoteExtentionHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -107,6 +104,6 @@ func NewQueryServiceHandler(svc QueryServiceHandler, opts ...connect.HandlerOpti
 // UnimplementedQueryServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedQueryServiceHandler struct{}
 
-func (UnimplementedQueryServiceHandler) GetVaas(context.Context, *connect.Request[v1.GetVaasRequest]) (*connect.Response[v1.GetVaasResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("query.v1.QueryService.GetVaas is not implemented"))
+func (UnimplementedQueryServiceHandler) GetVoteExtention(context.Context, *connect.Request[v1.GetVoteExtentionRequest]) (*connect.Response[v1.GetVoteExtentionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("query.v1.QueryService.GetVoteExtention is not implemented"))
 }

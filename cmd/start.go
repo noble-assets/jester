@@ -30,7 +30,7 @@ By default, Jester's gRPC server listens on localhost:9091. This assumes that po
 You can override this default address with the --server_address flag.
 
 Note: The gRPC port for Jester is intended for use only by the Noble binary. 
-Querying the gRPC endpoint "GetVaas" retrieves accumulated Wormhole VAAs and clears the state.
+Querying the gRPC endpoint "GetVoteExtention" retrieves accumulated Wormhole VAAs and clears the state.
 
 The Ethereum contracts are hardcoded and can be toggled between mainnet and testnet using the --testnet flag.
 You can override contracts and configurations with the relevant "override" flags.`,

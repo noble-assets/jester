@@ -73,8 +73,7 @@ func (a *AppState) LoadConfig() {
 	}
 
 	viper.AutomaticEnv() // after reading in config, check for matching env vars
-	viper.EnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.EnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.EnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 
 	a.Config = &Config{
 		Log_level:     viper.GetString(FlagLogLevel),

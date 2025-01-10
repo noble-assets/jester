@@ -21,7 +21,7 @@ var l *VaaList
 
 type VaaList struct {
 	mu   sync.Mutex
-	list []string
+	list [][]byte
 }
 
 func InitVaaList() *VaaList {
@@ -29,16 +29,16 @@ func InitVaaList() *VaaList {
 	return l
 }
 
-func (v *VaaList) Add(item string) {
+func (v *VaaList) Add(item []byte) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	v.list = append(v.list, item)
 }
 
-func (v *VaaList) GetThenClearAll() []string {
+func (v *VaaList) GetThenClearAll() [][]byte {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	copyList := make([]string, len(v.list))
+	copyList := make([][]byte, len(v.list))
 	copy(copyList, v.list)
 	v.list = nil // clear list
 	return copyList
@@ -50,16 +50,16 @@ var _ queryv1connect.QueryServiceHandler = &JesterServer{}
 
 type JesterServer struct{}
 
-func (s *JesterServer) GetVaas(
-	ctx context.Context,
-	req *connect.Request[queryv1.GetVaasRequest],
-) (*connect.Response[queryv1.GetVaasResponse], error) {
+func (s *JesterServer) GetVoteExtention(
+	ctx context.Context, req *connect.Request[queryv1.GetVoteExtentionRequest],
+) (*connect.Response[queryv1.GetVoteExtentionResponse], error) {
 	vaas := l.GetThenClearAll()
-	res := connect.NewResponse(&queryv1.GetVaasResponse{
+	res := connect.NewResponse(&queryv1.GetVoteExtentionResponse{
 		Dollar: &queryv1.Dollar{
 			Vaas: vaas,
 		},
 	})
+
 	return res, nil
 }
 

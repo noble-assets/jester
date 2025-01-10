@@ -26,7 +26,7 @@ By default, Jester's config will be placed in `$HOME/.jester/`.
 An Ethereum `websocket_url` and `rpc_url` are required to run Jester.
 
 By default, Jesters gRPC server address is `localhost:9091`. This endpoint should not be publicly exposed.
-Querying the `query.v1.QueryService/GetVaas` should only be done by the Noble binary. Querying this endpoint clears cached VAA's.
+Querying the `query.v1.QueryService/GetVoteExtention` should only be done by the Noble binary. Querying this endpoint clears cached VAA's.
 
 ## Flags and Configuration
 

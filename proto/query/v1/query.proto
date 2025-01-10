@@ -5,15 +5,15 @@ package query.v1;
 option go_package = "github.com/noble-assets/jester/v1";
 
 service QueryService {
-  rpc GetVaas(GetVaasRequest) returns (GetVaasResponse);
+  rpc GetVoteExtention(GetVoteExtentionRequest) returns (GetVoteExtentionResponse);
 }
 
-message GetVaasRequest {}
+message GetVoteExtentionRequest {}
 
 message Dollar {
-  repeated string vaas = 1;
+  repeated bytes vaas = 1;
 }
 
-message GetVaasResponse {
+message GetVoteExtentionResponse {
   Dollar dollar = 1;
 }

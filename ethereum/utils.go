@@ -8,10 +8,11 @@ type ContractBackendWrapper struct {
 	*ethclient.Client
 }
 
-// NewContractBackendWrapper creates a new ContractBackendWrapper.
-// This is used to associate a websocket or rpc client an abi binding.
-func NewContractBackendWrapper(client *ethclient.Client) *ContractBackendWrapper {
-	return &ContractBackendWrapper{
-		Client: client,
-	}
+// NewWebsocketContractBackendWrapper creates the backend for a websocket client.
+// This is used to bind to an abi filter.
+func NewWebsocketContractBackendWrapper(eth *Eth) *ContractBackendWrapper {
+	eth.WebsocketClientMutex.Lock()
+	defer eth.WebsocketClientMutex.Unlock()
+
+	return &ContractBackendWrapper{Client: eth.WebsocketClient}
 }

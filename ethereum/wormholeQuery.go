@@ -22,7 +22,7 @@ type QueryData struct {
 }
 
 type WormholeResp struct {
-	VaaBytes string `json:"vaaBytes"`
+	VaaBytes []byte `json:"vaaBytes"`
 }
 
 var (
@@ -34,7 +34,12 @@ var (
 // StartQueryWorker starts a worker to query Wormhole VAA's.
 // Once found, the VAA is added to the vaaList which is queryable
 // via GRPC
-func StartQueryWorker(ctx context.Context, log *slog.Logger, wormholeApiUrl string, dequeued *QueryData, vaaList *server.VaaList) {
+func StartQueryWorker(
+	ctx context.Context, log *slog.Logger,
+	wormholeApiUrl string,
+	dequeued *QueryData,
+	vaaList *server.VaaList,
+) {
 	resp, err := fetchVaa(ctx, log, wormholeApiUrl, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.txHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
@@ -47,7 +52,13 @@ func StartQueryWorker(ctx context.Context, log *slog.Logger, wormholeApiUrl stri
 // fetchVaa sends a GET request with retry logic to the wormhole API
 //
 // `txHash` is used for logging purposes only
-func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chainID uint16, seq uint64, emitter, txHash string) (WormholeResp, error) {
+func fetchVaa(
+	ctx context.Context, log *slog.Logger,
+	wormholeApiUrl string,
+	chainID uint16,
+	seq uint64,
+	emitter, txHash string,
+) (WormholeResp, error) {
 	chainIdStr := strconv.FormatUint(uint64(chainID), 10)
 	seqStr := strconv.FormatUint(seq, 10)
 	url := fmt.Sprintf("%s/%s/%s/%s", wormholeApiUrl, chainIdStr, emitter, seqStr)
@@ -81,7 +92,9 @@ func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chai
 			case resp.StatusCode == http.StatusNotFound: // likely waiting for wormhole to pick up tx
 				return errNotFound
 			case resp.StatusCode != http.StatusOK:
-				return retry.Unrecoverable(fmt.Errorf("non-retryable error: code %d, code: %s", resp.StatusCode, http.StatusText(resp.StatusCode)))
+				return retry.Unrecoverable(fmt.Errorf("non-retryable error: code %d, code: %s",
+					resp.StatusCode, http.StatusText(resp.StatusCode),
+				))
 			}
 
 			body, err := io.ReadAll(resp.Body)
@@ -112,7 +125,9 @@ func fetchVaa(ctx context.Context, log *slog.Logger, wormholeApiUrl string, chai
 		retry.Delay(30*time.Second),
 		retry.OnRetry(func(attempt uint, err error) {
 			since := time.Since(fistAttempt).Round(time.Second)
-			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf("%d/%d", attempt+1, retryAttemps), "seq", seq, "error", err, "since-first-attempt", since, "txHash", txHash)
+			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf(
+				"%d/%d", attempt+1, retryAttemps), "seq", seq, "error", err, "since-first-attempt", since, "txHash", txHash,
+			)
 		}),
 	)
 	if err != nil {
