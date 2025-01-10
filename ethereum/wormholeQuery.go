@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -46,7 +47,9 @@ func StartQueryWorker(
 	}
 
 	log.Info("found VAA", "txHash", dequeued.txHash)
-	vaaList.Add(resp.VaaBytes)
+
+	vaa, _ := base64.StdEncoding.DecodeString(resp.VaaBytes)
+	vaaList.Add(vaa)
 }
 
 // fetchVaa sends a GET request with retry logic to the wormhole API
