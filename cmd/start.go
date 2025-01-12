@@ -8,6 +8,7 @@ import (
 	"golang.org/x/sync/semaphore"
 	"jester.noble.xyz/appstate"
 	eth "jester.noble.xyz/ethereum"
+	"jester.noble.xyz/noble"
 	"jester.noble.xyz/server"
 
 	"github.com/spf13/cobra"
@@ -43,9 +44,16 @@ You can override contracts and configurations with the relevant "override" flags
 				a.Config.Testnet,
 				getEthOverrides(),
 			)
-			return
+			if err != nil {
+				return err
+			}
+			a.Noble, err = noble.InitializeNoble(cmd.Context(), a.Log, a.Config.Noble.GRPCURL)
+			return err
 		},
-		PostRun: func(_ *cobra.Command, _ []string) { a.Eth.CloseClients() },
+		PostRun: func(_ *cobra.Command, _ []string) {
+			a.Eth.CloseClients()
+			a.Noble.CloseClients()
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			log := a.Log
@@ -99,7 +107,7 @@ You can override contracts and configurations with the relevant "override" flags
 
 			// Start GRPC server
 			vaaList := server.InitVaaList()
-			go server.StartServer(ctx, log, a.Config.ServerAddress)
+			go server.StartServer(ctx, log, a.Config.ServerAddress, a.WormholeClient)
 
 			// Worker pool to query the Wormhole API for VAAs.
 			// Due to rate limits with wormhole's API, there is a fine balance between
@@ -180,6 +188,13 @@ You can override contracts and configurations with the relevant "override" flags
 	}
 	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
 	if err := viper.BindPFlag(appstate.FlagOverrideWormholeTransceiver, cmd.Flags().Lookup(appstate.FlagOverrideWormholeTransceiver)); err != nil {
+		panic(err)
+	}
+
+	// testing flags
+	cmd.Flags().Bool(noble.FlagSkipHealth, false, "skip Noble gRPC health check")
+	cmd.Flags().Lookup(noble.FlagSkipHealth).Hidden = true
+	if err := viper.BindPFlag(noble.FlagSkipHealth, cmd.Flags().Lookup(noble.FlagSkipHealth)); err != nil {
 		panic(err)
 	}
 

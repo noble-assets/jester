@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
+	wormholev1 "github.com/noble-assets/wormhole/api/v1"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -30,6 +32,9 @@ func InitVaaList() *VaaList {
 }
 
 func (v *VaaList) Add(item []byte) {
+	if item == nil {
+		return
+	}
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	v.list = append(v.list, item)
@@ -48,25 +53,48 @@ func (v *VaaList) GetThenClearAll() [][]byte {
 
 var _ api.QueryServiceHandler = &JesterServer{}
 
-type JesterServer struct{}
+type JesterServer struct {
+	log            *slog.Logger
+	wormholeClient wormholev1.QueryClient
+}
 
 func (s *JesterServer) GetVoteExtension(
 	ctx context.Context,
 	req *connect.Request[api.GetVoteExtensionRequest],
 ) (*connect.Response[api.GetVoteExtensionResponse], error) {
+	log := s.log
 	vaas := l.GetThenClearAll()
+
+	var vaasToKeep [][]byte
+	for _, vaa := range vaas {
+		gRPCRes, err := s.wormholeClient.ExecutedVAA(ctx, &wormholev1.QueryExecutedVAA{
+			Input:     hex.EncodeToString(vaa),
+			InputType: "",
+		})
+		if err != nil {
+			log.Error("executedVaa query from Noble over gRPC", "error", err)
+			continue
+		}
+		if !gRPCRes.Executed {
+			vaasToKeep = append(vaasToKeep, vaa)
+		}
+	}
+
 	res := connect.NewResponse(&api.GetVoteExtensionResponse{
 		Dollar: &api.Dollar{
-			Vaas: vaas,
+			Vaas: vaasToKeep,
 		},
 	})
 
 	return res, nil
 }
 
-// StartServer initializes and starts the HTTP/2 gRPC server
-func StartServer(ctx context.Context, log *slog.Logger, serverAddress string) {
-	server := &JesterServer{}
+// StartServer initializes and starts Jesters HTTP/2 gRPC server
+func StartServer(ctx context.Context, log *slog.Logger, serverAddress string, wormholeClient wormholev1.QueryClient) {
+	server := &JesterServer{
+		log:            log,
+		wormholeClient: wormholeClient,
+	}
 	mux := http.NewServeMux()
 	path, handler := api.NewQueryServiceHandler(server)
 	mux.Handle(path, handler)
@@ -83,7 +111,7 @@ func StartServer(ctx context.Context, log *slog.Logger, serverAddress string) {
 	}
 
 	go func() {
-		log.Info("started gRPC server", "address", serverAddress)
+		log.Info("started Jester's gRPC server", "address", serverAddress)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("server error", "err", err)
 			os.Exit(1)

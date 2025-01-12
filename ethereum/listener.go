@@ -124,7 +124,6 @@ func WormholeListener(
 				log.Error("subscription error. Attempting to re-subscribe.", "error", err)
 				sub.Unsubscribe()
 				break listenloop
-				// continue mainloop
 			}
 		}
 	}
@@ -215,7 +214,6 @@ func M0Listener(
 					}
 					logMessagePublishedMap.Delete(event.Raw.TxHash.String())
 				}
-
 			case err := <-sub.Err():
 				log.Error("subscription error. Attempting to re-subscribe.", "error", err)
 				sub.Unsubscribe()

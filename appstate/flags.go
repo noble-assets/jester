@@ -12,6 +12,7 @@ const (
 	flagTestnet                     = "testnet"
 	flagEthWebsocket                = "ethereum.websocket-url"
 	flagEthRPC                      = "ethereum.rpc-url"
+	flagNobleGRPC                   = "noble.grpc-url"
 	flagServerAddr                  = "server-address"
 	FlagStartBlock                  = "start-block"
 	FlagEndBlock                    = "end-block"
@@ -28,6 +29,7 @@ const (
 var (
 	eth_websocket  string
 	eth_rpc        string
+	noble_grpc     string
 	server_address string
 	testnet        bool
 )
@@ -57,6 +59,11 @@ func AddConfigurationFlags(cmd *cobra.Command) {
 
 	cmd.PersistentFlags().StringVar(&server_address, flagServerAddr, "localhost:9091", "gRPC server address")
 	if err := viper.BindPFlag(flagServerAddr, cmd.PersistentFlags().Lookup(flagServerAddr)); err != nil {
+		panic(err)
+	}
+
+	cmd.PersistentFlags().StringVar(&noble_grpc, flagNobleGRPC, "localhost:9090", "noble grpc address")
+	if err := viper.BindPFlag(flagNobleGRPC, cmd.PersistentFlags().Lookup(flagNobleGRPC)); err != nil {
 		panic(err)
 	}
 }

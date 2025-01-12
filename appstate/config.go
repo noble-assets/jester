@@ -7,9 +7,14 @@ type Config struct {
 	ServerAddress string `toml:"server-address"`
 
 	Ethereum *Ethereum `toml:"ethereum"`
+	Noble    *Noble    `toml:"noble"`
 }
 
 type Ethereum struct {
 	WebsocketURL string `toml:"websocket-url"`
 	RPCURL       string `toml:"rpc-url"`
+}
+
+type Noble struct {
+	GRPCURL string `toml:"grpc-url"`
 }

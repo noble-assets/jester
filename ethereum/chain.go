@@ -32,6 +32,8 @@ type Config struct {
 	WormholeTransceiver  string // LogMessagePublished topic sender
 }
 
+// redial is used to manage the redial state between one gRPC client
+// and multiple websockets.
 type redial struct {
 	inProgressMutex sync.Mutex
 	inProgress      bool
@@ -124,6 +126,9 @@ func (e *Eth) dialWebsocket(ctx context.Context, log *slog.Logger) (err error) {
 	return nil
 }
 
+// HandleRedial handles the redial of the websocket client between multiple websocket subscriptions.
+// Because the websocket client is shared between multiple subscriptions, this function
+// is used to ensure that only one redial is in progress at a time.
 func (e *Eth) HandleRedial(ctx context.Context, log *slog.Logger) error {
 	redial := &e.redial
 	redial.inProgressMutex.Lock()
