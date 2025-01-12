@@ -10,6 +10,7 @@ import (
 	eth "jester.noble.xyz/ethereum"
 	"jester.noble.xyz/noble"
 	"jester.noble.xyz/server"
+	"jester.noble.xyz/state"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -74,9 +75,10 @@ You can override contracts and configurations with the relevant "override" flags
 			//
 			// Irrelevant LogMessagePublished events without corresponding MTokenSent events
 			// are periodically cleaned up.
-			logMessagePublishedMap := eth.NewLogMessagePublishedMap()
 
+			logMessagePublishedMap := eth.NewLogMessagePublishedMap()
 			processingQueue := make(chan *eth.QueryData, 1000)
+			vaaList := state.NewVaaList()
 
 			g.Go(func() error {
 				return eth.WormholeListener(ctx, log, logMessagePublishedMap, a.Eth)
@@ -86,7 +88,7 @@ You can override contracts and configurations with the relevant "override" flags
 				return eth.M0Listener(ctx, log, logMessagePublishedMap, a.Eth, processingQueue)
 			})
 
-			// Watch for event subscription interuptions and get historical data
+			// Watch for event subscription interruptions and get historical data
 			go func() {
 				a.Eth.GetHistoricalOnRedial(ctx, log, processingQueue)
 			}()
@@ -105,9 +107,8 @@ You can override contracts and configurations with the relevant "override" flags
 				}
 			}()
 
-			// Start GRPC server
-			vaaList := server.InitVaaList()
-			go server.StartServer(ctx, log, a.Config.ServerAddress, a.WormholeClient)
+			gRPCServer := server.NewJesterGrpcServer(a.Config.ServerAddress, log, vaaList, a.Noble.WormholeClient)
+			go gRPCServer.Start(ctx)
 
 			// Worker pool to query the Wormhole API for VAAs.
 			// Due to rate limits with wormhole's API, there is a fine balance between

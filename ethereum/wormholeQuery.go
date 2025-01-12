@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	"jester.noble.xyz/server"
+	"jester.noble.xyz/state"
 )
 
 type QueryData struct {
@@ -39,7 +39,7 @@ func StartQueryWorker(
 	ctx context.Context, log *slog.Logger,
 	wormholeApiUrl string,
 	dequeued *QueryData,
-	vaaList *server.VaaList,
+	vaaList *state.VaaList,
 ) {
 	resp, err := fetchVaa(ctx, log, wormholeApiUrl, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.txHash)
 	if err != nil {
