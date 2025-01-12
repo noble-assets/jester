@@ -65,14 +65,14 @@ func newEth(websocketurl string, rpcurl string) *Eth {
 // The returned *Eth pointer should be added to the app state.
 func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl, rpcurl string, testnet bool, overrides Overrides) (*Eth, error) {
 	eth := newEth(websocketurl, rpcurl)
+
+	eth.setContracts(log, testnet, overrides)
 	if err := eth.dialWebsocket(ctx, log); err != nil {
 		return nil, err
 	}
 	if err := eth.dialRPC(ctx, log); err != nil {
 		return nil, err
 	}
-
-	eth.setContracts(log, testnet, overrides)
 
 	eth.redial.getHistory = make(chan struct{})
 

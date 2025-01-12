@@ -43,12 +43,12 @@ You can override contracts and configurations with the relevant "override" flags
 				a.Config.Ethereum.WebsocketURL,
 				a.Config.Ethereum.RPCURL,
 				a.Config.Testnet,
-				getEthOverrides(),
+				getEthOverrides(a.Viper),
 			)
 			if err != nil {
 				return err
 			}
-			a.Noble, err = noble.InitializeNoble(cmd.Context(), a.Log, a.Config.Noble.GRPCURL)
+			a.Noble, err = noble.InitializeNoble(cmd.Context(), a.Log, a.Config.Noble.GRPCURL, a.Viper.GetBool(noble.FlagSkipHealth))
 			return err
 		},
 		PostRun: func(_ *cobra.Command, _ []string) {
@@ -137,14 +137,14 @@ You can override contracts and configurations with the relevant "override" flags
 			})
 
 			// Historical query
-			startBlock := viper.GetInt64(appstate.FlagStartBlock)
+			startBlock := a.Viper.GetInt64(appstate.FlagStartBlock)
 			if startBlock != 0 {
-				endBlock := viper.GetInt64(appstate.FlagEndBlock)
+				endBlock := a.Viper.GetInt64(appstate.FlagEndBlock)
 				go func() {
 					eth.GetHistory(ctx, log, a.Eth, processingQueue, startBlock, endBlock)
 				}()
 			}
-
+			//
 			if err := g.Wait(); err != nil {
 				log.Error("fatal error", "error", err)
 				return err
@@ -158,57 +158,30 @@ You can override contracts and configurations with the relevant "override" flags
 
 	// Historical query flags
 	cmd.Flags().Int64(appstate.FlagStartBlock, 0, "block number to start ethereum historical query")
-	if err := viper.BindPFlag(appstate.FlagStartBlock, cmd.Flags().Lookup(appstate.FlagStartBlock)); err != nil {
-		panic(err)
-	}
 	cmd.Flags().Int64(appstate.FlagEndBlock, 0, "block number to end ethereum historical query, 0 for latest height")
-	if err := viper.BindPFlag(appstate.FlagEndBlock, cmd.Flags().Lookup(appstate.FlagEndBlock)); err != nil {
-		panic(err)
-	}
 
 	// Contract and configuration override flags
 	cmd.Flags().Uint16(appstate.FlagOverrideWormholeSrcChainId, 0, "override Wormhole source chain ID. This is likely the chain ID associated with Ethereum on Wormhole")
-	if err := viper.BindPFlag(appstate.FlagOverrideWormholeSrcChainId, cmd.Flags().Lookup(appstate.FlagOverrideWormholeSrcChainId)); err != nil {
-		panic(err)
-	}
 	cmd.Flags().Uint16(appstate.FlagOverrideNobleChainID, 0, "override noble Wormhole chain ID")
-	if err := viper.BindPFlag(appstate.FlagOverrideNobleChainID, cmd.Flags().Lookup(appstate.FlagOverrideNobleChainID)); err != nil {
-		panic(err)
-	}
 	cmd.Flags().String(appstate.FlagOverrideWormholeApiUrl, "", "override wormhole API URL")
-	if err := viper.BindPFlag(appstate.FlagOverrideWormholeApiUrl, cmd.Flags().Lookup(appstate.FlagOverrideWormholeApiUrl)); err != nil {
-		panic(err)
-	}
 	cmd.Flags().String(appstate.FlagOverrideHubPortal, "", "override the hub portal contract address")
-	if err := viper.BindPFlag(appstate.FlagOverrideHubPortal, cmd.Flags().Lookup(appstate.FlagOverrideHubPortal)); err != nil {
-		panic(err)
-	}
 	cmd.Flags().String(appstate.FlagOverrideWormholeCore, "", "override the wormhole core contract address")
-	if err := viper.BindPFlag(appstate.FlagOverrideWormholeCore, cmd.Flags().Lookup(appstate.FlagOverrideWormholeCore)); err != nil {
-		panic(err)
-	}
 	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
-	if err := viper.BindPFlag(appstate.FlagOverrideWormholeTransceiver, cmd.Flags().Lookup(appstate.FlagOverrideWormholeTransceiver)); err != nil {
-		panic(err)
-	}
 
 	// testing flags
 	cmd.Flags().Bool(noble.FlagSkipHealth, false, "skip Noble gRPC health check")
 	cmd.Flags().Lookup(noble.FlagSkipHealth).Hidden = true
-	if err := viper.BindPFlag(noble.FlagSkipHealth, cmd.Flags().Lookup(noble.FlagSkipHealth)); err != nil {
-		panic(err)
-	}
 
 	return cmd
 }
 
-func getEthOverrides() eth.Overrides {
+func getEthOverrides(v *viper.Viper) eth.Overrides {
 	return eth.Overrides{
-		WormholeSrcChainId:   viper.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
-		WormholeNobleChainID: viper.GetUint16(appstate.FlagOverrideNobleChainID),
-		WormholeApiUrl:       viper.GetString(appstate.FlagOverrideWormholeApiUrl),
-		HubPortal:            viper.GetString(appstate.FlagOverrideHubPortal),
-		WormholeCore:         viper.GetString(appstate.FlagOverrideWormholeCore),
-		WormholeTransceiver:  viper.GetString(appstate.FlagOverrideWormholeTransceiver),
+		WormholeSrcChainId:   v.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
+		WormholeNobleChainID: v.GetUint16(appstate.FlagOverrideNobleChainID),
+		WormholeApiUrl:       v.GetString(appstate.FlagOverrideWormholeApiUrl),
+		HubPortal:            v.GetString(appstate.FlagOverrideHubPortal),
+		WormholeCore:         v.GetString(appstate.FlagOverrideWormholeCore),
+		WormholeTransceiver:  v.GetString(appstate.FlagOverrideWormholeTransceiver),
 	}
 }

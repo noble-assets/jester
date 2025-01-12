@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/phsym/console-slog"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"jester.noble.xyz/ethereum"
 	"jester.noble.xyz/noble"
@@ -14,6 +16,7 @@ import (
 
 // appState is the modifiable state of the application.
 type AppState struct {
+	Viper  *viper.Viper
 	Config *Config
 
 	Log *slog.Logger
@@ -25,6 +28,7 @@ type AppState struct {
 }
 
 func (a *AppState) InitLogger() {
+	viper := a.Viper
 	var level slog.Level
 	logLevel := strings.ToLower(viper.GetString(FlagLogLevel))
 
@@ -62,9 +66,16 @@ func (a *AppState) InitLogger() {
 	a.Log = slog.New(logHandler)
 }
 
-// loadConfigFile reads configuration from file, env, OR args into a.Config
-// This allows access to configuration via the appstate instead of using viper.
-func (a *AppState) LoadConfig() {
+func (a *AppState) ConfigureViper(cmd *cobra.Command) {
+	viper := a.Viper
+
+	// bindAllFlags binds all flags to viper (both local and persistent).
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		if err := viper.BindPFlag(f.Name, cmd.Flags().Lookup(f.Name)); err != nil {
+			panic(err)
+		}
+	})
+
 	home := viper.GetString(FlagHome)
 
 	viper.AddConfigPath(home)
@@ -76,7 +87,13 @@ func (a *AppState) LoadConfig() {
 	}
 
 	viper.AutomaticEnv() // after reading in config, check for matching env vars
-	viper.EnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
+}
+
+// loadConfigFile reads configuration from file, env, OR args into a.Config
+// This allows access to configuration via the appstate instead of using viper.
+func (a *AppState) LoadConfig() {
+	viper := a.Viper
 
 	a.Config = &Config{
 		Log_level:     viper.GetString(FlagLogLevel),

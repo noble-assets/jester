@@ -9,7 +9,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // initCmd represents the init command
@@ -21,7 +20,7 @@ func initCmd(a *appstate.AppState) *cobra.Command {
 populate values.`,
 
 		RunE: func(_ *cobra.Command, _ []string) error {
-			configPath := filepath.Join(viper.GetString(appstate.FlagHome), ".jester", "config.toml")
+			configPath := filepath.Join(a.Viper.GetString(appstate.FlagHome), ".jester", "config.toml")
 
 			// programmatically overwriting config file does not treat viper keys ase expected
 			// instead, notify user and have them delete config manually

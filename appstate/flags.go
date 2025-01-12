@@ -2,7 +2,6 @@ package appstate
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -43,27 +42,8 @@ var (
 // Ideally there is a flag for each config setting.
 func AddConfigurationFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&eth_websocket, flagEthWebsocket, "w", "", "ethereum websocket")
-	if err := viper.BindPFlag(flagEthWebsocket, cmd.PersistentFlags().Lookup(flagEthWebsocket)); err != nil {
-		panic(err)
-	}
-
 	cmd.PersistentFlags().StringVarP(&eth_rpc, flagEthRPC, "r", "", "ethereum rpc")
-	if err := viper.BindPFlag(flagEthRPC, cmd.PersistentFlags().Lookup(flagEthRPC)); err != nil {
-		panic(err)
-	}
-
-	cmd.PersistentFlags().BoolVar(&testnet, flagTestnet, false, "use testnet Ethereum contracts")
-	if err := viper.BindPFlag(flagTestnet, cmd.PersistentFlags().Lookup(flagTestnet)); err != nil {
-		panic(err)
-	}
-
+	cmd.PersistentFlags().BoolVar(&testnet, flagTestnet, false, "use testnet configuration (contracts, chain ID's, ect.)")
 	cmd.PersistentFlags().StringVar(&server_address, flagServerAddr, "localhost:9091", "gRPC server address")
-	if err := viper.BindPFlag(flagServerAddr, cmd.PersistentFlags().Lookup(flagServerAddr)); err != nil {
-		panic(err)
-	}
-
 	cmd.PersistentFlags().StringVar(&noble_grpc, flagNobleGRPC, "localhost:9090", "noble grpc address")
-	if err := viper.BindPFlag(flagNobleGRPC, cmd.PersistentFlags().Lookup(flagNobleGRPC)); err != nil {
-		panic(err)
-	}
 }

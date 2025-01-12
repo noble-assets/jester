@@ -17,7 +17,9 @@ const (
 )
 
 func NewRootCommand() *cobra.Command {
-	a := new(appstate.AppState)
+	a := &appstate.AppState{
+		Viper: viper.New(),
+	}
 
 	rootCmd := &cobra.Command{
 		Use:   appName,
@@ -25,34 +27,22 @@ func NewRootCommand() *cobra.Command {
 		Long: `Jester is a 'sidecar' meant to run alongside the nobled binary.
 	
 Jester is only necessary if you are also a validator.`,
-		PersistentPreRun: func(_ *cobra.Command, _ []string) {
-			// Inside persistent pre-run because this takes effect after flags are parsed.
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			// Inside persistent pre-run because this takes effect after flags are
+			// parsed for both root and all child commands.
+			a.ConfigureViper(cmd)
 			a.LoadConfig()
 			a.InitLogger()
 		},
 	}
 
-	rootCmd.PersistentFlags().String(appstate.FlagHome, defaultHome(),
-		"directory for config and data \n (optional env var = JESTER_HOME)")
-	if err := viper.BindPFlag(appstate.FlagHome, rootCmd.PersistentFlags().Lookup(appstate.FlagHome)); err != nil {
-		panic(err)
-	}
+	rootCmd.PersistentFlags().String(appstate.FlagHome, defaultHome(), "directory for config and data \n (optional env var = JESTER_HOME)")
 	// manually bind "home" instead of using viper.AutomaticEnv
-	if err := viper.BindEnv(appstate.FlagHome, "JESTER_HOME"); err != nil {
+	if err := a.Viper.BindEnv(appstate.FlagHome, "JESTER_HOME"); err != nil {
 		panic(err)
 	}
-
-	rootCmd.PersistentFlags().String(appstate.FlagLogLevel, defaultLogLevel,
-		"log level format (info, debug, warn, error)")
-	if err := viper.BindPFlag(appstate.FlagLogLevel, rootCmd.PersistentFlags().Lookup(appstate.FlagLogLevel)); err != nil {
-		panic(err)
-	}
-
-	rootCmd.PersistentFlags().String(appstate.FlagLogStyle, defaultLogStyle,
-		"log style format (text, json, pretty)")
-	if err := viper.BindPFlag(appstate.FlagLogStyle, rootCmd.PersistentFlags().Lookup(appstate.FlagLogStyle)); err != nil {
-		panic(err)
-	}
+	rootCmd.PersistentFlags().String(appstate.FlagLogLevel, defaultLogLevel, "log level format (info, debug, warn, error)")
+	rootCmd.PersistentFlags().String(appstate.FlagLogStyle, defaultLogStyle, "log style format (text, json, pretty)")
 
 	rootCmd.AddCommand(
 		config.ConfigCmd(a),

@@ -9,7 +9,6 @@ import (
 	nodev1beta1 "cosmossdk.io/api/cosmos/base/node/v1beta1"
 	"github.com/avast/retry-go/v4"
 	wormholev1 "github.com/noble-assets/wormhole/api/v1"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -33,7 +32,7 @@ const FlagSkipHealth = "skip-health"
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
 // The returned *Noble pointer should be added to the app state.
-func InitializeNoble(ctx context.Context, log *slog.Logger, gRPCurl string) (*Noble, error) {
+func InitializeNoble(ctx context.Context, log *slog.Logger, gRPCurl string, skipHealth bool) (*Noble, error) {
 	noble := newNoble(gRPCurl)
 
 	if err := noble.newGrpcClient(); err != nil {
@@ -43,7 +42,7 @@ func InitializeNoble(ctx context.Context, log *slog.Logger, gRPCurl string) (*No
 	noble.nodeServiceClient = noble.NewNodeServiceClient()
 	noble.WormholeClient = noble.NewWormholeClient()
 
-	if viper.GetBool(FlagSkipHealth) {
+	if skipHealth {
 		log.Warn("skipping Noble gRPC health check")
 		return noble, nil
 	}
