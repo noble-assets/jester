@@ -15,7 +15,7 @@ func ConfigCmd(a *appstate.AppState) *cobra.Command {
 		},
 	}
 
-	appstate.AddConfigurationFlags(cmd)
+	appstate.AddConfigFlags(cmd)
 
 	cmd.AddCommand(
 		initCmd(a),

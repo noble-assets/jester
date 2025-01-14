@@ -9,6 +9,7 @@ import (
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"jester.noble.xyz/utils"
 )
 
 type Eth struct {
@@ -174,7 +175,7 @@ func (e *Eth) HandleRedial(ctx context.Context, log *slog.Logger) error {
 // subscription interruption. It is hardcoded to look back 50 blocks.
 //
 // It is meant to be run in a goroutine.
-func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, processingQueue chan *QueryData) {
+func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, processingQueue chan *utils.QueryData) {
 	for {
 		select {
 		case <-ctx.Done():

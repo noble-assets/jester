@@ -11,6 +11,7 @@ import (
 	"jester.noble.xyz/noble"
 	"jester.noble.xyz/server"
 	"jester.noble.xyz/state"
+	"jester.noble.xyz/utils"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -77,7 +78,7 @@ You can override contracts and configurations with the relevant "override" flags
 			// are periodically cleaned up.
 
 			logMessagePublishedMap := eth.NewLogMessagePublishedMap()
-			processingQueue := make(chan *eth.QueryData, 1000)
+			processingQueue := make(chan *utils.QueryData, 1000)
 			vaaList := state.NewVaaList()
 
 			g.Go(func() error {
@@ -128,9 +129,9 @@ You can override contracts and configurations with the relevant "override" flags
 							return errors.Join(errors.New("failed to acquire semaphore"), err)
 						}
 
-						go func(data *eth.QueryData) {
+						go func(data *utils.QueryData) {
 							defer sem.Release(1)
-							eth.StartQueryWorker(ctx, log, a.Eth.Config.WormholeApiUrl, data, vaaList)
+							utils.StartWormholeWorker(ctx, log, a.Eth.Config.WormholeApiUrl, data, vaaList)
 						}(dequeued)
 					}
 				}
@@ -144,7 +145,8 @@ You can override contracts and configurations with the relevant "override" flags
 					eth.GetHistory(ctx, log, a.Eth, processingQueue, startBlock, endBlock)
 				}()
 			}
-			//
+
+			// Hold here, waiting for any errors from errgroup
 			if err := g.Wait(); err != nil {
 				log.Error("fatal error", "error", err)
 				return err
@@ -154,7 +156,7 @@ You can override contracts and configurations with the relevant "override" flags
 		},
 	}
 
-	appstate.AddConfigurationFlags(cmd)
+	appstate.AddConfigFlags(cmd)
 
 	// Historical query flags
 	cmd.Flags().Int64(appstate.FlagStartBlock, 0, "block number to start ethereum historical query")
@@ -170,7 +172,7 @@ You can override contracts and configurations with the relevant "override" flags
 
 	// testing flags
 	cmd.Flags().Bool(noble.FlagSkipHealth, false, "skip Noble gRPC health check")
-	cmd.Flags().Lookup(noble.FlagSkipHealth).Hidden = true
+	cmd.Flag(noble.FlagSkipHealth).Hidden = true
 
 	return cmd
 }

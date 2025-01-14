@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"jester.noble.xyz/ethereum/abi/mportal"
 	"jester.noble.xyz/ethereum/abi/wormhole"
+	"jester.noble.xyz/utils"
 )
 
 type LogMessagePublishedMap struct {
@@ -134,7 +135,7 @@ func M0Listener(
 	ctx context.Context, log *slog.Logger,
 	logMessagePublishedMap *LogMessagePublishedMap,
 	eth *Eth,
-	processingQueue chan *QueryData,
+	processingQueue chan *utils.QueryData,
 ) error {
 	log = log.With(slog.String("listener", "m0"))
 
@@ -206,11 +207,11 @@ func M0Listener(
 				if err == nil {
 					log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
 
-					processingQueue <- &QueryData{
+					processingQueue <- &utils.QueryData{
 						WormHoleChainID: eth.Config.WormholeSrcChainId,
 						Emitter:         eth.Config.WormholeTransceiver,
 						Sequence:        seq,
-						txHash:          txHash,
+						TxHash:          txHash,
 					}
 					logMessagePublishedMap.Delete(event.Raw.TxHash.String())
 				}
@@ -227,7 +228,7 @@ func M0Listener(
 func GetHistory(
 	ctx context.Context, log *slog.Logger,
 	eth *Eth,
-	processingQueue chan *QueryData,
+	processingQueue chan *utils.QueryData,
 	startBlock int64, endBlock int64,
 ) {
 	from := big.NewInt(startBlock)
@@ -303,11 +304,11 @@ func GetHistory(
 					log.Error("error unpacking wormhole abi into interface when querying history", "error", err)
 				}
 				log.Debug("found relevant events during historical query", "block", event.Raw.BlockNumber, "seq", event.Sequence)
-				processingQueue <- &QueryData{
+				processingQueue <- &utils.QueryData{
 					WormHoleChainID: eth.Config.WormholeSrcChainId,
 					Emitter:         eth.Config.WormholeTransceiver,
 					Sequence:        event.Sequence,
-					txHash:          txHash.String(),
+					TxHash:          txHash.String(),
 				}
 				totalVaas += 1
 			}
