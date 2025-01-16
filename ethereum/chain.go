@@ -9,6 +9,7 @@ import (
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/utils"
 )
 
@@ -127,10 +128,10 @@ func (e *Eth) dialWebsocket(ctx context.Context, log *slog.Logger) (err error) {
 	return nil
 }
 
-// HandleRedial handles the redial of the websocket client between multiple websocket subscriptions.
+// handleRedial handles the redial of the websocket client between multiple websocket subscriptions.
 // Because the websocket client is shared between multiple subscriptions, this function
 // is used to ensure that only one redial is in progress at a time.
-func (e *Eth) HandleRedial(ctx context.Context, log *slog.Logger) error {
+func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics) error {
 	redial := &e.redial
 	redial.inProgressMutex.Lock()
 
@@ -161,6 +162,10 @@ func (e *Eth) HandleRedial(ctx context.Context, log *slog.Logger) error {
 		redial.inProgressMutex.Unlock()
 	}()
 
+	if m.Enabled {
+		m.IncEthSubInterruptionCounter()
+	}
+
 	if err := e.dialWebsocket(ctx, log); err != nil {
 		redialDone <- err
 		return err
@@ -174,7 +179,7 @@ func (e *Eth) HandleRedial(ctx context.Context, log *slog.Logger) error {
 // GetHistoricalOnRedial is used to catch up on any block data missed during an event
 // subscription interruption. It is hardcoded to look back 50 blocks.
 //
-// It is meant to be run in a goroutine.
+// It is meant to be run in a goroutine.m
 func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, processingQueue chan *utils.QueryData) {
 	for {
 		select {

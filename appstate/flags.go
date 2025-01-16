@@ -17,14 +17,18 @@ const (
 	FlagOverrideHubPortal           = "override-hub-portal"
 	FlagOverrideWormholeTransceiver = "override-wormhole-transceiver"
 	FlagOverrideWormholeCore        = "override-wormhole-core"
+	flagMetricsEnabled              = "metrics.enabled"
+	flagMetricsAddress              = "metrics.address"
 )
 
 // if the flag is being added to multiple commands, you must use the flags that accepts pointers
 // example `StringVar` instead of `String`
 var (
-	eth_websocket  string
-	eth_rpc        string
-	noble_grpc     string
-	server_address string
-	testnet        bool
+	eth_websocket   string
+	eth_rpc         string
+	noble_grpc      string
+	server_address  string
+	testnet         bool
+	metrics_enabled bool
+	metrics_address string
 )

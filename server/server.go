@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
@@ -23,14 +24,16 @@ var _ api.QueryServiceHandler = &JesterGrpcServer{}
 
 type JesterGrpcServer struct {
 	log            *slog.Logger
+	mux            *http.ServeMux
 	serverAddress  string
 	vaaList        *state.VaaList
 	wormholeClient wormholev1.QueryClient
 }
 
-func NewJesterGrpcServer(serverAddress string, log *slog.Logger, vaaList *state.VaaList, wormholeClient wormholev1.QueryClient) *JesterGrpcServer {
+func NewJesterGrpcServer(log *slog.Logger, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList, wormholeClient wormholev1.QueryClient) *JesterGrpcServer {
 	return &JesterGrpcServer{
-		log:            log,
+		log:            log.With("module", "grpc"),
+		mux:            mux,
 		serverAddress:  serverAddress,
 		vaaList:        vaaList,
 		wormholeClient: wormholeClient,
@@ -39,37 +42,45 @@ func NewJesterGrpcServer(serverAddress string, log *slog.Logger, vaaList *state.
 
 // Start initializes and starts Jesters HTTP/2 gRPC server.
 // This should be run in a goroutine.
-func (s *JesterGrpcServer) Start(ctx context.Context) {
-	log := s.log
-
-	mux := http.NewServeMux()
+func (s *JesterGrpcServer) StartServer(ctx context.Context) error {
 	path, handler := api.NewQueryServiceHandler(s)
-	mux.Handle(path, handler)
+	s.mux.Handle(path, handler)
 
 	// enables reflection for gRPC support
-	mux.Handle(grpcreflect.NewHandlerV1(
+	s.mux.Handle(grpcreflect.NewHandlerV1(
 		grpcreflect.NewStaticReflector(api.QueryServiceName),
 	))
 
 	srv := &http.Server{
 		Addr:        s.serverAddress,
-		Handler:     h2c.NewHandler(mux, &http2.Server{}),
+		Handler:     h2c.NewHandler(s.mux, &http2.Server{}),
+		ErrorLog:    slog.NewLogLogger(s.log.Handler(), slog.LevelError),
 		ReadTimeout: 45 * time.Second,
+		BaseContext: func(net.Listener) context.Context {
+			return ctx
+		},
 	}
 
+	errChan := make(chan error, 1)
 	go func() {
-		log.Info("started Jester's gRPC server", "address", s.serverAddress)
+		s.log.Info("starting server", "address", s.serverAddress)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			panic(fmt.Sprintf("server error: %v", err))
+			errChan <- err
+			close(errChan)
 		}
 	}()
 
-	<-ctx.Done()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("server shutdown error", "error", err)
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("shutdown error: %w", err)
+		}
+		return nil
+	case err := <-errChan:
+		return fmt.Errorf("server error: %w", err)
 	}
 }
 
@@ -77,7 +88,6 @@ func (s *JesterGrpcServer) GetVoteExtension(
 	ctx context.Context,
 	req *connect.Request[api.GetVoteExtensionRequest],
 ) (*connect.Response[api.GetVoteExtensionResponse], error) {
-	log := s.log
 	vaas := s.vaaList.GetThenClearAll()
 
 	var vaasToKeep [][]byte
@@ -87,10 +97,10 @@ func (s *JesterGrpcServer) GetVoteExtension(
 			InputType: "",
 		})
 		if err != nil {
-			log.Error("executedVaa query from Noble over gRPC", "error", err)
-			continue
+			s.log.Error("error querying Noble for executedVaa", "error", err)
 		}
-		if !gRPCRes.Executed {
+
+		if gRPCRes == nil || !gRPCRes.Executed {
 			vaasToKeep = append(vaasToKeep, vaa)
 		}
 	}

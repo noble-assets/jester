@@ -3,6 +3,7 @@ package appstate
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 
@@ -11,19 +12,19 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"jester.noble.xyz/ethereum"
+	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/noble"
 )
 
 // appState is the modifiable state of the application.
 type AppState struct {
-	Viper  *viper.Viper
-	Config *Config
+	Log     *slog.Logger
+	Viper   *viper.Viper
+	Mux     *http.ServeMux
+	Metrics *metrics.PrometheusMetrics
+	Config  *Config
 
-	Log *slog.Logger
-
-	// ethereum clients
 	*ethereum.Eth
-
 	*noble.Noble
 }
 
@@ -100,6 +101,10 @@ func (a *AppState) LoadConfig() {
 		Log_style:     viper.GetString(FlagLogStyle),
 		Testnet:       viper.GetBool(flagTestnet),
 		ServerAddress: viper.GetString(flagServerAddr),
+		Metrics: &Metrics{
+			Enabled: viper.GetBool(flagMetricsEnabled),
+			Address: viper.GetString(flagMetricsAddress),
+		},
 		Ethereum: &Ethereum{
 			WebsocketURL: viper.GetString(flagEthWebsocket),
 			RPCURL:       viper.GetString(flagEthRPC),

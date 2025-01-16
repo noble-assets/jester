@@ -2,12 +2,16 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 	"jester.noble.xyz/appstate"
 	eth "jester.noble.xyz/ethereum"
+	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/noble"
 	"jester.noble.xyz/server"
 	"jester.noble.xyz/state"
@@ -38,6 +42,11 @@ Querying the gRPC endpoint "GetVoteExtention" retrieves accumulated Wormhole VAA
 The Ethereum contracts are hardcoded and can be toggled between mainnet and testnet using the --testnet flag.
 You can override contracts and configurations with the relevant "override" flags.`,
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
+			if !a.Viper.GetBool(flagHushLogo) {
+				plogo()
+			}
+			a.Mux = http.NewServeMux()
+			a.Metrics = metrics.NewPrometheusMetrics()
 			a.Eth, err = eth.InitializeEth(
 				cmd.Context(),
 				a.Log,
@@ -49,7 +58,12 @@ You can override contracts and configurations with the relevant "override" flags
 			if err != nil {
 				return err
 			}
-			a.Noble, err = noble.InitializeNoble(cmd.Context(), a.Log, a.Config.Noble.GRPCURL, a.Viper.GetBool(noble.FlagSkipHealth))
+			a.Noble, err = noble.InitializeNoble(
+				cmd.Context(),
+				a.Log,
+				a.Config.Noble.GRPCURL,
+				a.Viper.GetBool(noble.FlagSkipHealth),
+			)
 			return err
 		},
 		PostRun: func(_ *cobra.Command, _ []string) {
@@ -81,12 +95,22 @@ You can override contracts and configurations with the relevant "override" flags
 			processingQueue := make(chan *utils.QueryData, 1000)
 			vaaList := state.NewVaaList()
 
+			// Start Prometheus metrics server
+			if a.Config.Metrics.Enabled {
+				a.Metrics.Initialize()
+				g.Go(func() error {
+					return metrics.StartServer(ctx, log, a.Mux, a.Config.Metrics.Address, a.Metrics.Registry)
+				})
+			} else {
+				log.Warn("prometheus metrics server disabled")
+			}
+
 			g.Go(func() error {
-				return eth.WormholeListener(ctx, log, logMessagePublishedMap, a.Eth)
+				return eth.WormholeListener(ctx, log, a.Metrics, logMessagePublishedMap, a.Eth)
 			})
 
 			g.Go(func() error {
-				return eth.M0Listener(ctx, log, logMessagePublishedMap, a.Eth, processingQueue)
+				return eth.M0Listener(ctx, log, a.Metrics, logMessagePublishedMap, a.Eth, processingQueue)
 			})
 
 			// Watch for event subscription interruptions and get historical data
@@ -108,8 +132,10 @@ You can override contracts and configurations with the relevant "override" flags
 				}
 			}()
 
-			gRPCServer := server.NewJesterGrpcServer(a.Config.ServerAddress, log, vaaList, a.Noble.WormholeClient)
-			go gRPCServer.Start(ctx)
+			gRPCServer := server.NewJesterGrpcServer(log, a.Mux, a.Config.ServerAddress, vaaList, a.Noble.WormholeClient)
+			g.Go(func() error {
+				return gRPCServer.StartServer(ctx)
+			})
 
 			// Worker pool to query the Wormhole API for VAAs.
 			// Due to rate limits with wormhole's API, there is a fine balance between
@@ -174,6 +200,8 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().Bool(noble.FlagSkipHealth, false, "skip Noble gRPC health check")
 	cmd.Flag(noble.FlagSkipHealth).Hidden = true
 
+	cmd.Flags().BoolP(flagHushLogo, "l", false, "suppress logo")
+
 	return cmd
 }
 
@@ -185,5 +213,25 @@ func getEthOverrides(v *viper.Viper) eth.Overrides {
 		HubPortal:            v.GetString(appstate.FlagOverrideHubPortal),
 		WormholeCore:         v.GetString(appstate.FlagOverrideWormholeCore),
 		WormholeTransceiver:  v.GetString(appstate.FlagOverrideWormholeTransceiver),
+	}
+}
+
+var flagHushLogo = "hush-logo"
+
+func plogo() {
+	x := fmt.Sprintf(`
+     ██╗███████╗███████╗████████╗███████╗██████╗ 
+     ██║██╔════╝██╔════╝╚══██╔══╝██╔════╝██╔══██╗
+     ██║█████╗  ███████╗   ██║   █████╗  ██████╔╝
+██   ██║██╔══╝  ╚════██║   ██║   ██╔══╝  ██╔══██╗
+╚█████╔╝███████╗███████║   ██║   ███████╗██║  ██║
+ ╚════╝ ╚══════╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+                             Noble's sidekick  
+%s                                             
+`, Version)
+	lines := strings.Split(x, "\n")
+	for _, line := range lines {
+		println(line)
+		time.Sleep(100 * time.Millisecond)
 	}
 }

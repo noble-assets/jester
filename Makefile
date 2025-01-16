@@ -1,5 +1,5 @@
 COMMIT := $(shell git log -1 --format='%H')
-VERSION := $(shell echo $(shell git describe --tags --always --dirty --match "v*") | sed 's/^v//')
+VERSION := $(shell echo $(shell git describe --tags --always --dirty --match "v*"))
 
 ldflags = -X jester.noble.xyz/cmd.Version=$(VERSION) \
 		  -X jester.noble.xyz/cmd.Commit=$(COMMIT)

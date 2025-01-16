@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"jester.noble.xyz/ethereum/abi/mportal"
 	"jester.noble.xyz/ethereum/abi/wormhole"
+	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/utils"
 )
 
@@ -78,6 +79,7 @@ func (m *LogMessagePublishedMap) Cleanup() {
 // WormholeListener listens for `LogMessagePublished` events
 func WormholeListener(
 	ctx context.Context, log *slog.Logger,
+	m *metrics.PrometheusMetrics,
 	logMessagePublishedMap *LogMessagePublishedMap,
 	eth *Eth,
 ) error {
@@ -102,7 +104,7 @@ func WormholeListener(
 		)
 		if err != nil {
 			log.Error("failed to subscribe to `LogMessagePublished` events. Attempting to redial client", "error", err)
-			err = eth.HandleRedial(ctx, log)
+			err = eth.handleRedial(ctx, log, m)
 			if err != nil {
 				return errors.Join(errors.New("failed to redial Ethereum client"), err)
 			}
@@ -133,6 +135,7 @@ func WormholeListener(
 // M0Listener listens for MTokenSent events
 func M0Listener(
 	ctx context.Context, log *slog.Logger,
+	m *metrics.PrometheusMetrics,
 	logMessagePublishedMap *LogMessagePublishedMap,
 	eth *Eth,
 	processingQueue chan *utils.QueryData,
@@ -160,7 +163,7 @@ func M0Listener(
 		)
 		if err != nil {
 			log.Error("failed to subscribe to `MTokenSent` events. Attempting to redial client", "error", err)
-			err = eth.HandleRedial(ctx, log)
+			err = eth.handleRedial(ctx, log, m)
 			if err != nil {
 				return errors.Join(errors.New("failed to redial Ethereum client"), err)
 			}
