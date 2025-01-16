@@ -43,6 +43,7 @@ func StartWormholeWorker(
 	resp, err := fetchVaa(ctx, log, wormholeApiUrl, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.TxHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
+		return
 	}
 
 	log.Info("found VAA", "txHash", dequeued.TxHash)

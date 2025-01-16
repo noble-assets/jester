@@ -28,28 +28,69 @@ type Config struct {
 // SkipHealth is a flag used for testing purposes only
 const FlagSkipHealth = "skip-health"
 
-// InitializeNoble initializes a new Noble instance and verifies the gRPC connection.
+// NewNoble initializes a new Noble instance and verifies the gRPC connection.
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
 // The returned *Noble pointer should be added to the app state.
-func InitializeNoble(ctx context.Context, log *slog.Logger, gRPCurl string, skipHealth bool) (*Noble, error) {
-	noble := newNoble(gRPCurl)
+func NewNoble(ctx context.Context, log *slog.Logger, gRPCurl string, skipHealth bool) (noble *Noble, err error) {
+	noble = &Noble{
+		Config: &Config{
+			gRPCurl: gRPCurl,
+		},
+	}
 
-	if err := noble.newGrpcClient(); err != nil {
+	noble.gRPCClient, err = newGrpcClient(gRPCurl)
+	if err != nil {
 		return nil, err
 	}
 
-	noble.nodeServiceClient = noble.NewNodeServiceClient()
-	noble.WormholeClient = noble.NewWormholeClient()
+	noble.nodeServiceClient = NewNodeServiceClient(noble.gRPCClient)
+	noble.WormholeClient = NewWormholeClient(noble.gRPCClient)
 
 	if skipHealth {
 		log.Warn("skipping Noble gRPC health check")
 		return noble, nil
 	}
 
+	if err = noble.grpcHealthCheck(ctx, log); err != nil {
+		return nil, err
+	}
+
+	log.Info("verified healthy Noble gRPC endpoint")
+	return noble, nil
+}
+
+// newGrpcClient creates a new gRPC client for the Noble instance
+func newGrpcClient(url string) (*grpc.ClientConn, error) {
+	gRPCClient, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Noble gRPC client: %w", err)
+	}
+	return gRPCClient, nil
+}
+
+// NewNodeServiceClient creates a new NodeServiceClient for the Noble instance
+func NewNodeServiceClient(cc *grpc.ClientConn) nodev1beta1.ServiceClient {
+	return nodev1beta1.NewServiceClient(cc)
+}
+
+// NewWormholeClient creates a new WormholeClient for the Noble instance
+func NewWormholeClient(cc grpc.ClientConnInterface) wormholev1.QueryClient {
+	return wormholev1.NewQueryClient(cc)
+}
+
+// CloseClients closes the Noble gRPC client connection
+func (n *Noble) CloseClients() {
+	if n.gRPCClient != nil {
+		n.gRPCClient.Close()
+	}
+}
+
+// grpcHealthCheck checks the health of the Noble gRPC endpoint
+func (n *Noble) grpcHealthCheck(ctx context.Context, log *slog.Logger) error {
 	err := retry.Do(func() error {
-		ok, err := noble.HealthyGRPC(ctx)
-		if !ok {
+		_, err := n.nodeServiceClient.Status(ctx, &nodev1beta1.StatusRequest{})
+		if err != nil {
 			return err
 		}
 		return nil
@@ -62,52 +103,8 @@ func InitializeNoble(ctx context.Context, log *slog.Logger, gRPCurl string, skip
 		}),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unhealthy Noble gRPC endpoint: %v", err)
+		return fmt.Errorf("unhealthy Noble gRPC endpoint: %v", err)
 	}
 
-	log.Info("verified healthy Noble gRPC endpoint")
-
-	return noble, nil
-}
-
-// newNoble initializes a new Noble instance
-func newNoble(gRPCurl string) *Noble {
-	return &Noble{
-		Config: &Config{
-			gRPCurl: gRPCurl,
-		},
-	}
-}
-
-// newGrpcClient creates a new gRPC client for the Noble instance
-func (n *Noble) newGrpcClient() (err error) {
-	n.gRPCClient, err = grpc.NewClient(n.Config.gRPCurl, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return fmt.Errorf("failed to create Noble gRPC client: %w", err)
-	}
 	return nil
-}
-
-// CloseClients closes the Noble gRPC client connection
-func (n *Noble) CloseClients() {
-	if n.gRPCClient != nil {
-		n.gRPCClient.Close()
-	}
-}
-
-// NewNodeServiceClient creates a new NodeServiceClient for the Noble instance
-func (n *Noble) NewNodeServiceClient() nodev1beta1.ServiceClient {
-	return nodev1beta1.NewServiceClient(n.gRPCClient)
-}
-
-// NewWormholeClient creates a new WormholeClient for the Noble instance
-func (n *Noble) NewWormholeClient() wormholev1.QueryClient {
-	return wormholev1.NewQueryClient(n.gRPCClient)
-}
-
-// HealthyGRPC checks if the gRPC client is healthy by making a simple request.
-// It returns true if the client is healthy, otherwise false.
-func (n *Noble) HealthyGRPC(ctx context.Context) (bool, error) {
-	_, err := n.nodeServiceClient.Status(ctx, &nodev1beta1.StatusRequest{})
-	return err == nil, err
 }

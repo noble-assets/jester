@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,11 +16,12 @@ import (
 
 type Eth struct {
 	Config               *Config
+	Metrics              *metrics.PrometheusMetrics
 	WebsocketClient      *ethclient.Client
 	WebsocketClientMutex sync.Mutex
 	RPCClient            *ethclient.Client
 
-	redial redial
+	redial *redial
 }
 
 type Config struct {
@@ -52,39 +54,100 @@ type Overrides struct {
 	WormholeTransceiver  string
 }
 
-func newEth(websocketurl string, rpcurl string) *Eth {
-	return &Eth{
-		Config: &Config{
-			WebsocketURL: websocketurl,
-			RPCURL:       rpcurl,
-		},
-	}
-}
-
-// InitializeEth initializes Ethereum with a websocket and rpc client.
+// NewEth creates a new Ethereum instance with a websocket and rpc client.
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
 // The returned *Eth pointer should be added to the app state.
-func InitializeEth(ctx context.Context, log *slog.Logger, websocketurl, rpcurl string, testnet bool, overrides Overrides) (*Eth, error) {
-	eth := newEth(websocketurl, rpcurl)
-
-	eth.setContracts(log, testnet, overrides)
-	if err := eth.dialWebsocket(ctx, log); err != nil {
-		return nil, err
-	}
-	if err := eth.dialRPC(ctx, log); err != nil {
-		return nil, err
+func NewEth(ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics, websocketurl, rpcurl string, testnet bool, overrides Overrides) (*Eth, error) {
+	webSocketClient, err := dialClient(ctx, log, websocketurl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial websocket client: %v", err)
 	}
 
-	eth.redial.getHistory = make(chan struct{})
+	rpcClient, err := dialClient(ctx, log, rpcurl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial RPC client: %v", err)
+	}
 
-	return eth, nil
+	return &Eth{
+		Metrics:         m,
+		Config:          newConfig(log, websocketurl, rpcurl, testnet, overrides),
+		WebsocketClient: webSocketClient,
+		RPCClient:       rpcClient,
+		redial:          newRedial(),
+	}, nil
 }
 
-// dialRPC creates an Ethereum RPC client
-func (e *Eth) dialRPC(ctx context.Context, log *slog.Logger) (err error) {
+// newConfig creates a new Ethereum Config
+func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, overrides Overrides) *Config {
+	c := &Config{
+		WebsocketURL: websocketurl,
+		RPCURL:       rpcurl,
+
+		WormholeNobleChainID: 4009,
+	}
+
+	switch testnet {
+	case true:
+		c.WormholeSrcChainId = 10002
+		c.WormholeApiUrl = "https://api.testnet.wormscan.io/v1/signed_vaa"
+		c.HubPortal = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
+		c.WormholeCore = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
+		c.WormholeTransceiver = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
+	default:
+		c.WormholeSrcChainId = 2
+		c.WormholeApiUrl = ""      // TODO
+		c.HubPortal = ""           // TODO
+		c.WormholeCore = ""        // TODO
+		c.WormholeTransceiver = "" // TODO
+	}
+
+	// Overrides
+	if overrides.WormholeSrcChainId != 0 {
+		log.Info("overriding wormhole source chain ID", "chainID", overrides.WormholeSrcChainId)
+		c.WormholeSrcChainId = overrides.WormholeSrcChainId
+	}
+	if overrides.WormholeNobleChainID != 0 {
+		log.Info("overriding noble wormhole chain ID", "chainID", overrides.WormholeNobleChainID)
+		c.WormholeNobleChainID = overrides.WormholeNobleChainID
+	}
+	if overrides.WormholeApiUrl != "" {
+		log.Info("overriding wormhole API URL", "url", overrides.WormholeApiUrl)
+		c.WormholeApiUrl = overrides.WormholeApiUrl
+	}
+	if overrides.HubPortal != "" {
+		log.Info("overriding hub portal contract", "address", overrides.HubPortal)
+		c.HubPortal = overrides.HubPortal
+	}
+	if overrides.WormholeCore != "" {
+		log.Info("overriding wormhole core contract", "address", overrides.WormholeCore)
+		c.WormholeCore = overrides.WormholeCore
+	}
+	if overrides.WormholeTransceiver != "" {
+		log.Info("overriding wormhole transceiver contract", "address", overrides.WormholeTransceiver)
+		c.WormholeTransceiver = overrides.WormholeTransceiver
+	}
+
+	return c
+}
+
+func newRedial() *redial {
+	return &redial{
+		done:       make(chan error),
+		getHistory: make(chan struct{}),
+	}
+}
+
+// dialClient creates an Ethereum Client.
+// Based on the URL provided it will create either an RPC or Websocket client.
+func dialClient(ctx context.Context, log *slog.Logger, url string) (client *ethclient.Client, err error) {
+	var clientType = "RPC"
+	if strings.HasPrefix(url, "ws") {
+		clientType = "websocket"
+	}
+
 	err = retry.Do(func() error {
-		e.RPCClient, err = ethclient.DialContext(ctx, e.Config.RPCURL)
+		client, err = ethclient.DialContext(ctx, url)
 		if err != nil {
 			return err
 		}
@@ -92,47 +155,22 @@ func (e *Eth) dialRPC(ctx context.Context, log *slog.Logger) (err error) {
 	},
 		retry.Context(ctx),
 		retry.OnRetry(func(attempt uint, err error) {
-			log.Warn("retrying to dial Ethereum RPC", "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "err", err)
+			log.Warn(fmt.Sprintf("retrying to dial Ethereum %s", clientType), "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "err", err)
 		}))
 	if err != nil {
-		return fmt.Errorf("failed to connect to Ethereum RPC: %v", err)
+		return nil, err
 	}
 
-	log.Info("successfully dialed Ethereum RPC")
+	log.Info(fmt.Sprintf("successfully dialed Ethereum %s", clientType))
 
-	return nil
-}
-
-// dialWebsocket creates an Ethereum websocket client
-func (e *Eth) dialWebsocket(ctx context.Context, log *slog.Logger) (err error) {
-	err = retry.Do(func() error {
-		e.WebsocketClientMutex.Lock()
-		defer e.WebsocketClientMutex.Unlock()
-
-		e.WebsocketClient, err = ethclient.DialContext(ctx, e.Config.WebsocketURL)
-		if err != nil {
-			return err
-		}
-		return nil
-	},
-		retry.Context(ctx),
-		retry.OnRetry(func(attempt uint, err error) {
-			log.Warn("retrying to dial Ethereum websocket", "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "err", err)
-		}))
-	if err != nil {
-		return fmt.Errorf("failed to connect to Ethereum WebSocket: %v", err)
-	}
-
-	log.Info("successfully dialed Ethereum websocket")
-
-	return nil
+	return client, nil
 }
 
 // handleRedial handles the redial of the websocket client between multiple websocket subscriptions.
 // Because the websocket client is shared between multiple subscriptions, this function
 // is used to ensure that only one redial is in progress at a time.
-func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics) error {
-	redial := &e.redial
+func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
+	redial := e.redial
 	redial.inProgressMutex.Lock()
 
 	// Another goroutine is already handling redial
@@ -162,14 +200,16 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger, m *metrics.Pro
 		redial.inProgressMutex.Unlock()
 	}()
 
-	if m.Enabled {
-		m.IncEthSubInterruptionCounter()
-	}
+	e.Metrics.IncEthSubInterruptionCounter()
 
-	if err := e.dialWebsocket(ctx, log); err != nil {
+	client, err := dialClient(ctx, log, e.Config.WebsocketURL)
+	if err != nil {
 		redialDone <- err
 		return err
 	}
+	e.WebsocketClientMutex.Lock()
+	e.WebsocketClient = client
+	e.WebsocketClientMutex.Unlock()
 
 	time.Sleep(2 * time.Second)     // Allow other redial signals to accumulate
 	redial.getHistory <- struct{}{} // Trigger historical lookup to catch up on missed events
@@ -194,7 +234,7 @@ func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, proce
 				continue
 			}
 			start := latest - lookback
-			GetHistory(ctx, log, e, processingQueue, int64(start), 0)
+			e.GetHistory(ctx, log, processingQueue, int64(start), 0)
 		}
 	}
 }
@@ -205,51 +245,5 @@ func (e *Eth) CloseClients() {
 	}
 	if e.RPCClient != nil {
 		e.RPCClient.Close()
-	}
-}
-
-// setContracts sets the contract addresses for the Ethereum network.
-func (e *Eth) setContracts(log *slog.Logger, testnet bool, overrides Overrides) {
-	switch testnet {
-	case true:
-		e.Config.WormholeSrcChainId = 10002
-		e.Config.WormholeApiUrl = "https://api.testnet.wormscan.io/v1/signed_vaa"
-		e.Config.HubPortal = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
-		e.Config.WormholeCore = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
-		e.Config.WormholeTransceiver = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
-	default:
-		e.Config.WormholeSrcChainId = 2
-		e.Config.WormholeApiUrl = ""      // TODO
-		e.Config.HubPortal = ""           // TODO
-		e.Config.WormholeCore = ""        // TODO
-		e.Config.WormholeTransceiver = "" // TODO
-	}
-
-	e.Config.WormholeNobleChainID = 4009
-
-	// Overrides
-	if overrides.WormholeSrcChainId != 0 {
-		log.Info("overriding wormhole source chain ID", "chainID", overrides.WormholeSrcChainId)
-		e.Config.WormholeSrcChainId = overrides.WormholeSrcChainId
-	}
-	if overrides.WormholeNobleChainID != 0 {
-		log.Info("overriding noble wormhole chain ID", "chainID", overrides.WormholeNobleChainID)
-		e.Config.WormholeNobleChainID = overrides.WormholeNobleChainID
-	}
-	if overrides.WormholeApiUrl != "" {
-		log.Info("overriding wormhole API URL", "url", overrides.WormholeApiUrl)
-		e.Config.WormholeApiUrl = overrides.WormholeApiUrl
-	}
-	if overrides.HubPortal != "" {
-		log.Info("overriding hub portal contract", "address", overrides.HubPortal)
-		e.Config.HubPortal = overrides.HubPortal
-	}
-	if overrides.WormholeCore != "" {
-		log.Info("overriding wormhole core contract", "address", overrides.WormholeCore)
-		e.Config.WormholeCore = overrides.WormholeCore
-	}
-	if overrides.WormholeTransceiver != "" {
-		log.Info("overriding wormhole transceiver contract", "address", overrides.WormholeTransceiver)
-		e.Config.WormholeTransceiver = overrides.WormholeTransceiver
 	}
 }

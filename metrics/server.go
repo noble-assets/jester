@@ -8,20 +8,20 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// StartServer starts a prometheus metrics server.
-func StartServer(ctx context.Context, log *slog.Logger, mux *http.ServeMux, address string, registry *prometheus.Registry) error {
+// StartServer starts a prometheus metrics server on a given address
+func (m *PrometheusMetrics) StartServer(ctx context.Context, log *slog.Logger, mux *http.ServeMux, address string) error {
 	log = log.With(slog.String("server", "prometheus-metrics"))
+	m.enabled = true
 
 	// Serve default prometheus metrics
 	mux.Handle("/metrics", promhttp.Handler())
 
 	// Serve jester specific metrics
 	mux.Handle("/jester/metrics", promhttp.HandlerFor(
-		registry,
+		m.registry,
 		promhttp.HandlerOpts{
 			EnableOpenMetrics: true,
 		},

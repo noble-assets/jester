@@ -6,34 +6,30 @@ import (
 )
 
 type PrometheusMetrics struct {
-	Enabled bool
+	enabled  bool
+	registry *prometheus.Registry
 
-	Registry *prometheus.Registry
-
-	EthSubInteruptionCounter *prometheus.CounterVec
+	EthSubInteruptionCounter prometheus.Counter
 }
 
 // NewPrometheusMetrics creates a new PrometheusMetrics object
 func NewPrometheusMetrics() *PrometheusMetrics {
-	return &PrometheusMetrics{}
-}
+	registry := prometheus.NewRegistry()
+	factory := promauto.With(registry)
 
-// Initialize initializes and configures Prometheus
-func (m *PrometheusMetrics) Initialize() {
-	m.Enabled = true
-
-	m.Registry = prometheus.NewRegistry()
-	factory := promauto.With(m.Registry)
-
-	m.EthSubInteruptionCounter = factory.NewCounterVec(prometheus.CounterOpts{
-		Name: "eth_sub_interruption_counter",
-		Help: "The total number of ethereum subscription interruptions causing Jester to redial the websocket client",
-	}, []string{})
-
+	return &PrometheusMetrics{
+		registry: registry,
+		EthSubInteruptionCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "eth_sub_interruption_counter",
+			Help: "The total number of ethereum subscription interruptions causing Jester to redial the websocket client",
+		}),
+	}
 }
 
 // Methods to interact with metrics
 
 func (m *PrometheusMetrics) IncEthSubInterruptionCounter() {
-	m.EthSubInteruptionCounter.WithLabelValues().Inc()
+	if m.enabled {
+		m.EthSubInteruptionCounter.Inc()
+	}
 }

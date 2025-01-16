@@ -47,9 +47,8 @@ You can override contracts and configurations with the relevant "override" flags
 			}
 			a.Mux = http.NewServeMux()
 			a.Metrics = metrics.NewPrometheusMetrics()
-			a.Eth, err = eth.InitializeEth(
-				cmd.Context(),
-				a.Log,
+			a.Eth, err = eth.NewEth(
+				cmd.Context(), a.Log, a.Metrics,
 				a.Config.Ethereum.WebsocketURL,
 				a.Config.Ethereum.RPCURL,
 				a.Config.Testnet,
@@ -58,9 +57,8 @@ You can override contracts and configurations with the relevant "override" flags
 			if err != nil {
 				return err
 			}
-			a.Noble, err = noble.InitializeNoble(
-				cmd.Context(),
-				a.Log,
+			a.Noble, err = noble.NewNoble(
+				cmd.Context(), a.Log,
 				a.Config.Noble.GRPCURL,
 				a.Viper.GetBool(noble.FlagSkipHealth),
 			)
@@ -91,26 +89,25 @@ You can override contracts and configurations with the relevant "override" flags
 			// Irrelevant LogMessagePublished events without corresponding MTokenSent events
 			// are periodically cleaned up.
 
-			logMessagePublishedMap := eth.NewLogMessagePublishedMap()
+			logMessagePublishedMap := state.NewLogMessagePublishedMap()
 			processingQueue := make(chan *utils.QueryData, 1000)
 			vaaList := state.NewVaaList()
 
 			// Start Prometheus metrics server
 			if a.Config.Metrics.Enabled {
-				a.Metrics.Initialize()
 				g.Go(func() error {
-					return metrics.StartServer(ctx, log, a.Mux, a.Config.Metrics.Address, a.Metrics.Registry)
+					return a.Metrics.StartServer(ctx, log, a.Mux, a.Config.Metrics.Address)
 				})
 			} else {
 				log.Warn("prometheus metrics server disabled")
 			}
 
 			g.Go(func() error {
-				return eth.WormholeListener(ctx, log, a.Metrics, logMessagePublishedMap, a.Eth)
+				return a.Eth.StartWormholeListener(ctx, log, logMessagePublishedMap)
 			})
 
 			g.Go(func() error {
-				return eth.M0Listener(ctx, log, a.Metrics, logMessagePublishedMap, a.Eth, processingQueue)
+				return a.Eth.StartM0Listener(ctx, log, logMessagePublishedMap, processingQueue)
 			})
 
 			// Watch for event subscription interruptions and get historical data
@@ -168,7 +165,7 @@ You can override contracts and configurations with the relevant "override" flags
 			if startBlock != 0 {
 				endBlock := a.Viper.GetInt64(appstate.FlagEndBlock)
 				go func() {
-					eth.GetHistory(ctx, log, a.Eth, processingQueue, startBlock, endBlock)
+					a.Eth.GetHistory(ctx, log, processingQueue, startBlock, endBlock)
 				}()
 			}
 
