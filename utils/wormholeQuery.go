@@ -15,11 +15,10 @@ import (
 	"jester.noble.xyz/state"
 )
 
+// QueryData contains the metadata needed to query VAA's from the Wormhole API.
 type QueryData struct {
-	WormHoleChainID uint16
-	Emitter         string
-	Sequence        uint64
-	TxHash          string // logging purposes only
+	Sequence uint64
+	TxHash   string // logging purposes only
 }
 
 type WormholeResp struct {
@@ -36,11 +35,12 @@ var (
 // Once found, the VAA is added to the vaaList which is queryable via gRPC
 func StartWormholeWorker(
 	ctx context.Context, log *slog.Logger,
-	wormholeApiUrl string,
+	wormholeApiUrl, emitter string,
+	wormHoleChainID uint16,
 	dequeued *QueryData,
 	vaaList *state.VaaList,
 ) {
-	resp, err := fetchVaa(ctx, log, wormholeApiUrl, dequeued.WormHoleChainID, dequeued.Sequence, dequeued.Emitter, dequeued.TxHash)
+	resp, err := fetchVaa(ctx, log, wormholeApiUrl, wormHoleChainID, dequeued.Sequence, emitter, dequeued.TxHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
 		return

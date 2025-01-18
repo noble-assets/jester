@@ -31,13 +31,13 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 Jester facilitates the implementation of the Noble Dollar, powered by M0.
 
 When started, Jester listens for events on the Ethereum blockchain and queries the Wormhole API for VAAs (Verifiable Action Approvals).
-These VAAs are accumulated and served via a gRPC endpoint.
+These VAAs are accumulated and served via a gRPC endpoint. This data acts as an ABCI Vote Extension.
 
-By default, Jester's gRPC server listens on localhost:9091. This assumes that port 9090 is being used by the Noble binary. 
+By default, Jester's gRPC server listens and serves on localhost:9091. This assumes that port 9090 is being used by the Noble binary. 
 You can override this default address with the --server_address flag.
 
-Note: The gRPC port for Jester is intended for use only by the Noble binary. 
-Querying the gRPC endpoint "GetVoteExtention" retrieves accumulated Wormhole VAAs and clears the state.
+Note: The gRPC port for Jester is intended to be queried only by the Noble binary. 
+Querying the gRPC endpoint "GetVoteExtention" retrieves accumulated Wormhole VAAs and then CLEARS the memory state.
 
 The Ethereum contracts are hardcoded and can be toggled between mainnet and testnet using the --testnet flag.
 You can override contracts and configurations with the relevant "override" flags.`,
@@ -107,12 +107,16 @@ You can override contracts and configurations with the relevant "override" flags
 			})
 
 			g.Go(func() error {
-				return a.Eth.StartM0Listener(ctx, log, logMessagePublishedMap, processingQueue)
+				return a.Eth.StartMTokenSentListener(ctx, log, logMessagePublishedMap, processingQueue)
 			})
 
-			// Watch for event subscription interruptions and get historical data
+			g.Go(func() error {
+				return a.Eth.StartMTokenIndexSentListener(ctx, log, logMessagePublishedMap, processingQueue)
+			})
+
+			// Watch for websocket interruptions and get historical data to catch up.
 			go func() {
-				a.Eth.GetHistoricalOnRedial(ctx, log, processingQueue)
+				a.Eth.WatchForHistoryTrigger(ctx, log, processingQueue)
 			}()
 
 			// Cleanup irrelevant LogMessagePublished events
@@ -154,13 +158,19 @@ You can override contracts and configurations with the relevant "override" flags
 
 						go func(data *utils.QueryData) {
 							defer sem.Release(1)
-							utils.StartWormholeWorker(ctx, log, a.Eth.Config.WormholeApiUrl, data, vaaList)
+							utils.StartWormholeWorker(
+								ctx, log,
+								a.Eth.Config.WormholeApiUrl,
+								a.Eth.Config.WormholeTransceiver,
+								a.Eth.Config.WormholeSrcChainId,
+								data, vaaList,
+							)
 						}(dequeued)
 					}
 				}
 			})
 
-			// Historical query
+			// Get history on Jester start if startBlock is set
 			startBlock := a.Viper.GetInt64(appstate.FlagStartBlock)
 			if startBlock != 0 {
 				endBlock := a.Viper.GetInt64(appstate.FlagEndBlock)
@@ -197,6 +207,7 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().Bool(noble.FlagSkipHealth, false, "skip Noble gRPC health check")
 	cmd.Flag(noble.FlagSkipHealth).Hidden = true
 
+	// misc flags
 	cmd.Flags().BoolP(flagHushLogo, "l", false, "suppress logo")
 
 	return cmd

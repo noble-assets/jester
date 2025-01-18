@@ -39,6 +39,9 @@ const (
 
 // QueryServiceClient is a client for the noble.jester.v1.QueryService service.
 type QueryServiceClient interface {
+	// GetVoteExtension returns the vote extension.
+	// NOTE: This should ONLY be queried by the Noble binary duirng `SetExtendVoteHandler`.
+	// Querying this endpoint alters state.
 	GetVoteExtension(context.Context, *connect.Request[GetVoteExtensionRequest]) (*connect.Response[GetVoteExtensionResponse], error)
 }
 
@@ -74,6 +77,9 @@ func (c *queryServiceClient) GetVoteExtension(ctx context.Context, req *connect.
 
 // QueryServiceHandler is an implementation of the noble.jester.v1.QueryService service.
 type QueryServiceHandler interface {
+	// GetVoteExtension returns the vote extension.
+	// NOTE: This should ONLY be queried by the Noble binary duirng `SetExtendVoteHandler`.
+	// Querying this endpoint alters state.
 	GetVoteExtension(context.Context, *connect.Request[GetVoteExtensionRequest]) (*connect.Response[GetVoteExtensionResponse], error)
 }
 

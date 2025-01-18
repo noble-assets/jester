@@ -58,7 +58,10 @@ type Overrides struct {
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
 // The returned *Eth pointer should be added to the app state.
-func NewEth(ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics, websocketurl, rpcurl string, testnet bool, overrides Overrides) (*Eth, error) {
+func NewEth(
+	ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics,
+	websocketurl, rpcurl string, testnet bool, overrides Overrides,
+) (*Eth, error) {
 	webSocketClient, err := dialClient(ctx, log, websocketurl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial websocket client: %v", err)
@@ -141,7 +144,7 @@ func newRedial() *redial {
 // dialClient creates an Ethereum Client.
 // Based on the URL provided it will create either an RPC or Websocket client.
 func dialClient(ctx context.Context, log *slog.Logger, url string) (client *ethclient.Client, err error) {
-	var clientType = "RPC"
+	clientType := "RPC"
 	if strings.HasPrefix(url, "ws") {
 		clientType = "websocket"
 	}
@@ -216,11 +219,11 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 	return nil
 }
 
-// GetHistoricalOnRedial is used to catch up on any block data missed during an event
+// WatchForHistoryTrigger is used to catch up on any block data missed during an event
 // subscription interruption. It is hardcoded to look back 50 blocks.
 //
 // It is meant to be run in a goroutine.m
-func (e *Eth) GetHistoricalOnRedial(ctx context.Context, log *slog.Logger, processingQueue chan *utils.QueryData) {
+func (e *Eth) WatchForHistoryTrigger(ctx context.Context, log *slog.Logger, processingQueue chan *utils.QueryData) {
 	for {
 		select {
 		case <-ctx.Done():

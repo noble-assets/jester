@@ -2,6 +2,7 @@ package state
 
 import "sync"
 
+// VaaList is a thread safe list of VAA's accumulated from the Wormhole API.
 type VaaList struct {
 	mu   sync.Mutex
 	list [][]byte
@@ -20,6 +21,8 @@ func (v *VaaList) Add(item []byte) {
 	v.list = append(v.list, item)
 }
 
+// GetThenClearAll returns all VAA's currently stored in memory.
+// Once returned, the list is cleared.
 func (v *VaaList) GetThenClearAll() [][]byte {
 	v.mu.Lock()
 	defer v.mu.Unlock()

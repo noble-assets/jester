@@ -32,7 +32,7 @@ type JesterGrpcServer struct {
 
 func NewJesterGrpcServer(log *slog.Logger, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList, wormholeClient wormholev1.QueryClient) *JesterGrpcServer {
 	return &JesterGrpcServer{
-		log:            log.With("module", "grpc-server"),
+		log:            log.With("server", "grpc"),
 		mux:            mux,
 		serverAddress:  serverAddress,
 		vaaList:        vaaList,

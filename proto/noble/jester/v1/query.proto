@@ -7,6 +7,9 @@ import "noble/jester/v1/jester.proto";
 option go_package = "jester.noble.xyz/api;jester";
 
 service QueryService {
+  // GetVoteExtension returns the vote extension.
+  // NOTE: This should ONLY be queried by the Noble binary duirng `SetExtendVoteHandler`.
+  // Querying this endpoint alters state.
   rpc GetVoteExtension(GetVoteExtensionRequest) returns (GetVoteExtensionResponse);
 }
 
