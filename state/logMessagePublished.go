@@ -15,6 +15,8 @@ type logEntry struct {
 	timestamp time.Time // used to cleanup old entires
 }
 
+// NewLogMessagePublishedMap creates a new LogMessagePublishedMap.
+// This map maps transaction hashes to sequence numbers.
 func NewLogMessagePublishedMap() *LogMessagePublishedMap {
 	return &LogMessagePublishedMap{
 		store: make(map[string]logEntry),
@@ -46,6 +48,7 @@ func (m *LogMessagePublishedMap) Delete(txHash string) {
 	delete(m.store, txHash)
 }
 
+// Cleanup removes old entries from the map.
 func (m *LogMessagePublishedMap) Cleanup() {
 	m.mu.Lock()
 	defer m.mu.Unlock()

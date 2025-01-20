@@ -19,6 +19,8 @@ const (
 	FlagOverrideWormholeCore        = "override-wormhole-core"
 	flagMetricsEnabled              = "metrics.enabled"
 	flagMetricsAddress              = "metrics.address"
+	FlagSkipHealth                  = "skip-health"
+	FlagHushLogo                    = "hush-logo"
 )
 
 // if the flag is being added to multiple commands, you must use the flags that accepts pointers

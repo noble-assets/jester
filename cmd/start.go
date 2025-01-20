@@ -37,12 +37,12 @@ By default, Jester's gRPC server listens and serves on localhost:9091. This assu
 You can override this default address with the --server_address flag.
 
 Note: The gRPC port for Jester is intended to be queried only by the Noble binary. 
-Querying the gRPC endpoint "GetVoteExtention" retrieves accumulated Wormhole VAAs and then CLEARS the memory state.
+Querying the gRPC endpoint "GetVoteExtension" retrieves accumulated Wormhole VAAs and then CLEARS the memory state.
 
 The Ethereum contracts are hardcoded and can be toggled between mainnet and testnet using the --testnet flag.
 You can override contracts and configurations with the relevant "override" flags.`,
 		PreRunE: func(cmd *cobra.Command, _ []string) (err error) {
-			if !a.Viper.GetBool(flagHushLogo) {
+			if !a.Viper.GetBool(appstate.FlagHushLogo) {
 				plogo()
 			}
 			a.Mux = http.NewServeMux()
@@ -52,7 +52,7 @@ You can override contracts and configurations with the relevant "override" flags
 				a.Config.Ethereum.WebsocketURL,
 				a.Config.Ethereum.RPCURL,
 				a.Config.Testnet,
-				getEthOverrides(a.Viper),
+				getOverrides(a.Viper),
 			)
 			if err != nil {
 				return err
@@ -60,7 +60,7 @@ You can override contracts and configurations with the relevant "override" flags
 			a.Noble, err = noble.NewNoble(
 				cmd.Context(), a.Log,
 				a.Config.Noble.GRPCURL,
-				a.Viper.GetBool(noble.FlagSkipHealth),
+				a.Viper.GetBool(appstate.FlagSkipHealth),
 			)
 			return err
 		},
@@ -73,21 +73,32 @@ You can override contracts and configurations with the relevant "override" flags
 			log := a.Log
 			g, ctx := errgroup.WithContext(ctx)
 
-			// Event Subscription:
-			// To query Wormhole data, we need to subscribe to two events:
-			// 1. MTokenSent
-			// 2. LogMessagePublished
+			// Event subscription logic:
+			// 	We watch for three Ethereum events:
+			//  	1. `LogMessagePublished` from wormhole
+			// 		2. `MTokenSent` from M0
+			// 		3. `MTokenIndexSent` from M0
 			//
-			// LogMessagePublished events are generic to Wormhole; we only process ones
-			// tied to an MTokenSent event.
-			//
-			// As LogMessagePublished events are observed, their transaction hashes are mapped
+			// As `LogMessagePublished` events are observed, their transaction hashes are mapped
 			// to the sequence number emitted. This mapping is stored in `logMessagePublishedMap`.
-			// When MTokenSent events occur, the map is queried using the transaction hash
-			// to retrieve the associated sequence number.
+			// This sequence number is needed later to query the Wormhole API.
 			//
-			// Irrelevant LogMessagePublished events without corresponding MTokenSent events
-			// are periodically cleaned up.
+			// As we observe `MTokenSent` and `MTokenIndexSent` events, we use the tx hash to look up
+			// the sequence number from the corresponding `LogMessagePublished` event. This event happens
+			// in the same transaction as the M0 event. This metadata is then used to query the Wormhole API
+			// for the VAA associated with the event.
+			//
+			// Note:
+			//	`LogMessagePublished` events are generic to Wormhole and appear often.
+			// 	While we do initially store all `LogMessagePublished` events, we periodically cleanup old entries.
+			//
+			// The `processingQueue` is a channel that holds `QueryData` structs. These structs
+			// contain the necessary metadata to query the Wormhole API for VAAs.
+			//
+			// The `vaaList` is a state object that holds the VAAs we accumulate from the Wormhole API.
+			// This list is served via gRPC to the Noble binary. Hitting this endpoint returns accumulated
+			// VAA's and then clears the list. This is meant to only be queried by the Noble binary requesting the
+			// Vote Extension.
 
 			logMessagePublishedMap := state.NewLogMessagePublishedMap()
 			processingQueue := make(chan *utils.QueryData, 1000)
@@ -103,15 +114,15 @@ You can override contracts and configurations with the relevant "override" flags
 			}
 
 			g.Go(func() error {
-				return a.Eth.StartWormholeListener(ctx, log, logMessagePublishedMap)
+				return a.Eth.StartWormholeLMPListener(ctx, log, logMessagePublishedMap)
 			})
 
 			g.Go(func() error {
-				return a.Eth.StartMTokenSentListener(ctx, log, logMessagePublishedMap, processingQueue)
+				return a.Eth.StartM0TokenSentListener(ctx, log, logMessagePublishedMap, processingQueue)
 			})
 
 			g.Go(func() error {
-				return a.Eth.StartMTokenIndexSentListener(ctx, log, logMessagePublishedMap, processingQueue)
+				return a.Eth.StartM0MTokenIndexSentListener(ctx, log, logMessagePublishedMap, processingQueue)
 			})
 
 			// Watch for websocket interruptions and get historical data to catch up.
@@ -119,7 +130,8 @@ You can override contracts and configurations with the relevant "override" flags
 				a.Eth.WatchForHistoryTrigger(ctx, log, processingQueue)
 			}()
 
-			// Cleanup irrelevant LogMessagePublished events
+			// logMessagePublished events without an accompanying M0 event are irrelevant to us.
+			// We periodically cleanup old entries from the map.
 			go func() {
 				ticker := time.NewTicker(10 * time.Second)
 				defer ticker.Stop()
@@ -204,16 +216,16 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
 
 	// testing flags
-	cmd.Flags().Bool(noble.FlagSkipHealth, false, "skip Noble gRPC health check")
-	cmd.Flag(noble.FlagSkipHealth).Hidden = true
+	cmd.Flags().Bool(appstate.FlagSkipHealth, false, "skip Noble gRPC health check")
+	cmd.Flag(appstate.FlagSkipHealth).Hidden = true
 
 	// misc flags
-	cmd.Flags().BoolP(flagHushLogo, "l", false, "suppress logo")
+	cmd.Flags().BoolP(appstate.FlagHushLogo, "l", false, "suppress logo")
 
 	return cmd
 }
 
-func getEthOverrides(v *viper.Viper) eth.Overrides {
+func getOverrides(v *viper.Viper) eth.Overrides {
 	return eth.Overrides{
 		WormholeSrcChainId:   v.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
 		WormholeNobleChainID: v.GetUint16(appstate.FlagOverrideNobleChainID),
@@ -223,8 +235,6 @@ func getEthOverrides(v *viper.Viper) eth.Overrides {
 		WormholeTransceiver:  v.GetString(appstate.FlagOverrideWormholeTransceiver),
 	}
 }
-
-var flagHushLogo = "hush-logo"
 
 func plogo() {
 	x := fmt.Sprintf(`

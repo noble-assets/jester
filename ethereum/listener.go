@@ -5,16 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"math/big"
-	"strings"
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"jester.noble.xyz/ethereum/abi/mportal"
 	"jester.noble.xyz/ethereum/abi/wormhole"
@@ -22,29 +17,84 @@ import (
 	"jester.noble.xyz/utils"
 )
 
-// StartWormholeListener listens for Wormhole's `LogMessagePublished` events
-func (e *Eth) StartWormholeListener(
+// subscribeToEvent defines a callback function for subscribing to Ethereum events.
+// It establishes a subscription to the desired events, receives a context for cancellation,
+// and sends event data to the provided sink channel.
+//
+// Returns:
+// - event.Subscription: The subscription object to manage the subscription lifecycle.
+// - error: Any error encountered during the subscription process.
+//
+// T is the type representing the Ethereum event being subscribed to.
+type subscribeToEvent[T any] func(ctx context.Context, sink chan T) (event.Subscription, error)
+
+// processEvent defines a callback function to handle incoming blockchain events from a subscription.
+// This function processes a single event.
+//
+// Note:
+// - This function does not return an error to ensure the listener remains operational regardless of processing issues.
+// - Any errors encountered should be logged within the implementation.
+// - Panics during event processing are recovered within the startEventListener function to ensure resilience.
+//
+// T is the type representing the Ethereum event being processed.
+type processEvent[T any] func(ctx context.Context, log *slog.Logger, event T)
+
+// startEventListener manages the lifecycle of Ethereum event subscriptions and their processing logic.
+// This function ensures consistent error handling and resiliency across multiple subscriptions using the
+// same websocket client.
+//
+// Purpose:
+// - Establishes a subscription to listen for Ethereum events for a specific contract and event type.
+// - Handles errors from the subscription, including re-subscribing or reconnecting the client as needed.
+// - Processes events received from the subscription using the provided processEvent callback.
+//
+// Parameters:
+// - ctx (context.Context): Controls the lifecycle of the event listener.
+// - log (*slog.Logger): Logger for structured logging, augmented with contract and event details.
+// - e (*Eth): The Ethereum client wrapper used for redialing or other utilities.
+// - contractName (string): Name of the smart contract (used for logging only).
+// - eventName (string): Name of the event being subscribed to (used for logging only).
+// - subscribeToEvent (subscribeToEvent[T]): Callback function to establish the event subscription.
+// - processEvent (processEvent[T]): Callback function to process incoming events.
+//
+// Returns:
+// - error: An error is only returned if the subscription fails or becomes disconnected and is unrecoverable.
+// Returning an error will shutdown Jester.
+//
+// Example Usage:
+//
+//	err := startEventListener(
+//	    ctx, log, e, "MyContract", "MyEvent",
+//	    func(ctx context.Context, sink chan *MyEvent) (event.Subscription, error) {
+//			binding, err := myABIContract.NewBindings(common.HexToAddress(myContractAddress), websocketClient)
+//			if err != nil {
+//				return nil, fmt.Errorf("failed to bind client to myContract: %w", err)
+//			}
+//	        return binding.WatchMyEvent(opts, sink, filterOptions)
+//	    },
+//	    func(ctx context.Context, log *slog.Logger, event *MyEvent) {
+//	        // Process the event here
+//	    },
+//	)
+//	if err != nil {
+//	    log.Error("failed to start event listener", "error", err)
+//	}
+func startEventListener[T any](
 	ctx context.Context, log *slog.Logger,
-	logMessagePublishedMap *state.LogMessagePublishedMap,
+	e *Eth,
+	contractName, eventName string, // used for logging only
+	subscribeToEvent subscribeToEvent[T],
+	processEvent processEvent[T],
 ) error {
-	log = log.With(slog.String("listener", "wormhole"), slog.String("event", "LogMessagePublished"))
+	log = log.With(slog.String("contract", contractName), slog.String("event", eventName))
 
-	sink := make(chan *wormhole.AbiLogMessagePublished)
+	// Channel to receive events/logs from the subscription
+	sink := make(chan T)
 
-	// Subscribe to events via an ABI filter.
-	// The for loop ensures we continue to re-subscribe and/or redial the
-	// websocket client in case of a subscription error.
+	// Reconnect loop ensures resiliency in case of subscription errors.
+	// Attempts to resubscribe first, if that fails, attempts to redial the Ethereum client.
 	for {
-		wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(e.Config.WormholeCore), e.WebsocketClient)
-		if err != nil {
-			return fmt.Errorf("failed to bind client to wormhole contract: %w", err)
-		}
-
-		sub, err := wormholeBinding.WatchLogMessagePublished(
-			&bind.WatchOpts{Context: ctx},
-			sink,
-			[]common.Address{common.HexToAddress(e.Config.WormholeTransceiver)},
-		)
+		sub, err := subscribeToEvent(ctx, sink)
 		if err != nil {
 			log.Error("failed to subscribe to events. Attempting to redial client", "error", err)
 			err = e.handleRedial(ctx, log)
@@ -57,142 +107,109 @@ func (e *Eth) StartWormholeListener(
 
 		log.Info("successfully subscribed to events")
 
-		// listen and store data from events
-	listenloop:
+		// Process incoming events
+	processLoop:
 		for {
 			select {
 			case <-ctx.Done():
 				return nil
 			case event := <-sink:
-				log.Debug("observed event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
-				logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
+				// ensure listener remains running even during panics
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error("panic while processing event", "error", r)
+						}
+					}()
+					processEvent(ctx, log, event)
+				}()
 			case err := <-sub.Err():
 				log.Error("subscription error. Attempting to re-subscribe.", "error", err)
 				sub.Unsubscribe()
-				break listenloop
+				break processLoop
 			}
 		}
 	}
 }
 
-// StartM0Listener listens for M0's MTokenSent events
-func (e *Eth) StartMTokenSentListener(
-	ctx context.Context, log *slog.Logger,
-	logMessagePublishedMap *state.LogMessagePublishedMap,
-	processingQueue chan *utils.QueryData,
-) error {
-	log = log.With(slog.String("listener", "m0"), slog.String("event", "MTokenSent"))
+//
 
-	sink := make(chan *mportal.BindingsMTokenSent)
-
-	// Subscribe to events via an ABI filter.
-	// The for loop ensures we continue to re-subscribe and/or redial the
-	// websocket client in case of a subscription error.
-	for {
-		binding, err := mportal.NewBindings(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
-		if err != nil {
-			return fmt.Errorf("failed to bind client to mportal contract: %w", err)
-		}
-
-		var sub event.Subscription
-		sub, err = binding.WatchMTokenSent(
-			&bind.WatchOpts{Context: ctx},
-			sink,
-			[]uint16{e.Config.WormholeNobleChainID},
-			nil, nil,
-		)
-		if err != nil {
-			log.Error("failed to subscribe to events. Attempting to redial client", "error", err)
-			err = e.handleRedial(ctx, log)
+// StartWormholeLMPListener listens for Wormhole's `LogMessagePublished` events
+func (e *Eth) StartWormholeLMPListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *state.LogMessagePublishedMap) error {
+	contractName := "wormhole"
+	eventName := "LogMessagePublished"
+	return startEventListener(
+		ctx, log, e,
+		contractName, eventName,
+		func(ctx context.Context, sink chan *wormhole.AbiLogMessagePublished) (event.Subscription, error) {
+			wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(e.Config.WormholeCore), e.WebsocketClient)
 			if err != nil {
-				return errors.Join(errors.New("failed to redial Ethereum client"), err)
+				return nil, fmt.Errorf("failed to bind client to wormhole contract: %w", err)
 			}
-			continue
-		}
-		defer sub.Unsubscribe()
 
-		log.Info("successfully subscribed to events")
-
-		// listen and process data from events
-	listenloop:
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case event := <-sink:
-				txHash := event.Raw.TxHash.String()
-				log.Info("observed `MTokenSent` event", "txHash", txHash)
-
-				processM0Event(ctx, log, txHash, logMessagePublishedMap, processingQueue)
-
-			case err := <-sub.Err():
-				log.Error("subscription error. Attempting to re-subscribe.", "error", err)
-				sub.Unsubscribe()
-				break listenloop
-			}
-		}
-	}
+			return wormholeBinding.WatchLogMessagePublished(
+				&bind.WatchOpts{Context: ctx},
+				sink,
+				[]common.Address{common.HexToAddress(e.Config.WormholeTransceiver)},
+			)
+		},
+		func(ctx context.Context, log *slog.Logger, event *wormhole.AbiLogMessagePublished) {
+			log.Debug("observed event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
+			logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
+		},
+	)
 }
 
-// StartM0Listener listens for M0's MTokenSent events
-func (e *Eth) StartMTokenIndexSentListener(
-	ctx context.Context, log *slog.Logger,
-	logMessagePublishedMap *state.LogMessagePublishedMap,
-	processingQueue chan *utils.QueryData,
-) error {
-	log = log.With(slog.String("listener", "m0"), slog.String("event", "MTokenIndexSent"))
-
-	sink := make(chan *mportal.BindingsMTokenIndexSent)
-
-	// Subscribe to events via an ABI filter.
-	// The for loop ensures we continue to re-subscribe and/or redial the
-	// websocket client in case of a subscription error.
-	for {
-		binding, err := mportal.NewBindings(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
-		if err != nil {
-			return fmt.Errorf("failed to bind client to mportal contract: %w", err)
-		}
-
-		var sub event.Subscription
-		sub, err = binding.WatchMTokenIndexSent(
-			&bind.WatchOpts{Context: ctx},
-			sink,
-			[]uint16{e.Config.WormholeNobleChainID},
-		)
-		if err != nil {
-			log.Error("failed to subscribe to events. Attempting to redial client", "error", err)
-			err = e.handleRedial(ctx, log)
+// StartM0TokenSentListener listens for M0's `MTokenSent` events
+func (e *Eth) StartM0TokenSentListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *state.LogMessagePublishedMap, processingQueue chan *utils.QueryData) error {
+	contractName := "m0"
+	eventName := "MTokenSent"
+	return startEventListener(
+		ctx, log, e, contractName, eventName,
+		func(ctx context.Context, sink chan *mportal.BindingsMTokenSent) (event.Subscription, error) {
+			binding, err := mportal.NewBindings(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
 			if err != nil {
-				return errors.Join(errors.New("failed to redial Ethereum client"), err)
+				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
 			}
-			continue
-		}
-		defer sub.Unsubscribe()
 
-		log.Info("successfully subscribed to events")
-
-		// listen and process data from events
-	listenloop:
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case event := <-sink:
-				txHash := event.Raw.TxHash.String()
-				log.Info("observed `MTokenSent` event", "txHash", txHash)
-
-				processM0Event(ctx, log, txHash, logMessagePublishedMap, processingQueue)
-
-			case err := <-sub.Err():
-				log.Error("subscription error. Attempting to re-subscribe.", "error", err)
-				sub.Unsubscribe()
-				break listenloop
-			}
-		}
-	}
+			return binding.WatchMTokenSent(
+				&bind.WatchOpts{Context: ctx},
+				sink,
+				[]uint16{e.Config.WormholeNobleChainID},
+				nil, nil,
+			)
+		},
+		func(ctx context.Context, log *slog.Logger, event *mportal.BindingsMTokenSent) {
+			processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
+		},
+	)
 }
 
-// processM0Event processes M0 events by looking up the relevant logMessagePublished event tied to it.
+// StartM0MTokenIndexSentListener listens for M0's `MTokenIndexSent` events
+func (e *Eth) StartM0MTokenIndexSentListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *state.LogMessagePublishedMap, processingQueue chan *utils.QueryData) error {
+	contractName := "m0"
+	eventName := "MTokenIndexSent"
+	return startEventListener(
+		ctx, log, e, contractName, eventName,
+		func(ctx context.Context, sink chan *mportal.BindingsMTokenIndexSent) (event.Subscription, error) {
+			binding, err := mportal.NewBindings(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
+			if err != nil {
+				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
+			}
+
+			return binding.WatchMTokenIndexSent(
+				&bind.WatchOpts{Context: ctx},
+				sink,
+				[]uint16{e.Config.WormholeNobleChainID},
+			)
+		},
+		func(ctx context.Context, log *slog.Logger, event *mportal.BindingsMTokenIndexSent) {
+			processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
+		},
+	)
+}
+
+// processM0Event processes M0 events by looking up the logMessagePublished event that occur in the same transaction.
 // All relevant M0 events should have a corresponding logMessagePublished event.
 func processM0Event(
 	ctx context.Context, log *slog.Logger,
@@ -200,13 +217,13 @@ func processM0Event(
 	logMessagePublishedMap *state.LogMessagePublishedMap,
 	processingQueue chan *utils.QueryData,
 ) {
-	// LogMessagedPublished and (MToken or MTokenIndexSent) sent events happen in the same transaction. We use
-	// separate websockets to subscribe to each event. In cases where the MTokenSent event
-	// gets added to state before the LotMessagedPublished event, we will be unable to query for
-	// the sequence number emitted by LotMessagedPublished. For that reason, we retry.
+	log.Info("observed event", "txHash", txHash)
+
+	// Occasionally, the M0 event gets added to state before the LotMessagedPublished event (microseconds difference).
+	// To combat this, we retry.
 	var seq uint64
 	var found bool
-	retryAttemps := 5
+	retryAttempts := 5
 	err := retry.Do(func() error {
 		seq, found = logMessagePublishedMap.GetSequence(txHash)
 		if !found {
@@ -215,10 +232,10 @@ func processM0Event(
 		return nil
 	},
 		retry.Context(ctx),
-		retry.Attempts(uint(retryAttemps)),
+		retry.Attempts(uint(retryAttempts)),
 		retry.Delay(5*time.Millisecond),
 		retry.OnRetry(func(attempt uint, _ error) {
-			log.Debug("retry: logMessagePublished lookup", "attempt", fmt.Sprintf("%d/%d", attempt+1, retryAttemps), "txHash", txHash)
+			log.Debug("retry: logMessagePublished lookup", "attempt", fmt.Sprintf("%d/%d", attempt+1, retryAttempts), "txHash", txHash)
 		}),
 	)
 	if err != nil {
@@ -233,116 +250,4 @@ func processM0Event(
 		}
 		logMessagePublishedMap.Delete(txHash)
 	}
-}
-
-// GetHistory queries historical data.
-//
-// Since getting historical data is not crucial to Jester, we do not return an error.
-// Instead, we log the error and continue.
-func (e *Eth) GetHistory(
-	ctx context.Context, log *slog.Logger,
-	processingQueue chan *utils.QueryData,
-	startBlock int64, endBlock int64,
-) {
-	start := big.NewInt(startBlock)
-	var end *big.Int
-	if endBlock != 0 {
-		end = big.NewInt(endBlock)
-	}
-
-	log = log.With(slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
-	log.Info("starting to query history")
-
-	var totalVaas int
-	defer func() {
-		log.Info("finished querying history", "vaas-found", totalVaas)
-	}()
-
-	// load mPortal ABI to get function signatures
-	mPortalAbi, err := abi.JSON(strings.NewReader(mportal.BindingsMetaData.ABI))
-	if err != nil {
-		log.Error("unable to parse MTokenSent ABI when querying history", "error", err)
-		return
-	}
-
-	nobleChainIDHash := common.BigToHash(big.NewInt(int64(e.Config.WormholeNobleChainID)))
-
-	mTokenSentFuncSig := mPortalAbi.Events["MTokenSent"].ID
-	mTokenSentFunclogs, err := e.filterLogs(
-		ctx, start, end,
-		e.Config.HubPortal,
-		[][]common.Hash{{mTokenSentFuncSig}, {nobleChainIDHash}},
-	)
-	if err != nil {
-		log.Error("unable to filter `mTokenSent` logs when querying history", "error", err)
-		return
-	}
-
-	mTokenIndexSentSig := mPortalAbi.Events["MTokenIndexSent"].ID
-	mTokenIndexSentLogs, err := e.filterLogs(
-		ctx, start, end,
-		e.Config.HubPortal,
-		[][]common.Hash{{mTokenIndexSentSig}, {nobleChainIDHash}},
-	)
-	if err != nil {
-		log.Error("unable to filter `mTokenIndexSent` logs when querying history", "error", err)
-		return
-	}
-
-	allM0Logs := append(mTokenSentFunclogs, mTokenIndexSentLogs...)
-
-	if len(allM0Logs) == 0 {
-		return
-	}
-
-	// load wormhole ABI and get function signature
-	wormholeAbi, err := abi.JSON(strings.NewReader(wormhole.AbiABI))
-	if err != nil {
-		log.Error("unable to parse Wormhole ABI when querying history", "error", err)
-		return
-	}
-
-	logMessagePublishedFuncSig := wormholeAbi.Events["LogMessagePublished"].ID
-	logMessagePublishedLogs, err := e.filterLogs(
-		ctx, start, end,
-		e.Config.WormholeCore,
-		[][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(e.Config.WormholeTransceiver)}},
-	)
-	if err != nil {
-		log.Error("unable to filter `logMessagePublished` logs when querying history", "error", err)
-		return
-	}
-
-	event := struct {
-		wormhole.AbiLogMessagePublished
-	}{}
-
-	for _, l := range allM0Logs {
-		txHash := l.TxHash
-		for _, lLog := range logMessagePublishedLogs {
-			if txHash == lLog.TxHash {
-				if err := wormholeAbi.UnpackIntoInterface(&event, "LogMessagePublished", lLog.Data); err != nil {
-					log.Error("error unpacking wormhole abi into interface when querying history", "error", err)
-				}
-				log.Debug("found relevant events during historical query", "block", event.Raw.BlockNumber, "seq", event.Sequence)
-				processingQueue <- &utils.QueryData{
-					Sequence: event.Sequence,
-					TxHash:   txHash.String(),
-				}
-				totalVaas += 1
-			}
-		}
-	}
-}
-
-// filterLogs uses an RPC client to query Ethereum within a specified block range.
-// It returns filtered logs based on contract address and topics.
-func (e *Eth) filterLogs(ctx context.Context, start, end *big.Int, contractAddress string, topics [][]common.Hash) ([]ethTypes.Log, error) {
-	query := ethereum.FilterQuery{
-		FromBlock: start,
-		ToBlock:   end,
-		Addresses: []common.Address{common.HexToAddress(contractAddress)},
-		Topics:    topics,
-	}
-	return e.RPCClient.FilterLogs(ctx, query)
 }

@@ -222,7 +222,7 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 // WatchForHistoryTrigger is used to catch up on any block data missed during an event
 // subscription interruption. It is hardcoded to look back 50 blocks.
 //
-// It is meant to be run in a goroutine.m
+// It is meant to be run in a goroutine
 func (e *Eth) WatchForHistoryTrigger(ctx context.Context, log *slog.Logger, processingQueue chan *utils.QueryData) {
 	for {
 		select {
