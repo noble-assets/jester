@@ -7,7 +7,6 @@ const (
 	flagTestnet                     = "testnet"
 	flagEthWebsocket                = "ethereum.websocket-url"
 	flagEthRPC                      = "ethereum.rpc-url"
-	flagNobleGRPC                   = "noble.grpc-url"
 	flagServerAddr                  = "server-address"
 	FlagStartBlock                  = "start-block"
 	FlagEndBlock                    = "end-block"
@@ -19,7 +18,6 @@ const (
 	FlagOverrideWormholeCore        = "override-wormhole-core"
 	flagMetricsEnabled              = "metrics.enabled"
 	flagMetricsAddress              = "metrics.address"
-	FlagSkipHealth                  = "skip-health"
 	FlagHushLogo                    = "hush-logo"
 )
 
@@ -28,7 +26,6 @@ const (
 var (
 	eth_websocket   string
 	eth_rpc         string
-	noble_grpc      string
 	server_address  string
 	testnet         bool
 	metrics_enabled bool

@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 	"jester.noble.xyz/ethereum"
 	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/noble"
 )
 
 // appState is the modifiable state of the application.
@@ -25,7 +24,6 @@ type AppState struct {
 	Config  *Config
 
 	*ethereum.Eth
-	*noble.Noble
 }
 
 func (a *AppState) InitLogger() {
@@ -108,9 +106,6 @@ func (a *AppState) LoadConfig() {
 		Ethereum: &Ethereum{
 			WebsocketURL: viper.GetString(flagEthWebsocket),
 			RPCURL:       viper.GetString(flagEthRPC),
-		},
-		Noble: &Noble{
-			GRPCURL: viper.GetString(flagNobleGRPC),
 		},
 	}
 }

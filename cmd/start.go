@@ -12,7 +12,6 @@ import (
 	"jester.noble.xyz/appstate"
 	eth "jester.noble.xyz/ethereum"
 	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/noble"
 	"jester.noble.xyz/server"
 	"jester.noble.xyz/state"
 	"jester.noble.xyz/utils"
@@ -54,19 +53,10 @@ You can override contracts and configurations with the relevant "override" flags
 				a.Config.Testnet,
 				getOverrides(a.Viper),
 			)
-			if err != nil {
-				return err
-			}
-			a.Noble, err = noble.NewNoble(
-				cmd.Context(), a.Log,
-				a.Config.Noble.GRPCURL,
-				a.Viper.GetBool(appstate.FlagSkipHealth),
-			)
 			return err
 		},
 		PostRun: func(_ *cobra.Command, _ []string) {
 			a.Eth.CloseClients()
-			a.Noble.CloseClients()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
@@ -145,7 +135,7 @@ You can override contracts and configurations with the relevant "override" flags
 				}
 			}()
 
-			gRPCServer := server.NewJesterGrpcServer(log, a.Mux, a.Config.ServerAddress, vaaList, a.Noble.WormholeClient)
+			gRPCServer := server.NewJesterGrpcServer(log, a.Mux, a.Config.ServerAddress, vaaList)
 			g.Go(func() error {
 				return gRPCServer.StartServer(ctx)
 			})
@@ -214,10 +204,6 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().String(appstate.FlagOverrideHubPortal, "", "override the hub portal contract address")
 	cmd.Flags().String(appstate.FlagOverrideWormholeCore, "", "override the wormhole core contract address")
 	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
-
-	// testing flags
-	cmd.Flags().Bool(appstate.FlagSkipHealth, false, "skip Noble gRPC health check")
-	cmd.Flag(appstate.FlagSkipHealth).Hidden = true
 
 	// misc flags
 	cmd.Flags().BoolP(appstate.FlagHushLogo, "l", false, "suppress logo")
