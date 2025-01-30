@@ -96,7 +96,7 @@ func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, over
 		c.WormholeApiUrl = "https://api.testnet.wormscan.io/v1/signed_vaa"
 		c.HubPortal = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
 		c.WormholeCore = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
-		c.WormholeTransceiver = "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470"
+		c.WormholeTransceiver = "0x29CbF1e07166D31446307aE07999fa6d16223990"
 	default:
 		c.WormholeSrcChainId = 2
 		c.WormholeApiUrl = ""      // TODO
