@@ -18,7 +18,6 @@ package server
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -28,7 +27,6 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
-	wormholev1 "github.com/noble-assets/wormhole/api/v1"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"jester.noble.xyz/state"
@@ -39,20 +37,18 @@ import (
 var _ api.QueryServiceHandler = &JesterGrpcServer{}
 
 type JesterGrpcServer struct {
-	log            *slog.Logger
-	mux            *http.ServeMux
-	serverAddress  string
-	vaaList        *state.VaaList
-	wormholeClient wormholev1.QueryClient
+	log           *slog.Logger
+	mux           *http.ServeMux
+	serverAddress string
+	vaaList       *state.VaaList
 }
 
-func NewJesterGrpcServer(log *slog.Logger, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList, wormholeClient wormholev1.QueryClient) *JesterGrpcServer {
+func NewJesterGrpcServer(log *slog.Logger, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList) *JesterGrpcServer {
 	return &JesterGrpcServer{
-		log:            log.With("server", "grpc"),
-		mux:            mux,
-		serverAddress:  serverAddress,
-		vaaList:        vaaList,
-		wormholeClient: wormholeClient,
+		log:           log.With("server", "grpc"),
+		mux:           mux,
+		serverAddress: serverAddress,
+		vaaList:       vaaList,
 	}
 }
 
@@ -106,24 +102,9 @@ func (s *JesterGrpcServer) GetVoteExtension(
 ) (*connect.Response[api.GetVoteExtensionResponse], error) {
 	vaas := s.vaaList.GetThenClearAll()
 
-	var vaasToKeep [][]byte
-	for _, vaa := range vaas {
-		gRPCRes, err := s.wormholeClient.ExecutedVAA(ctx, &wormholev1.QueryExecutedVAA{
-			Input:     hex.EncodeToString(vaa),
-			InputType: "",
-		})
-		if err != nil {
-			s.log.Error("error querying Noble for executedVaa", "error", err)
-		}
-
-		if gRPCRes == nil || !gRPCRes.Executed {
-			vaasToKeep = append(vaasToKeep, vaa)
-		}
-	}
-
 	res := connect.NewResponse(&api.GetVoteExtensionResponse{
 		Dollar: &api.Dollar{
-			Vaas: vaasToKeep,
+			Vaas: vaas,
 		},
 	})
 

@@ -26,16 +26,11 @@ type Config struct {
 	Metrics       *Metrics `toml:"metrics"`
 
 	Ethereum *Ethereum `toml:"ethereum"`
-	Noble    *Noble    `toml:"noble"`
 }
 
 type Ethereum struct {
 	WebsocketURL string `toml:"websocket-url"`
 	RPCURL       string `toml:"rpc-url"`
-}
-
-type Noble struct {
-	GRPCURL string `toml:"grpc-url"`
 }
 
 type Metrics struct {
@@ -54,7 +49,6 @@ func AddConfigFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&eth_rpc, flagEthRPC, "r", "", "ethereum rpc")
 	cmd.PersistentFlags().BoolVar(&testnet, flagTestnet, false, "use testnet configuration (contracts, chain ID's, ect.)")
 	cmd.PersistentFlags().StringVar(&server_address, flagServerAddr, "localhost:9091", "gRPC server address")
-	cmd.PersistentFlags().StringVar(&noble_grpc, flagNobleGRPC, "localhost:9090", "noble grpc address")
 	cmd.PersistentFlags().BoolVar(&metrics_enabled, flagMetricsEnabled, true, "enable prometheus metrics")
 	cmd.PersistentFlags().StringVar(&metrics_address, flagMetricsAddress, "localhost:2112", "prometheus metrics address")
 }
