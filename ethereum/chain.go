@@ -57,7 +57,8 @@ type Config struct {
 type redial struct {
 	inProgressMutex sync.Mutex
 	inProgress      bool
-	done            chan error
+	cond            *sync.Cond
+	err             error
 	getHistory      chan struct{} // redial done, trigger historical lookup
 }
 
@@ -152,7 +153,6 @@ func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, over
 
 func newRedial() *redial {
 	return &redial{
-		done:       make(chan error),
 		getHistory: make(chan struct{}),
 	}
 }
@@ -194,28 +194,29 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 
 	// Another goroutine is already handling redial
 	if redial.inProgress {
-		log.Info("client redial already in progress")
-		redialDone := redial.done // create own reference to avoid races
 		redial.inProgressMutex.Unlock()
-		err := <-redialDone
+		log.Info("client redial already in progress")
+		redial.cond.L.Lock()   // Lock mutex to call wait()
+		redial.cond.Wait()     // Wait for the redial to complete; unlocks mutex, waits for Broadcast(), re-locks mutex
+		redial.cond.L.Unlock() // Unlock mutex
 		errExists := false
-		if err != nil {
+		if redial.err != nil {
 			errExists = true
 		}
 		log.Info("received client redial complete", "error-exists", errExists)
-		return err
+		return redial.err
 	}
 
 	// Mark redial as in progress and prepare a new signal channel
 	redial.inProgress = true
-	redial.done = make(chan error)
-	redialDone := redial.done // create own reference to avoid races
+	redial.cond = sync.NewCond(&redial.inProgressMutex)
 	redial.inProgressMutex.Unlock()
 
 	defer func() {
 		redial.inProgressMutex.Lock()
 		redial.inProgress = false
-		close(redialDone)
+		redial.err = err
+		redial.cond.Broadcast() // Signal all waiting goroutines that the redial operation is complete
 		redial.inProgressMutex.Unlock()
 	}()
 
@@ -223,14 +224,13 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 
 	client, err := dialClient(ctx, log, e.Config.WebsocketURL)
 	if err != nil {
-		redialDone <- err
 		return err
 	}
 	e.WebsocketClientMutex.Lock()
 	e.WebsocketClient = client
 	e.WebsocketClientMutex.Unlock()
 
-	time.Sleep(2 * time.Second)     // Allow other redial signals to accumulate
+	time.Sleep(1 * time.Second)     // Allow other redial signals to accumulate
 	redial.getHistory <- struct{}{} // Trigger historical lookup to catch up on missed events
 	return nil
 }
