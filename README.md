@@ -13,6 +13,7 @@ Jester is a sidecar application designed to be run by the Noble validator set. I
 ## What does Jester do?
 
 Jester acts as a relayer listening for `$USDN` transfers between Ethereum and Noble.
+
 As events are observed, Jester accumulates Wormhole VAA's (Verified Action Approvals).
 These VAA's are handed off to Noble validators and submitted on-chain.
 
@@ -100,7 +101,7 @@ grpc-server = "localhost:9091"
 Make sure that Jesters gRPC server matches the configuration set in Noble's `app.toml` (`$HOME/.noble/config/app.toml`).
 You do not need need to worry about this if you are using defaults.
 
-## Running Jester
+## Run 🃏
 
 To run:
 
@@ -110,9 +111,13 @@ To run:
 
 Jester includes a Prometheus server to monitor its status. We **HIGHLY** encourage all operators to scrape the `up` metric to ensure that Jester is up and running.
 
-By default, the Prometheus server listens on `localhost:2112`. The default metrics are available at `/metrics`, and custom metrics can be accessed at `/jester/metrics`.
+By default, the Prometheus server listens on `localhost:2112`.
 
-More details on the Prometheus server are available [here](./docs/prometheus.md)
+The default metrics are available at `/metrics`.
+
+Custom metrics can be accessed at `/jester/metrics`.
+
+More details for the Prometheus server are available [here](./docs/prometheus.md)
 
 > [!IMPORTANT]
 > The only way Jester is expected to quit is if the Ethereum Websocket becomes disconnect.
