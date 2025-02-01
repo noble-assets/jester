@@ -13,7 +13,7 @@ ldflags := $(strip $(ldflags))
 
 install:
 	@echo "🤖 Installing Jester..."
-	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/jesterd
+	@go install -mod=readonly -ldflags '$(ldflags)' ./cmd/jesterd
 	@echo "✅ Completed install!"
 
 build:
