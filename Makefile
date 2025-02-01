@@ -11,6 +11,11 @@ ldflags := $(strip $(ldflags))
 ###                                  Build                                  ###
 ###############################################################################
 
+install:
+	@echo "🤖 Installing Jester..."
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/jesterd
+	@echo "✅ Completed install!"
+
 build:
 	@echo "🤖 Building jester..."
 	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/" ./cmd/jesterd

@@ -19,13 +19,14 @@ package appstate
 import "github.com/spf13/cobra"
 
 type Config struct {
-	Log_level     string   `toml:"log-level"`
-	Log_style     string   `toml:"log-style"`
-	Testnet       bool     `toml:"testnet"`
-	ServerAddress string   `toml:"server-address"`
-	Metrics       *Metrics `toml:"metrics"`
+	Log_level     string `toml:"log-level"`
+	Log_style     string `toml:"log-style"`
+	Testnet       bool   `toml:"testnet"`
+	ServerAddress string `toml:"server-address"`
 
 	Ethereum *Ethereum `toml:"ethereum"`
+
+	Metrics *Metrics `toml:"metrics"`
 }
 
 type Ethereum struct {

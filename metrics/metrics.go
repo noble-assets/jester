@@ -37,7 +37,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		registry: registry,
 		EthSubInteruptionCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "eth_sub_interruption_counter",
-			Help: "The total number of ethereum subscription interruptions causing Jester to redial the websocket client",
+			Help: "The total number of Ethereum subscription interruptions causing Jester to redial the websocket client",
 		}),
 	}
 }

@@ -54,7 +54,7 @@ func (m *PrometheusMetrics) StartServer(ctx context.Context, log *slog.Logger, m
 
 	errChan := make(chan error, 1)
 	go func() {
-		log.Info("starting server", "address", address)
+		log.Info("starting server", "address", address, "default-metrics", "/metrics", "custom-metrics", "/jester/metrics")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 			close(errChan)
