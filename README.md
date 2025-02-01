@@ -2,7 +2,7 @@
 
 ![GitHub Release](https://img.shields.io/github/v/release/noble-assets/jester?filter=v*)
 ![GitHub Release](https://img.shields.io/github/v/release/noble-assets/jester?filter=api%2Fv*)
-![Build Workflow](https://github.com/noble-assets/jester/actions/workflows/release.yml/badge.svg)
+![Build Workflow](https://github.com/noble-assets/jester/actions/workflows/release.yaml/badge.svg)
 [![Go Reference](https://pkg.go.dev/badge/jester.noble.zyx.svg)](https://pkg.go.dev/jester.noble.zyx)
 
 Jester is a sidecar application designed to be run by the Noble validator set. It facilitates the implementation of the Noble Dollar, powered by M0.
