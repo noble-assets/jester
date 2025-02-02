@@ -2,8 +2,7 @@
 
 ## v1.0.0-alpha.0
 
-**Jan 31, 2025**
+*Jan 31, 2025*
 
-### FEATURE
+Introduces the initial release of the Jester binary.
 
-- initial release of Jester

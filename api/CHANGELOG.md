@@ -4,6 +4,5 @@
 
 *Jan 31, 2025*
 
-### FEATURE
+Introduces `api.jester.noble.xyz`.
 
-- Introduce `api.jester.noble.xyz`

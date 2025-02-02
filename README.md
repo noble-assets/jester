@@ -2,8 +2,8 @@
 
 ![GitHub Release](https://img.shields.io/github/v/release/noble-assets/jester?filter=v*)
 ![GitHub Release](https://img.shields.io/github/v/release/noble-assets/jester?filter=api%2Fv*)
-![Build Workflow](https://github.com/noble-assets/jester/actions/workflows/release.yaml/badge.svg)
-[![Go Reference](https://pkg.go.dev/badge/jester.noble.zyx.svg)](https://pkg.go.dev/jester.noble.zyx)
+![Build Workflow](https://github.com/noble-assets/jester/actions/workflows/release.yaml/badge.svg?event=push)
+[![Go Reference](https://pkg.go.dev/badge/jester.noble.zyx.svg)](https://pkg.go.dev/jester.noble.xyz)
 
 Jester is a sidecar application designed to be run by the Noble validator set. It facilitates the implementation of the Noble Dollar, powered by M0.
 
@@ -69,7 +69,7 @@ server-address = "localhost:9091"
 
 </details>
 
-Jesters config is simple. Please ensure all values are filled out.
+Jesters config is simple and mostly auto generated via the `init` command.  Please ensure all values are filled out.
 
 You will need a reliable Ethereum `websocket-url` and Ethereum `rpc-url`.
 
@@ -133,4 +133,8 @@ Users have three options to configure Jester:
 
 Note that configuration precedence takes place in the above order. Flags are prioritized, then ENV variables then the config file.
 
-> TIP: Use flags when running `jester config init` to automatically fill out the config file.
+> TIP: Use flags when running `jesterd config init` to automatically fill out the config file.
+
+## More Questions?
+
+Please visit our [FAQ](./docs/faq.md).

@@ -1,9 +1,6 @@
 version: 2
 project_name: jesterd
 
-before:
-  hooks:
-    - go mod tidy
 builds:
   -
    main: ./cmd/jesterd
@@ -20,7 +17,7 @@ builds:
       - arm64
 
 archives:
-  - format: binary
+  - formats: [ 'binary' ]
 
 kos:
    - 
