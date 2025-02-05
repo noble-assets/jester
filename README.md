@@ -89,9 +89,9 @@ You will need to add the following to Nobles `app.toml` file. By default this fi
 
 [jester]
 
-# Jesters gRPC server address. 
-# This should not conflict with the Tendermint gRPC server.
-grpc-server = "localhost:9091"
+# Jester's gRPC server address. 
+# This should not conflict with the CometBFT gRPC server.
+grpc-address = "localhost:9091"
 ```
 
 > New versions of Noble will automatically have this field when initialized.
