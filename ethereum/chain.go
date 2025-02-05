@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/utils"
@@ -44,12 +45,13 @@ type Config struct {
 	WebsocketURL string
 	RPCURL       string
 
-	WormholeSrcChainId   uint16
-	WormholeNobleChainID uint16
-	WormholeApiUrl       string
-	HubPortal            string
-	WormholeCore         string
-	WormholeTransceiver  string // LogMessagePublished topic sender
+	WormholeSrcChainId        uint16
+	WormholeNobleChainID      uint16
+	WormholeApiUrl            string
+	HubPortal                 string
+	WormholeCore              string
+	WormholeTransceiver       string // LogMessagePublished topic sender
+	PaddedWormholeTransceiver string
 }
 
 // redial is used to manage the redial state between one gRPC client
@@ -147,6 +149,10 @@ func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, over
 		log.Info("overriding wormhole transceiver contract", "address", overrides.WormholeTransceiver)
 		c.WormholeTransceiver = overrides.WormholeTransceiver
 	}
+
+	paddedWormholeTransceiver := make([]byte, 32)
+	copy(paddedWormholeTransceiver[12:], common.FromHex(c.WormholeTransceiver))
+	c.PaddedWormholeTransceiver = common.Bytes2Hex(paddedWormholeTransceiver)
 
 	return c
 }

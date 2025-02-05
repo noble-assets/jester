@@ -179,7 +179,7 @@ You can override contracts and configurations with the relevant "override" flags
 							utils.StartWormholeWorker(
 								ctx, log,
 								a.Eth.Config.WormholeApiUrl,
-								a.Eth.Config.WormholeTransceiver,
+								a.Eth.Config.PaddedWormholeTransceiver,
 								a.Eth.Config.WormholeSrcChainId,
 								data, vaaList,
 							)
