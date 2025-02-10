@@ -112,15 +112,15 @@ func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, over
 	switch testnet {
 	case true:
 		c.WormholeSrcChainId = 10002
-		c.WormholeApiUrl = "https://api.testnet.wormscan.io/v1/signed_vaa"
+		c.WormholeApiUrl = "https://api.testnet.wormholescan.io/v1/signed_vaa"
 		c.HubPortal = "0x1B7aE194B20C555B9d999c835F74cDCE36A67a74"
 		c.WormholeCore = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
 		c.WormholeTransceiver = "0x29CbF1e07166D31446307aE07999fa6d16223990"
 	default:
 		c.WormholeSrcChainId = 2
-		c.WormholeApiUrl = ""      // TODO
-		c.HubPortal = ""           // TODO
-		c.WormholeCore = ""        // TODO
+		c.WormholeApiUrl = "https://api.wormholescan.io/v1/signed_vaa"
+		c.HubPortal = "0x83Ae82Bd4054e815fB7B189C39D9CE670369ea16"
+		c.WormholeCore = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
 		c.WormholeTransceiver = "" // TODO
 	}
 

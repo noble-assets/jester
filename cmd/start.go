@@ -246,8 +246,9 @@ func plogo() {
 ██   ██║██╔══╝  ╚════██║   ██║   ██╔══╝  ██╔══██╗
 ╚█████╔╝███████╗███████║   ██║   ███████╗██║  ██║
  ╚════╝ ╚══════╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
-                             Noble's sidekick  
-%s                                             
+
+                                 Noble's sidekick
+                                 %s
 `, Version)
 	lines := strings.Split(x, "\n")
 	for _, line := range lines {
