@@ -1,11 +1,12 @@
 # Prometheus Metrics
 
-By default, Jesters Prometheus server listens on `localhost:2112` for incoming scrape requets.
-This can be changed in the config OR by using the `--metrics.address` flag.
+By default, Jester's Prometheus server listens on `localhost:2112` for incoming scrape requests.
+This can be changed in the config or by using the `--metrics.address` flag.
 
-Default metrics are available at `/metrics`.
+> [!NOTE]
+> If you need to scrape metrics from an external system, set the metrics address to `0.0.0.0:2112`.
 
-Custom metrics can be accessed at `/jester/metrics`.
+All metrics are served at `/metrics`.
 
 ## Custom Metrics
 
