@@ -1,0 +1,1 @@
+- bump go to 1.24 ([\#8](https://github.com/noble-assets/jester/issues/8))
