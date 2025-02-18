@@ -2,8 +2,6 @@ module jester.noble.xyz
 
 go 1.24
 
-toolchain go1.24.0
-
 require (
 	connectrpc.com/connect v1.18.1
 	connectrpc.com/grpcreflect v1.2.0
