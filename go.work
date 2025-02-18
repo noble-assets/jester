@@ -1,6 +1,5 @@
 go 1.24
 
-use (
-	.
-	api
-)
+use .
+
+replace jester.noble.xyz/api v1.0.0 => ./api
