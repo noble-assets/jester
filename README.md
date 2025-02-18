@@ -113,15 +113,14 @@ Jester includes a Prometheus server to monitor its status. We **HIGHLY** encoura
 
 By default, the Prometheus server listens on `localhost:2112`.
 
-The default metrics are available at `/metrics`.
+Both [custom metrics](./docs/prometheus.md#custom-metrics) and default Golang metrics are served at `/metrics`.
 
-Custom metrics can be accessed at `/jester/metrics`.
-
-More details for the Prometheus server are available [here](./docs/prometheus.md)
+More details about the Prometheus server are available [here](./docs/prometheus.md).
 
 > [!IMPORTANT]
 > The only way Jester is expected to quit is if the Ethereum Websocket becomes disconnect.
 > Jester will make several attempts to reconnect. If all attempts fails, Jester quits.
+> Scraping the `up` metric will allow operators to be notified if this happens.
 
 ## Flags and Configuration
 
