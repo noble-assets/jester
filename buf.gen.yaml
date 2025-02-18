@@ -4,5 +4,5 @@ plugins:
   - remote: buf.build/connectrpc/go:v1.18.1
     out: .
     opt: package_suffix=
-  - remote: buf.build/protocolbuffers/go:v1.36.2
+  - remote: buf.build/protocolbuffers/go:v1.36.5
     out: .
