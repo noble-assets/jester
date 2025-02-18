@@ -21,10 +21,18 @@ build:
 	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/" ./cmd/jesterd
 	@echo "✅ Completed build!"
 
-build-race:
-	@echo "🤖 Building jester with race detection"
-	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/" ./cmd/jesterd -race
+###############################################################################
+###                                 Docker                                  ###
+###############################################################################
+
+docker-build:
+	@echo "🐳 Building Docker image..."
+	@docker build -t jesterd:$(VERSION) .
 	@echo "✅ Completed build!"
+
+docker-run-shell:
+	@echo "🐳 Running Docker image..."
+	@docker run --rm -p 9091:9091 -p 2112:2112 -it --entrypoint /bin/sh jesterd
 
 ###############################################################################
 ###                                 Tooling                                 ###
