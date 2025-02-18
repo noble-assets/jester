@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -32,16 +33,10 @@ func (m *PrometheusMetrics) StartServer(ctx context.Context, log *slog.Logger, m
 	log = log.With(slog.String("server", "prometheus-metrics"))
 	m.enabled = true
 
-	// Serve default prometheus metrics
-	mux.Handle("/metrics", promhttp.Handler())
+	// Register custom metrics with the default Prometheus registry
+	prometheus.DefaultRegisterer.MustRegister(m.registry)
 
-	// Serve jester specific metrics
-	mux.Handle("/jester/metrics", promhttp.HandlerFor(
-		m.registry,
-		promhttp.HandlerOpts{
-			EnableOpenMetrics: true,
-		},
-	))
+	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := &http.Server{
 		Addr:     address,
@@ -54,7 +49,7 @@ func (m *PrometheusMetrics) StartServer(ctx context.Context, log *slog.Logger, m
 
 	errChan := make(chan error, 1)
 	go func() {
-		log.Info("starting server", "address", address, "default-metrics", "/metrics", "custom-metrics", "/jester/metrics")
+		log.Info("starting server", "address", fmt.Sprintf("%s/metrics", address))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 			close(errChan)
