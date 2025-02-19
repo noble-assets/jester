@@ -1,0 +1,1 @@
+- Downgrade Go to keep version in line with Noble ([#11](https://github.com/noble-assets/jester/pull/11))

@@ -1,0 +1,1 @@
+- Update default testnet config values. ([#4](https://github.com/noble-assets/jester/pull/4))

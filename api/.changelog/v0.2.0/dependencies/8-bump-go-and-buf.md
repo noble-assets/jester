@@ -1,0 +1,1 @@
+- Bump Go and Buf ([#8](https://github.com/noble-assets/jester/issues/8))

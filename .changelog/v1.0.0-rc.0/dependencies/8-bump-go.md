@@ -1,0 +1,1 @@
+- Bump Go version to [`v1.24`](https://go.dev/doc/go1.24). ([#8](https://github.com/noble-assets/jester/issues/8))
