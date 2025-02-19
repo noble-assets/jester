@@ -1,6 +1,6 @@
 module jester.noble.xyz/api
 
-go 1.22.11
+go 1.22
 
 require (
 	connectrpc.com/connect v1.18.1
