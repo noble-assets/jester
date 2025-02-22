@@ -182,8 +182,8 @@ func (e *Eth) StartM0TokenSentListener(ctx context.Context, log *slog.Logger, lo
 	eventName := "MTokenSent"
 	return startEventListener(
 		ctx, log, e, contractName, eventName,
-		func(ctx context.Context, sink chan *mportal.BindingsMTokenSent) (event.Subscription, error) {
-			binding, err := mportal.NewBindings(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
+		func(ctx context.Context, sink chan *mportal.AbiMTokenSent) (event.Subscription, error) {
+			binding, err := mportal.NewAbi(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
 			if err != nil {
 				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
 			}
@@ -195,7 +195,7 @@ func (e *Eth) StartM0TokenSentListener(ctx context.Context, log *slog.Logger, lo
 				nil, nil, nil,
 			)
 		},
-		func(ctx context.Context, log *slog.Logger, event *mportal.BindingsMTokenSent) {
+		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenSent) {
 			processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
 		},
 	)
@@ -207,8 +207,8 @@ func (e *Eth) StartM0MTokenIndexSentListener(ctx context.Context, log *slog.Logg
 	eventName := "MTokenIndexSent"
 	return startEventListener(
 		ctx, log, e, contractName, eventName,
-		func(ctx context.Context, sink chan *mportal.BindingsMTokenIndexSent) (event.Subscription, error) {
-			binding, err := mportal.NewBindings(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
+		func(ctx context.Context, sink chan *mportal.AbiMTokenIndexSent) (event.Subscription, error) {
+			binding, err := mportal.NewAbi(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
 			if err != nil {
 				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
 			}
@@ -219,7 +219,7 @@ func (e *Eth) StartM0MTokenIndexSentListener(ctx context.Context, log *slog.Logg
 				[]uint16{e.Config.WormholeNobleChainID},
 			)
 		},
-		func(ctx context.Context, log *slog.Logger, event *mportal.BindingsMTokenIndexSent) {
+		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenIndexSent) {
 			processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
 		},
 	)

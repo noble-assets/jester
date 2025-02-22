@@ -55,7 +55,7 @@ func (e *Eth) GetHistory(
 	}()
 
 	// load mPortal ABI to get function signatures
-	mPortalAbi, err := abi.JSON(strings.NewReader(mportal.BindingsMetaData.ABI))
+	mPortalAbi, err := abi.JSON(strings.NewReader(mportal.AbiMetaData.ABI))
 	if err != nil {
 		log.Error("unable to parse MTokenSent ABI when querying history", "error", err)
 		return
@@ -72,7 +72,7 @@ func (e *Eth) GetHistory(
 	}
 	var filteredMTokenSentLogs []ethTypes.Log
 	for _, mTokenSentLog := range mTokenSentLogs {
-		var event mportal.BindingsMTokenSent
+		var event mportal.AbiMTokenSent
 		if err := mPortalAbi.UnpackIntoInterface(&event, "MTokenSent", mTokenSentLog.Data); err != nil {
 			log.Error("error unpacking portal abi into interface when querying history", "error", err)
 		}
