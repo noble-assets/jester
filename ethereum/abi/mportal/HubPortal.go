@@ -76,7 +76,7 @@ type TransceiverStructsNttManagerMessage struct {
 
 // BindingsMetaData contains all meta data concerning the Bindings contract.
 var BindingsMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"mToken_\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"registrar_\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"chainId_\",\"type\":\"uint16\",\"internalType\":\"uint16\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"DEFAULT_TRANSCEIVER_INSTRUCTIONS\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"NTT_MANAGER_VERSION\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"string\",\"internalType\":\"string\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"attestationReceived\",\"inputs\":[{\"name\":\"sourceChainId\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"sourceNttManagerAddress\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"payload\",\"type\":\"tuple\",\"internalType\":\"structTransceiverStructs.NttManagerMessage\",\"components\":[{\"name\":\"id\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"sender\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"payload\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"cancelOutboundQueuedTransfer\",\"inputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"chainId\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint16\",\"internalType\":\"uint16\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"completeInboundQueuedTransfer\",\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"completeOutboundQueuedTransfer\",\"inputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"currentIndex\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint128\",\"internalType\":\"uint128\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"disableEarning\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"disableEarningIndex\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint128\",\"internalType\":\"uint128\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"enableEarning\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"executeMsg\",\"inputs\":[{\"name\":\"sourceChainId\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"sourceNttManagerAddress\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"message\",\"type\":\"tuple\",\"internalType\":\"structTransceiverStructs.NttManagerMessage\",\"components\":[{\"name\":\"id\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"sender\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"payload\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getCurrentInboundCapacity\",\"inputs\":[{\"name\":\"\",\"type\":\"uint16\",\"internalType\":\"uint16\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"getCurrentOutboundCapacity\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"getInboundLimitParams\",\"inputs\":[{\"name\":\"\",\"type\":\"uint16\",\"internalType\":\"uint16\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structIRateLimiter.RateLimitParams\",\"components\":[{\"name\":\"limit\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"currentCapacity\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"lastTxTimestamp\",\"type\":\"uint64\",\"internalType\":\"uint64\"}]}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"getInboundQueuedTransfer\",\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structIRateLimiter.InboundQueuedTransfer\",\"components\":[{\"name\":\"amount\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"txTimestamp\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"recipient\",\"type\":\"address\",\"internalType\":\"address\"}]}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"getMigratesImmutables\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMode\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"uint8\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getOutboundLimitParams\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structIRateLimiter.RateLimitParams\",\"components\":[{\"name\":\"limit\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"currentCapacity\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"lastTxTimestamp\",\"type\":\"uint64\",\"internalType\":\"uint64\"}]}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"getOutboundQueuedTransfer\",\"inputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structIRateLimiter.OutboundQueuedTransfer\",\"components\":[{\"name\":\"recipient\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"refundAddress\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"amount\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"txTimestamp\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"recipientChain\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"sender\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"transceiverInstructions\",\"type\":\"bytes\",\"internalType\":\"bytes\"}]}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"getPeer\",\"inputs\":[{\"name\":\"chainId_\",\"type\":\"uint16\",\"internalType\":\"uint16\"}],\"outputs\":[{\"name\":\"\",\"type\":\"tuple\",\"internalType\":\"structINttManager.NttManagerPeer\",\"components\":[{\"name\":\"peerAddress\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"tokenDecimals\",\"type\":\"uint8\",\"internalType\":\"uint8\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getThreshold\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"uint8\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTransceiverInfo\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"tuple[]\",\"internalType\":\"structTransceiverRegistry.TransceiverInfo[]\",\"components\":[{\"name\":\"registered\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"enabled\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"}]}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getTransceivers\",\"inputs\":[],\"outputs\":[{\"name\":\"result\",\"type\":\"address[]\",\"internalType\":\"address[]\"}],\"stateMutability\":\"pure\"},{\"type\":\"function\",\"name\":\"initialize\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"isMessageApproved\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isMessageExecuted\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isPaused\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"mToken\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"messageAttestations\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"count\",\"type\":\"uint8\",\"internalType\":\"uint8\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"migrate\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"mode\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"enumIManagerBase.Mode\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"nextMessageSequence\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"pause\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"pauser\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"quoteDeliveryPrice\",\"inputs\":[{\"name\":\"recipientChain\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"transceiverInstructions\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"},{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"rateLimitDuration\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"registrar\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"removeTransceiver\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"sendMTokenIndex\",\"inputs\":[{\"name\":\"destinationChainId_\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"refundAddress_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"messageId_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"sendRegistrarKey\",\"inputs\":[{\"name\":\"destinationChainId_\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"key_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"refundAddress_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"messageId_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"sendRegistrarListStatus\",\"inputs\":[{\"name\":\"destinationChainId_\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"listName_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"account_\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"refundAddress_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"messageId_\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"setInboundLimit\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"chainId_\",\"type\":\"uint16\",\"internalType\":\"uint16\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setOutboundLimit\",\"inputs\":[{\"name\":\"limit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setPeer\",\"inputs\":[{\"name\":\"peerChainId\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"peerContract\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"decimals\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"inboundLimit\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setThreshold\",\"inputs\":[{\"name\":\"threshold\",\"type\":\"uint8\",\"internalType\":\"uint8\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setTransceiver\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"token\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"tokenDecimals\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint8\",\"internalType\":\"uint8\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"transceiverAttestedToMessage\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"index\",\"type\":\"uint8\",\"internalType\":\"uint8\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"transfer\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"recipientChain\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"recipient\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"transfer\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"recipientChain\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"recipient\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"refundAddress\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"shouldQueue\",\"type\":\"bool\",\"internalType\":\"bool\"},{\"name\":\"transceiverInstructions\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"stateMutability\":\"payable\"},{\"type\":\"function\",\"name\":\"transferOwnership\",\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"transferPauserCapability\",\"inputs\":[{\"name\":\"newPauser\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"unpause\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"upgrade\",\"inputs\":[{\"name\":\"newImplementation\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"wasEarningEnabled\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"AdminChanged\",\"inputs\":[{\"name\":\"previousAdmin\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"},{\"name\":\"newAdmin\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"BeaconUpgraded\",\"inputs\":[{\"name\":\"beacon\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"EarningDisabled\",\"inputs\":[{\"name\":\"index\",\"type\":\"uint128\",\"indexed\":false,\"internalType\":\"uint128\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"EarningEnabled\",\"inputs\":[{\"name\":\"index\",\"type\":\"uint128\",\"indexed\":false,\"internalType\":\"uint128\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"InboundTransferQueued\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Initialized\",\"inputs\":[{\"name\":\"version\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MTokenIndexSent\",\"inputs\":[{\"name\":\"destinationChainId\",\"type\":\"uint16\",\"indexed\":true,\"internalType\":\"uint16\"},{\"name\":\"messageId\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"index\",\"type\":\"uint128\",\"indexed\":false,\"internalType\":\"uint128\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MTokenReceived\",\"inputs\":[{\"name\":\"sourceChainId\",\"type\":\"uint16\",\"indexed\":true,\"internalType\":\"uint16\"},{\"name\":\"messageId\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"sender\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"recipient\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"index\",\"type\":\"uint128\",\"indexed\":false,\"internalType\":\"uint128\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MTokenSent\",\"inputs\":[{\"name\":\"destinationChainId\",\"type\":\"uint16\",\"indexed\":true,\"internalType\":\"uint16\"},{\"name\":\"messageId\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"recipient\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"index\",\"type\":\"uint128\",\"indexed\":false,\"internalType\":\"uint128\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MessageAlreadyExecuted\",\"inputs\":[{\"name\":\"sourceNttManager\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"msgHash\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"MessageAttestedTo\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"transceiver\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"},{\"name\":\"index\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"NotPaused\",\"inputs\":[{\"name\":\"notPaused\",\"type\":\"bool\",\"indexed\":false,\"internalType\":\"bool\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OutboundTransferCancelled\",\"inputs\":[{\"name\":\"sequence\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"recipient\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OutboundTransferQueued\",\"inputs\":[{\"name\":\"queueSequence\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OutboundTransferRateLimited\",\"inputs\":[{\"name\":\"sender\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"sequence\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"currentCapacity\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OwnershipTransferred\",\"inputs\":[{\"name\":\"previousOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOwner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Paused\",\"inputs\":[{\"name\":\"paused\",\"type\":\"bool\",\"indexed\":false,\"internalType\":\"bool\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"PauserTransferred\",\"inputs\":[{\"name\":\"oldPauser\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newPauser\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"PeerUpdated\",\"inputs\":[{\"name\":\"chainId_\",\"type\":\"uint16\",\"indexed\":true,\"internalType\":\"uint16\"},{\"name\":\"oldPeerContract\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"oldPeerDecimals\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"},{\"name\":\"peerContract\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"peerDecimals\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RegistrarKeySent\",\"inputs\":[{\"name\":\"destinationChainId\",\"type\":\"uint16\",\"indexed\":true,\"internalType\":\"uint16\"},{\"name\":\"messageId\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"key\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"value\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RegistrarListStatusSent\",\"inputs\":[{\"name\":\"destinationChainId\",\"type\":\"uint16\",\"indexed\":true,\"internalType\":\"uint16\"},{\"name\":\"messageId\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"listName\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"},{\"name\":\"account\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"status\",\"type\":\"bool\",\"indexed\":false,\"internalType\":\"bool\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"ThresholdChanged\",\"inputs\":[{\"name\":\"oldThreshold\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"},{\"name\":\"threshold\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"TransceiverAdded\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"},{\"name\":\"transceiversNum\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"threshold\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"TransceiverRemoved\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"indexed\":false,\"internalType\":\"address\"},{\"name\":\"threshold\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"TransferRedeemed\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"TransferSent\",\"inputs\":[{\"name\":\"recipient\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"refundAddress\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"amount\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"fee\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"recipientChain\",\"type\":\"uint16\",\"indexed\":false,\"internalType\":\"uint16\"},{\"name\":\"msgSequence\",\"type\":\"uint64\",\"indexed\":false,\"internalType\":\"uint64\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"TransferSent\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"indexed\":true,\"internalType\":\"bytes32\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Upgraded\",\"inputs\":[{\"name\":\"implementation\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"BurnAmountDifferentThanBalanceDiff\",\"inputs\":[{\"name\":\"burnAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"balanceDiff\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"CallerNotTransceiver\",\"inputs\":[{\"name\":\"caller\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"CancellerNotSender\",\"inputs\":[{\"name\":\"canceller\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"sender\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"CapacityCannotExceedLimit\",\"inputs\":[{\"name\":\"newCurrentCapacity\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"},{\"name\":\"newLimit\",\"type\":\"uint72\",\"internalType\":\"TrimmedAmount\"}]},{\"type\":\"error\",\"name\":\"DeliveryPaymentTooLow\",\"inputs\":[{\"name\":\"requiredPayment\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"providedPayment\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"DisabledTransceiver\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"EarningCannotBeReenabled\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"EarningIsDisabled\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"EarningIsEnabled\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InboundQueuedTransferNotFound\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"InboundQueuedTransferStillQueued\",\"inputs\":[{\"name\":\"digest\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"transferTimestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"InvalidFork\",\"inputs\":[{\"name\":\"evmChainId\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"blockChainId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"InvalidFork\",\"inputs\":[{\"name\":\"evmChainId\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"blockChainId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"InvalidInitialization\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidMode\",\"inputs\":[{\"name\":\"mode\",\"type\":\"uint8\",\"internalType\":\"uint8\"}]},{\"type\":\"error\",\"name\":\"InvalidPauser\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"InvalidPayloadLength\",\"inputs\":[{\"name\":\"length\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"InvalidPayloadPrefix\",\"inputs\":[{\"name\":\"prefix\",\"type\":\"bytes4\",\"internalType\":\"bytes4\"}]},{\"type\":\"error\",\"name\":\"InvalidPeer\",\"inputs\":[{\"name\":\"chainId\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"peerAddress\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"InvalidPeerChainIdZero\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPeerDecimals\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPeerSameChainId\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidPeerZeroAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidRecipient\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidRefundAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"InvalidTargetChain\",\"inputs\":[{\"name\":\"targetChain\",\"type\":\"uint16\",\"internalType\":\"uint16\"},{\"name\":\"thisChain\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]},{\"type\":\"error\",\"name\":\"InvalidTransceiverZeroAddress\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"IsApprovedEarner\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"LengthMismatch\",\"inputs\":[{\"name\":\"encodedLength\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"expectedLength\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"MessageNotApproved\",\"inputs\":[{\"name\":\"msgHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"NoEnabledTransceivers\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NonRegisteredTransceiver\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"NotApprovedEarner\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotEnoughCapacity\",\"inputs\":[{\"name\":\"currentCapacity\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"NotImplemented\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotInitializing\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotMigrating\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"OnlyDelegateCall\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"OutboundQueuedTransferNotFound\",\"inputs\":[{\"name\":\"queueSequence\",\"type\":\"uint64\",\"internalType\":\"uint64\"}]},{\"type\":\"error\",\"name\":\"OutboundQueuedTransferStillQueued\",\"inputs\":[{\"name\":\"queueSequence\",\"type\":\"uint64\",\"internalType\":\"uint64\"},{\"name\":\"transferTimestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"OwnableInvalidOwner\",\"inputs\":[{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"OwnableUnauthorizedAccount\",\"inputs\":[{\"name\":\"account\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"PeerNotRegistered\",\"inputs\":[{\"name\":\"chainId\",\"type\":\"uint16\",\"internalType\":\"uint16\"}]},{\"type\":\"error\",\"name\":\"ReentrancyGuardReentrantCall\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"RefundFailed\",\"inputs\":[{\"name\":\"refundAmount\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"RequireContractIsNotPaused\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"RequireContractIsPaused\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"RetrievedIncorrectRegisteredTransceivers\",\"inputs\":[{\"name\":\"retrieved\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"registered\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"StaticcallFailed\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ThresholdTooHigh\",\"inputs\":[{\"name\":\"threshold\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"transceivers\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"TooManyTransceivers\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"TransceiverAlreadyAttestedToMessage\",\"inputs\":[{\"name\":\"nttManagerMessageHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]},{\"type\":\"error\",\"name\":\"TransceiverAlreadyEnabled\",\"inputs\":[{\"name\":\"transceiver\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"TransferAmountHasDust\",\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"dust\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"Uint64Overflow\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"UndefinedRateLimiting\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"UnexpectedDeployer\",\"inputs\":[{\"name\":\"expectedOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"owner\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"UnexpectedMsgValue\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroAmount\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroMToken\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroRegistrar\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"ZeroThreshold\",\"inputs\":[]}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"mToken_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"registrar_\",\"type\":\"address\"},{\"internalType\":\"uint16\",\"name\":\"chainId_\",\"type\":\"uint16\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"burnAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"balanceDiff\",\"type\":\"uint256\"}],\"name\":\"BurnAmountDifferentThanBalanceDiff\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CallerNotTransceiver\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"canceller\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"CancellerNotSender\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"TrimmedAmount\",\"name\":\"newCurrentCapacity\",\"type\":\"uint72\"},{\"internalType\":\"TrimmedAmount\",\"name\":\"newLimit\",\"type\":\"uint72\"}],\"name\":\"CapacityCannotExceedLimit\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"requiredPayment\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"providedPayment\",\"type\":\"uint256\"}],\"name\":\"DeliveryPaymentTooLow\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"}],\"name\":\"DisabledTransceiver\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"EarningCannotBeReenabled\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"EarningIsDisabled\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"EarningIsEnabled\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"InboundQueuedTransferNotFound\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"transferTimestamp\",\"type\":\"uint256\"}],\"name\":\"InboundQueuedTransferStillQueued\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"}],\"name\":\"InvalidDestinationChain\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"evmChainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"blockChainId\",\"type\":\"uint256\"}],\"name\":\"InvalidFork\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"mode\",\"type\":\"uint8\"}],\"name\":\"InvalidMode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"InvalidPauser\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"name\":\"InvalidPayloadLength\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"prefix\",\"type\":\"bytes4\"}],\"name\":\"InvalidPayloadPrefix\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"chainId\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"peerAddress\",\"type\":\"bytes32\"}],\"name\":\"InvalidPeer\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidPeerChainIdZero\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidPeerDecimals\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidPeerSameChainId\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidPeerZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidRecipient\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidRefundAddress\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"targetChain\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"thisChain\",\"type\":\"uint16\"}],\"name\":\"InvalidTargetChain\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidTransceiverZeroAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"IsApprovedEarner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"encodedLength\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expectedLength\",\"type\":\"uint256\"}],\"name\":\"LengthMismatch\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"msgHash\",\"type\":\"bytes32\"}],\"name\":\"MessageNotApproved\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoEnabledTransceivers\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"}],\"name\":\"NonRegisteredTransceiver\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotApprovedEarner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"currentCapacity\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"NotEnoughCapacity\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotImplemented\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotMigrating\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyDelegateCall\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"queueSequence\",\"type\":\"uint64\"}],\"name\":\"OutboundQueuedTransferNotFound\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"queueSequence\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"transferTimestamp\",\"type\":\"uint256\"}],\"name\":\"OutboundQueuedTransferStillQueued\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"chainId\",\"type\":\"uint16\"}],\"name\":\"PeerNotRegistered\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ReentrancyGuardReentrantCall\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"refundAmount\",\"type\":\"uint256\"}],\"name\":\"RefundFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"RequireContractIsNotPaused\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"RequireContractIsPaused\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"retrieved\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"registered\",\"type\":\"uint256\"}],\"name\":\"RetrievedIncorrectRegisteredTransceivers\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"StaticcallFailed\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"threshold\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"transceivers\",\"type\":\"uint256\"}],\"name\":\"ThresholdTooHigh\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"TooManyTransceivers\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"nttManagerMessageHash\",\"type\":\"bytes32\"}],\"name\":\"TransceiverAlreadyAttestedToMessage\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"}],\"name\":\"TransceiverAlreadyEnabled\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"dust\",\"type\":\"uint256\"}],\"name\":\"TransferAmountHasDust\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"Uint64Overflow\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UndefinedRateLimiting\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"expectedOwner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"UnexpectedDeployer\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UnexpectedMsgValue\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sourceToken\",\"type\":\"address\"},{\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"destinationToken\",\"type\":\"bytes32\"}],\"name\":\"UnsupportedBridgingPath\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroAmount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroDestinationToken\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroMToken\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroRegistrar\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroSourceToken\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ZeroThreshold\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousAdmin\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"AdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"beacon\",\"type\":\"address\"}],\"name\":\"BeaconUpgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"mToken\",\"type\":\"bytes32\"}],\"name\":\"DestinationMTokenSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"index\",\"type\":\"uint128\"}],\"name\":\"EarningDisabled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"index\",\"type\":\"uint128\"}],\"name\":\"EarningEnabled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"chainId\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"oldLimit\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newLimit\",\"type\":\"uint256\"}],\"name\":\"InboundTransferLimitUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"InboundTransferQueued\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"messageId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"index\",\"type\":\"uint128\"}],\"name\":\"MTokenIndexSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint16\",\"name\":\"sourceChainId\",\"type\":\"uint16\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"destinationToken\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"sender\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"index\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"messageId\",\"type\":\"bytes32\"}],\"name\":\"MTokenReceived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sourceToken\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"destinationToken\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"recipient\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint128\",\"name\":\"index\",\"type\":\"uint128\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"messageId\",\"type\":\"bytes32\"}],\"name\":\"MTokenSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"sourceNttManager\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"msgHash\",\"type\":\"bytes32\"}],\"name\":\"MessageAlreadyExecuted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"index\",\"type\":\"uint8\"}],\"name\":\"MessageAttestedTo\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"notPaused\",\"type\":\"bool\"}],\"name\":\"NotPaused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"OutboundTransferCancelled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"oldLimit\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newLimit\",\"type\":\"uint256\"}],\"name\":\"OutboundTransferLimitUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"queueSequence\",\"type\":\"uint64\"}],\"name\":\"OutboundTransferQueued\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"currentCapacity\",\"type\":\"uint256\"}],\"name\":\"OutboundTransferRateLimited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"paused\",\"type\":\"bool\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"oldPauser\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newPauser\",\"type\":\"address\"}],\"name\":\"PauserTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"chainId_\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"oldPeerContract\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"oldPeerDecimals\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"peerContract\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"peerDecimals\",\"type\":\"uint8\"}],\"name\":\"PeerUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"messageId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"key\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"value\",\"type\":\"bytes32\"}],\"name\":\"RegistrarKeySent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"messageId\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"listName\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"status\",\"type\":\"bool\"}],\"name\":\"RegistrarListStatusSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sourceToken\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"destinationToken\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"supported\",\"type\":\"bool\"}],\"name\":\"SupportedBridgingPathSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"oldThreshold\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"threshold\",\"type\":\"uint8\"}],\"name\":\"ThresholdChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"transceiversNum\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"threshold\",\"type\":\"uint8\"}],\"name\":\"TransceiverAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"threshold\",\"type\":\"uint8\"}],\"name\":\"TransceiverRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"TransferRedeemed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"recipient\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"refundAddress\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"fee\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint16\",\"name\":\"recipientChain\",\"type\":\"uint16\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"msgSequence\",\"type\":\"uint64\"}],\"name\":\"TransferSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"TransferSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"destinationWrappedToken\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"WrapFailed\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_TRANSCEIVER_INSTRUCTIONS\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"NTT_MANAGER_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"sourceChainId\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"sourceNttManagerAddress\",\"type\":\"bytes32\"},{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"sender\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"internalType\":\"structTransceiverStructs.NttManagerMessage\",\"name\":\"payload\",\"type\":\"tuple\"}],\"name\":\"attestationReceived\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"cancelOutboundQueuedTransfer\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chainId\",\"outputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"completeInboundQueuedTransfer\",\"outputs\":[],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"completeOutboundQueuedTransfer\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"currentIndex\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"}],\"name\":\"destinationMToken\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"mToken\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"disableEarning\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"disableEarningIndex\",\"outputs\":[{\"internalType\":\"uint128\",\"name\":\"\",\"type\":\"uint128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"enableEarning\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"sourceChainId\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"sourceNttManagerAddress\",\"type\":\"bytes32\"},{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"sender\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"payload\",\"type\":\"bytes\"}],\"internalType\":\"structTransceiverStructs.NttManagerMessage\",\"name\":\"message\",\"type\":\"tuple\"}],\"name\":\"executeMsg\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"name\":\"getCurrentInboundCapacity\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getCurrentOutboundCapacity\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"\",\"type\":\"uint16\"}],\"name\":\"getInboundLimitParams\",\"outputs\":[{\"components\":[{\"internalType\":\"TrimmedAmount\",\"name\":\"limit\",\"type\":\"uint72\"},{\"internalType\":\"TrimmedAmount\",\"name\":\"currentCapacity\",\"type\":\"uint72\"},{\"internalType\":\"uint64\",\"name\":\"lastTxTimestamp\",\"type\":\"uint64\"}],\"internalType\":\"structIRateLimiter.RateLimitParams\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"getInboundQueuedTransfer\",\"outputs\":[{\"components\":[{\"internalType\":\"TrimmedAmount\",\"name\":\"amount\",\"type\":\"uint72\"},{\"internalType\":\"uint64\",\"name\":\"txTimestamp\",\"type\":\"uint64\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"}],\"internalType\":\"structIRateLimiter.InboundQueuedTransfer\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMigratesImmutables\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMode\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getOutboundLimitParams\",\"outputs\":[{\"components\":[{\"internalType\":\"TrimmedAmount\",\"name\":\"limit\",\"type\":\"uint72\"},{\"internalType\":\"TrimmedAmount\",\"name\":\"currentCapacity\",\"type\":\"uint72\"},{\"internalType\":\"uint64\",\"name\":\"lastTxTimestamp\",\"type\":\"uint64\"}],\"internalType\":\"structIRateLimiter.RateLimitParams\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"getOutboundQueuedTransfer\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"recipient\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"refundAddress\",\"type\":\"bytes32\"},{\"internalType\":\"TrimmedAmount\",\"name\":\"amount\",\"type\":\"uint72\"},{\"internalType\":\"uint64\",\"name\":\"txTimestamp\",\"type\":\"uint64\"},{\"internalType\":\"uint16\",\"name\":\"recipientChain\",\"type\":\"uint16\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"transceiverInstructions\",\"type\":\"bytes\"}],\"internalType\":\"structIRateLimiter.OutboundQueuedTransfer\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"chainId_\",\"type\":\"uint16\"}],\"name\":\"getPeer\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"peerAddress\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"tokenDecimals\",\"type\":\"uint8\"}],\"internalType\":\"structINttManager.NttManagerPeer\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getThreshold\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTransceiverInfo\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"registered\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"enabled\",\"type\":\"bool\"},{\"internalType\":\"uint8\",\"name\":\"index\",\"type\":\"uint8\"}],\"internalType\":\"structTransceiverRegistry.TransceiverInfo[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTransceivers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"result\",\"type\":\"address[]\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"isMessageApproved\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"isMessageExecuted\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isPaused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"mToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"}],\"name\":\"messageAttestations\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"count\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"migrate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"mode\",\"outputs\":[{\"internalType\":\"enumIManagerBase.Mode\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nextMessageSequence\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pauser\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"recipientChain\",\"type\":\"uint16\"},{\"internalType\":\"bytes\",\"name\":\"transceiverInstructions\",\"type\":\"bytes\"}],\"name\":\"quoteDeliveryPrice\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"rateLimitDuration\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"registrar\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"}],\"name\":\"removeTransceiver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"destinationChainId_\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"refundAddress_\",\"type\":\"bytes32\"}],\"name\":\"sendMTokenIndex\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"messageId_\",\"type\":\"bytes32\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"destinationChainId_\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"key_\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"refundAddress_\",\"type\":\"bytes32\"}],\"name\":\"sendRegistrarKey\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"messageId_\",\"type\":\"bytes32\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"destinationChainId_\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"listName_\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account_\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"refundAddress_\",\"type\":\"bytes32\"}],\"name\":\"sendRegistrarListStatus\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"messageId_\",\"type\":\"bytes32\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"destinationChainId_\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"mToken_\",\"type\":\"bytes32\"}],\"name\":\"setDestinationMToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"chainId_\",\"type\":\"uint16\"}],\"name\":\"setInboundLimit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"setOutboundLimit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint16\",\"name\":\"peerChainId\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"peerContract\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"decimals\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"inboundLimit\",\"type\":\"uint256\"}],\"name\":\"setPeer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sourceToken_\",\"type\":\"address\"},{\"internalType\":\"uint16\",\"name\":\"destinationChainId_\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"destinationToken_\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"supported_\",\"type\":\"bool\"}],\"name\":\"setSupportedBridgingPath\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"threshold\",\"type\":\"uint8\"}],\"name\":\"setThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"transceiver\",\"type\":\"address\"}],\"name\":\"setTransceiver\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sourceToken\",\"type\":\"address\"},{\"internalType\":\"uint16\",\"name\":\"destinationChainId\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"destinationToken\",\"type\":\"bytes32\"}],\"name\":\"supportedBridgingPath\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"supported\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"token\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"tokenDecimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"digest\",\"type\":\"bytes32\"},{\"internalType\":\"uint8\",\"name\":\"index\",\"type\":\"uint8\"}],\"name\":\"transceiverAttestedToMessage\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"recipientChain\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"recipient\",\"type\":\"bytes32\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint16\",\"name\":\"recipientChain\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"recipient\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"refundAddress\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"shouldQueue\",\"type\":\"bool\"},{\"internalType\":\"bytes\",\"name\":\"transceiverInstructions\",\"type\":\"bytes\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount_\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"sourceToken_\",\"type\":\"address\"},{\"internalType\":\"uint16\",\"name\":\"destinationChainId_\",\"type\":\"uint16\"},{\"internalType\":\"bytes32\",\"name\":\"destinationToken_\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"recipient_\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"refundAddress_\",\"type\":\"bytes32\"}],\"name\":\"transferMLikeToken\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"sequence_\",\"type\":\"uint64\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newPauser\",\"type\":\"address\"}],\"name\":\"transferPauserCapability\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"}],\"name\":\"upgrade\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wasEarningEnabled\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // BindingsABI is the input ABI used to generate the binding from.
@@ -405,6 +405,37 @@ func (_Bindings *BindingsSession) CurrentIndex() (*big.Int, error) {
 // Solidity: function currentIndex() view returns(uint128)
 func (_Bindings *BindingsCallerSession) CurrentIndex() (*big.Int, error) {
 	return _Bindings.Contract.CurrentIndex(&_Bindings.CallOpts)
+}
+
+// DestinationMToken is a free data retrieval call binding the contract method 0xab5d44d1.
+//
+// Solidity: function destinationMToken(uint16 destinationChainId) view returns(bytes32 mToken)
+func (_Bindings *BindingsCaller) DestinationMToken(opts *bind.CallOpts, destinationChainId uint16) ([32]byte, error) {
+	var out []interface{}
+	err := _Bindings.contract.Call(opts, &out, "destinationMToken", destinationChainId)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// DestinationMToken is a free data retrieval call binding the contract method 0xab5d44d1.
+//
+// Solidity: function destinationMToken(uint16 destinationChainId) view returns(bytes32 mToken)
+func (_Bindings *BindingsSession) DestinationMToken(destinationChainId uint16) ([32]byte, error) {
+	return _Bindings.Contract.DestinationMToken(&_Bindings.CallOpts, destinationChainId)
+}
+
+// DestinationMToken is a free data retrieval call binding the contract method 0xab5d44d1.
+//
+// Solidity: function destinationMToken(uint16 destinationChainId) view returns(bytes32 mToken)
+func (_Bindings *BindingsCallerSession) DestinationMToken(destinationChainId uint16) ([32]byte, error) {
+	return _Bindings.Contract.DestinationMToken(&_Bindings.CallOpts, destinationChainId)
 }
 
 // DisableEarningIndex is a free data retrieval call binding the contract method 0xf22e63ac.
@@ -1183,6 +1214,37 @@ func (_Bindings *BindingsCallerSession) Registrar() (common.Address, error) {
 	return _Bindings.Contract.Registrar(&_Bindings.CallOpts)
 }
 
+// SupportedBridgingPath is a free data retrieval call binding the contract method 0xcd9d5694.
+//
+// Solidity: function supportedBridgingPath(address sourceToken, uint16 destinationChainId, bytes32 destinationToken) view returns(bool supported)
+func (_Bindings *BindingsCaller) SupportedBridgingPath(opts *bind.CallOpts, sourceToken common.Address, destinationChainId uint16, destinationToken [32]byte) (bool, error) {
+	var out []interface{}
+	err := _Bindings.contract.Call(opts, &out, "supportedBridgingPath", sourceToken, destinationChainId, destinationToken)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// SupportedBridgingPath is a free data retrieval call binding the contract method 0xcd9d5694.
+//
+// Solidity: function supportedBridgingPath(address sourceToken, uint16 destinationChainId, bytes32 destinationToken) view returns(bool supported)
+func (_Bindings *BindingsSession) SupportedBridgingPath(sourceToken common.Address, destinationChainId uint16, destinationToken [32]byte) (bool, error) {
+	return _Bindings.Contract.SupportedBridgingPath(&_Bindings.CallOpts, sourceToken, destinationChainId, destinationToken)
+}
+
+// SupportedBridgingPath is a free data retrieval call binding the contract method 0xcd9d5694.
+//
+// Solidity: function supportedBridgingPath(address sourceToken, uint16 destinationChainId, bytes32 destinationToken) view returns(bool supported)
+func (_Bindings *BindingsCallerSession) SupportedBridgingPath(sourceToken common.Address, destinationChainId uint16, destinationToken [32]byte) (bool, error) {
+	return _Bindings.Contract.SupportedBridgingPath(&_Bindings.CallOpts, sourceToken, destinationChainId, destinationToken)
+}
+
 // Token is a free data retrieval call binding the contract method 0xfc0c546a.
 //
 // Solidity: function token() view returns(address)
@@ -1559,6 +1621,27 @@ func (_Bindings *BindingsTransactorSession) SendRegistrarListStatus(destinationC
 	return _Bindings.Contract.SendRegistrarListStatus(&_Bindings.TransactOpts, destinationChainId_, listName_, account_, refundAddress_)
 }
 
+// SetDestinationMToken is a paid mutator transaction binding the contract method 0x76a4a539.
+//
+// Solidity: function setDestinationMToken(uint16 destinationChainId_, bytes32 mToken_) returns()
+func (_Bindings *BindingsTransactor) SetDestinationMToken(opts *bind.TransactOpts, destinationChainId_ uint16, mToken_ [32]byte) (*types.Transaction, error) {
+	return _Bindings.contract.Transact(opts, "setDestinationMToken", destinationChainId_, mToken_)
+}
+
+// SetDestinationMToken is a paid mutator transaction binding the contract method 0x76a4a539.
+//
+// Solidity: function setDestinationMToken(uint16 destinationChainId_, bytes32 mToken_) returns()
+func (_Bindings *BindingsSession) SetDestinationMToken(destinationChainId_ uint16, mToken_ [32]byte) (*types.Transaction, error) {
+	return _Bindings.Contract.SetDestinationMToken(&_Bindings.TransactOpts, destinationChainId_, mToken_)
+}
+
+// SetDestinationMToken is a paid mutator transaction binding the contract method 0x76a4a539.
+//
+// Solidity: function setDestinationMToken(uint16 destinationChainId_, bytes32 mToken_) returns()
+func (_Bindings *BindingsTransactorSession) SetDestinationMToken(destinationChainId_ uint16, mToken_ [32]byte) (*types.Transaction, error) {
+	return _Bindings.Contract.SetDestinationMToken(&_Bindings.TransactOpts, destinationChainId_, mToken_)
+}
+
 // SetInboundLimit is a paid mutator transaction binding the contract method 0x186ce612.
 //
 // Solidity: function setInboundLimit(uint256 limit, uint16 chainId_) returns()
@@ -1620,6 +1703,27 @@ func (_Bindings *BindingsSession) SetPeer(peerChainId uint16, peerContract [32]b
 // Solidity: function setPeer(uint16 peerChainId, bytes32 peerContract, uint8 decimals, uint256 inboundLimit) returns()
 func (_Bindings *BindingsTransactorSession) SetPeer(peerChainId uint16, peerContract [32]byte, decimals uint8, inboundLimit *big.Int) (*types.Transaction, error) {
 	return _Bindings.Contract.SetPeer(&_Bindings.TransactOpts, peerChainId, peerContract, decimals, inboundLimit)
+}
+
+// SetSupportedBridgingPath is a paid mutator transaction binding the contract method 0x1482cb4a.
+//
+// Solidity: function setSupportedBridgingPath(address sourceToken_, uint16 destinationChainId_, bytes32 destinationToken_, bool supported_) returns()
+func (_Bindings *BindingsTransactor) SetSupportedBridgingPath(opts *bind.TransactOpts, sourceToken_ common.Address, destinationChainId_ uint16, destinationToken_ [32]byte, supported_ bool) (*types.Transaction, error) {
+	return _Bindings.contract.Transact(opts, "setSupportedBridgingPath", sourceToken_, destinationChainId_, destinationToken_, supported_)
+}
+
+// SetSupportedBridgingPath is a paid mutator transaction binding the contract method 0x1482cb4a.
+//
+// Solidity: function setSupportedBridgingPath(address sourceToken_, uint16 destinationChainId_, bytes32 destinationToken_, bool supported_) returns()
+func (_Bindings *BindingsSession) SetSupportedBridgingPath(sourceToken_ common.Address, destinationChainId_ uint16, destinationToken_ [32]byte, supported_ bool) (*types.Transaction, error) {
+	return _Bindings.Contract.SetSupportedBridgingPath(&_Bindings.TransactOpts, sourceToken_, destinationChainId_, destinationToken_, supported_)
+}
+
+// SetSupportedBridgingPath is a paid mutator transaction binding the contract method 0x1482cb4a.
+//
+// Solidity: function setSupportedBridgingPath(address sourceToken_, uint16 destinationChainId_, bytes32 destinationToken_, bool supported_) returns()
+func (_Bindings *BindingsTransactorSession) SetSupportedBridgingPath(sourceToken_ common.Address, destinationChainId_ uint16, destinationToken_ [32]byte, supported_ bool) (*types.Transaction, error) {
+	return _Bindings.Contract.SetSupportedBridgingPath(&_Bindings.TransactOpts, sourceToken_, destinationChainId_, destinationToken_, supported_)
 }
 
 // SetThreshold is a paid mutator transaction binding the contract method 0xe5a98603.
@@ -1704,6 +1808,27 @@ func (_Bindings *BindingsSession) Transfer0(amount *big.Int, recipientChain uint
 // Solidity: function transfer(uint256 amount, uint16 recipientChain, bytes32 recipient, bytes32 refundAddress, bool shouldQueue, bytes transceiverInstructions) payable returns(uint64)
 func (_Bindings *BindingsTransactorSession) Transfer0(amount *big.Int, recipientChain uint16, recipient [32]byte, refundAddress [32]byte, shouldQueue bool, transceiverInstructions []byte) (*types.Transaction, error) {
 	return _Bindings.Contract.Transfer0(&_Bindings.TransactOpts, amount, recipientChain, recipient, refundAddress, shouldQueue, transceiverInstructions)
+}
+
+// TransferMLikeToken is a paid mutator transaction binding the contract method 0x68df33c6.
+//
+// Solidity: function transferMLikeToken(uint256 amount_, address sourceToken_, uint16 destinationChainId_, bytes32 destinationToken_, bytes32 recipient_, bytes32 refundAddress_) payable returns(uint64 sequence_)
+func (_Bindings *BindingsTransactor) TransferMLikeToken(opts *bind.TransactOpts, amount_ *big.Int, sourceToken_ common.Address, destinationChainId_ uint16, destinationToken_ [32]byte, recipient_ [32]byte, refundAddress_ [32]byte) (*types.Transaction, error) {
+	return _Bindings.contract.Transact(opts, "transferMLikeToken", amount_, sourceToken_, destinationChainId_, destinationToken_, recipient_, refundAddress_)
+}
+
+// TransferMLikeToken is a paid mutator transaction binding the contract method 0x68df33c6.
+//
+// Solidity: function transferMLikeToken(uint256 amount_, address sourceToken_, uint16 destinationChainId_, bytes32 destinationToken_, bytes32 recipient_, bytes32 refundAddress_) payable returns(uint64 sequence_)
+func (_Bindings *BindingsSession) TransferMLikeToken(amount_ *big.Int, sourceToken_ common.Address, destinationChainId_ uint16, destinationToken_ [32]byte, recipient_ [32]byte, refundAddress_ [32]byte) (*types.Transaction, error) {
+	return _Bindings.Contract.TransferMLikeToken(&_Bindings.TransactOpts, amount_, sourceToken_, destinationChainId_, destinationToken_, recipient_, refundAddress_)
+}
+
+// TransferMLikeToken is a paid mutator transaction binding the contract method 0x68df33c6.
+//
+// Solidity: function transferMLikeToken(uint256 amount_, address sourceToken_, uint16 destinationChainId_, bytes32 destinationToken_, bytes32 recipient_, bytes32 refundAddress_) payable returns(uint64 sequence_)
+func (_Bindings *BindingsTransactorSession) TransferMLikeToken(amount_ *big.Int, sourceToken_ common.Address, destinationChainId_ uint16, destinationToken_ [32]byte, recipient_ [32]byte, refundAddress_ [32]byte) (*types.Transaction, error) {
+	return _Bindings.Contract.TransferMLikeToken(&_Bindings.TransactOpts, amount_, sourceToken_, destinationChainId_, destinationToken_, recipient_, refundAddress_)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -2069,6 +2194,151 @@ func (_Bindings *BindingsFilterer) ParseBeaconUpgraded(log types.Log) (*Bindings
 	return event, nil
 }
 
+// BindingsDestinationMTokenSetIterator is returned from FilterDestinationMTokenSet and is used to iterate over the raw logs and unpacked data for DestinationMTokenSet events raised by the Bindings contract.
+type BindingsDestinationMTokenSetIterator struct {
+	Event *BindingsDestinationMTokenSet // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BindingsDestinationMTokenSetIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BindingsDestinationMTokenSet)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BindingsDestinationMTokenSet)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BindingsDestinationMTokenSetIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BindingsDestinationMTokenSetIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BindingsDestinationMTokenSet represents a DestinationMTokenSet event raised by the Bindings contract.
+type BindingsDestinationMTokenSet struct {
+	DestinationChainId uint16
+	MToken             [32]byte
+	Raw                types.Log // Blockchain specific contextual infos
+}
+
+// FilterDestinationMTokenSet is a free log retrieval operation binding the contract event 0xe6658eeba76934cef78dc5f420ee40406e4876e8d3e767f7b700c63daf1bf0ba.
+//
+// Solidity: event DestinationMTokenSet(uint16 indexed destinationChainId, bytes32 mToken)
+func (_Bindings *BindingsFilterer) FilterDestinationMTokenSet(opts *bind.FilterOpts, destinationChainId []uint16) (*BindingsDestinationMTokenSetIterator, error) {
+
+	var destinationChainIdRule []interface{}
+	for _, destinationChainIdItem := range destinationChainId {
+		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
+	}
+
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "DestinationMTokenSet", destinationChainIdRule)
+	if err != nil {
+		return nil, err
+	}
+	return &BindingsDestinationMTokenSetIterator{contract: _Bindings.contract, event: "DestinationMTokenSet", logs: logs, sub: sub}, nil
+}
+
+// WatchDestinationMTokenSet is a free log subscription operation binding the contract event 0xe6658eeba76934cef78dc5f420ee40406e4876e8d3e767f7b700c63daf1bf0ba.
+//
+// Solidity: event DestinationMTokenSet(uint16 indexed destinationChainId, bytes32 mToken)
+func (_Bindings *BindingsFilterer) WatchDestinationMTokenSet(opts *bind.WatchOpts, sink chan<- *BindingsDestinationMTokenSet, destinationChainId []uint16) (event.Subscription, error) {
+
+	var destinationChainIdRule []interface{}
+	for _, destinationChainIdItem := range destinationChainId {
+		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
+	}
+
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "DestinationMTokenSet", destinationChainIdRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BindingsDestinationMTokenSet)
+				if err := _Bindings.contract.UnpackLog(event, "DestinationMTokenSet", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseDestinationMTokenSet is a log parse operation binding the contract event 0xe6658eeba76934cef78dc5f420ee40406e4876e8d3e767f7b700c63daf1bf0ba.
+//
+// Solidity: event DestinationMTokenSet(uint16 indexed destinationChainId, bytes32 mToken)
+func (_Bindings *BindingsFilterer) ParseDestinationMTokenSet(log types.Log) (*BindingsDestinationMTokenSet, error) {
+	event := new(BindingsDestinationMTokenSet)
+	if err := _Bindings.contract.UnpackLog(event, "DestinationMTokenSet", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // BindingsEarningDisabledIterator is returned from FilterEarningDisabled and is used to iterate over the raw logs and unpacked data for EarningDisabled events raised by the Bindings contract.
 type BindingsEarningDisabledIterator struct {
 	Event *BindingsEarningDisabled // Event containing the contract specifics and raw log
@@ -2331,6 +2601,152 @@ func (_Bindings *BindingsFilterer) WatchEarningEnabled(opts *bind.WatchOpts, sin
 func (_Bindings *BindingsFilterer) ParseEarningEnabled(log types.Log) (*BindingsEarningEnabled, error) {
 	event := new(BindingsEarningEnabled)
 	if err := _Bindings.contract.UnpackLog(event, "EarningEnabled", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// BindingsInboundTransferLimitUpdatedIterator is returned from FilterInboundTransferLimitUpdated and is used to iterate over the raw logs and unpacked data for InboundTransferLimitUpdated events raised by the Bindings contract.
+type BindingsInboundTransferLimitUpdatedIterator struct {
+	Event *BindingsInboundTransferLimitUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BindingsInboundTransferLimitUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BindingsInboundTransferLimitUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BindingsInboundTransferLimitUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BindingsInboundTransferLimitUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BindingsInboundTransferLimitUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BindingsInboundTransferLimitUpdated represents a InboundTransferLimitUpdated event raised by the Bindings contract.
+type BindingsInboundTransferLimitUpdated struct {
+	ChainId  uint16
+	OldLimit *big.Int
+	NewLimit *big.Int
+	Raw      types.Log // Blockchain specific contextual infos
+}
+
+// FilterInboundTransferLimitUpdated is a free log retrieval operation binding the contract event 0x739ed886fd81a3ddc9f4b327ab69152e513cd45b26fda0c73660eaca8e119301.
+//
+// Solidity: event InboundTransferLimitUpdated(uint16 indexed chainId, uint256 oldLimit, uint256 newLimit)
+func (_Bindings *BindingsFilterer) FilterInboundTransferLimitUpdated(opts *bind.FilterOpts, chainId []uint16) (*BindingsInboundTransferLimitUpdatedIterator, error) {
+
+	var chainIdRule []interface{}
+	for _, chainIdItem := range chainId {
+		chainIdRule = append(chainIdRule, chainIdItem)
+	}
+
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "InboundTransferLimitUpdated", chainIdRule)
+	if err != nil {
+		return nil, err
+	}
+	return &BindingsInboundTransferLimitUpdatedIterator{contract: _Bindings.contract, event: "InboundTransferLimitUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchInboundTransferLimitUpdated is a free log subscription operation binding the contract event 0x739ed886fd81a3ddc9f4b327ab69152e513cd45b26fda0c73660eaca8e119301.
+//
+// Solidity: event InboundTransferLimitUpdated(uint16 indexed chainId, uint256 oldLimit, uint256 newLimit)
+func (_Bindings *BindingsFilterer) WatchInboundTransferLimitUpdated(opts *bind.WatchOpts, sink chan<- *BindingsInboundTransferLimitUpdated, chainId []uint16) (event.Subscription, error) {
+
+	var chainIdRule []interface{}
+	for _, chainIdItem := range chainId {
+		chainIdRule = append(chainIdRule, chainIdItem)
+	}
+
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "InboundTransferLimitUpdated", chainIdRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BindingsInboundTransferLimitUpdated)
+				if err := _Bindings.contract.UnpackLog(event, "InboundTransferLimitUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseInboundTransferLimitUpdated is a log parse operation binding the contract event 0x739ed886fd81a3ddc9f4b327ab69152e513cd45b26fda0c73660eaca8e119301.
+//
+// Solidity: event InboundTransferLimitUpdated(uint16 indexed chainId, uint256 oldLimit, uint256 newLimit)
+func (_Bindings *BindingsFilterer) ParseInboundTransferLimitUpdated(log types.Log) (*BindingsInboundTransferLimitUpdated, error) {
+	event := new(BindingsInboundTransferLimitUpdated)
+	if err := _Bindings.contract.UnpackLog(event, "InboundTransferLimitUpdated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -2820,25 +3236,25 @@ func (it *BindingsMTokenReceivedIterator) Close() error {
 
 // BindingsMTokenReceived represents a MTokenReceived event raised by the Bindings contract.
 type BindingsMTokenReceived struct {
-	SourceChainId uint16
-	MessageId     [32]byte
-	Sender        [32]byte
-	Recipient     common.Address
-	Amount        *big.Int
-	Index         *big.Int
-	Raw           types.Log // Blockchain specific contextual infos
+	SourceChainId    uint16
+	DestinationToken common.Address
+	Sender           [32]byte
+	Recipient        common.Address
+	Amount           *big.Int
+	Index            *big.Int
+	MessageId        [32]byte
+	Raw              types.Log // Blockchain specific contextual infos
 }
 
-// FilterMTokenReceived is a free log retrieval operation binding the contract event 0xbd6146ab70befc9dc9a724a2fa48ae30b5a4dbe253e9e80e9337b659f3c1eb9a.
+// FilterMTokenReceived is a free log retrieval operation binding the contract event 0x1fa93583b8ef840b2aa9730b35f5454180f063fd8d3ffec60122d9e1f567c7be.
 //
-// Solidity: event MTokenReceived(uint16 indexed sourceChainId, bytes32 messageId, bytes32 indexed sender, address indexed recipient, uint256 amount, uint128 index)
-func (_Bindings *BindingsFilterer) FilterMTokenReceived(opts *bind.FilterOpts, sourceChainId []uint16, sender [][32]byte, recipient []common.Address) (*BindingsMTokenReceivedIterator, error) {
+// Solidity: event MTokenReceived(uint16 sourceChainId, address indexed destinationToken, bytes32 indexed sender, address indexed recipient, uint256 amount, uint128 index, bytes32 messageId)
+func (_Bindings *BindingsFilterer) FilterMTokenReceived(opts *bind.FilterOpts, destinationToken []common.Address, sender [][32]byte, recipient []common.Address) (*BindingsMTokenReceivedIterator, error) {
 
-	var sourceChainIdRule []interface{}
-	for _, sourceChainIdItem := range sourceChainId {
-		sourceChainIdRule = append(sourceChainIdRule, sourceChainIdItem)
+	var destinationTokenRule []interface{}
+	for _, destinationTokenItem := range destinationToken {
+		destinationTokenRule = append(destinationTokenRule, destinationTokenItem)
 	}
-
 	var senderRule []interface{}
 	for _, senderItem := range sender {
 		senderRule = append(senderRule, senderItem)
@@ -2848,23 +3264,22 @@ func (_Bindings *BindingsFilterer) FilterMTokenReceived(opts *bind.FilterOpts, s
 		recipientRule = append(recipientRule, recipientItem)
 	}
 
-	logs, sub, err := _Bindings.contract.FilterLogs(opts, "MTokenReceived", sourceChainIdRule, senderRule, recipientRule)
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "MTokenReceived", destinationTokenRule, senderRule, recipientRule)
 	if err != nil {
 		return nil, err
 	}
 	return &BindingsMTokenReceivedIterator{contract: _Bindings.contract, event: "MTokenReceived", logs: logs, sub: sub}, nil
 }
 
-// WatchMTokenReceived is a free log subscription operation binding the contract event 0xbd6146ab70befc9dc9a724a2fa48ae30b5a4dbe253e9e80e9337b659f3c1eb9a.
+// WatchMTokenReceived is a free log subscription operation binding the contract event 0x1fa93583b8ef840b2aa9730b35f5454180f063fd8d3ffec60122d9e1f567c7be.
 //
-// Solidity: event MTokenReceived(uint16 indexed sourceChainId, bytes32 messageId, bytes32 indexed sender, address indexed recipient, uint256 amount, uint128 index)
-func (_Bindings *BindingsFilterer) WatchMTokenReceived(opts *bind.WatchOpts, sink chan<- *BindingsMTokenReceived, sourceChainId []uint16, sender [][32]byte, recipient []common.Address) (event.Subscription, error) {
+// Solidity: event MTokenReceived(uint16 sourceChainId, address indexed destinationToken, bytes32 indexed sender, address indexed recipient, uint256 amount, uint128 index, bytes32 messageId)
+func (_Bindings *BindingsFilterer) WatchMTokenReceived(opts *bind.WatchOpts, sink chan<- *BindingsMTokenReceived, destinationToken []common.Address, sender [][32]byte, recipient []common.Address) (event.Subscription, error) {
 
-	var sourceChainIdRule []interface{}
-	for _, sourceChainIdItem := range sourceChainId {
-		sourceChainIdRule = append(sourceChainIdRule, sourceChainIdItem)
+	var destinationTokenRule []interface{}
+	for _, destinationTokenItem := range destinationToken {
+		destinationTokenRule = append(destinationTokenRule, destinationTokenItem)
 	}
-
 	var senderRule []interface{}
 	for _, senderItem := range sender {
 		senderRule = append(senderRule, senderItem)
@@ -2874,7 +3289,7 @@ func (_Bindings *BindingsFilterer) WatchMTokenReceived(opts *bind.WatchOpts, sin
 		recipientRule = append(recipientRule, recipientItem)
 	}
 
-	logs, sub, err := _Bindings.contract.WatchLogs(opts, "MTokenReceived", sourceChainIdRule, senderRule, recipientRule)
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "MTokenReceived", destinationTokenRule, senderRule, recipientRule)
 	if err != nil {
 		return nil, err
 	}
@@ -2906,9 +3321,9 @@ func (_Bindings *BindingsFilterer) WatchMTokenReceived(opts *bind.WatchOpts, sin
 	}), nil
 }
 
-// ParseMTokenReceived is a log parse operation binding the contract event 0xbd6146ab70befc9dc9a724a2fa48ae30b5a4dbe253e9e80e9337b659f3c1eb9a.
+// ParseMTokenReceived is a log parse operation binding the contract event 0x1fa93583b8ef840b2aa9730b35f5454180f063fd8d3ffec60122d9e1f567c7be.
 //
-// Solidity: event MTokenReceived(uint16 indexed sourceChainId, bytes32 messageId, bytes32 indexed sender, address indexed recipient, uint256 amount, uint128 index)
+// Solidity: event MTokenReceived(uint16 sourceChainId, address indexed destinationToken, bytes32 indexed sender, address indexed recipient, uint256 amount, uint128 index, bytes32 messageId)
 func (_Bindings *BindingsFilterer) ParseMTokenReceived(log types.Log) (*BindingsMTokenReceived, error) {
 	event := new(BindingsMTokenReceived)
 	if err := _Bindings.contract.UnpackLog(event, "MTokenReceived", log); err != nil {
@@ -2987,23 +3402,25 @@ func (it *BindingsMTokenSentIterator) Close() error {
 
 // BindingsMTokenSent represents a MTokenSent event raised by the Bindings contract.
 type BindingsMTokenSent struct {
+	SourceToken        common.Address
 	DestinationChainId uint16
-	MessageId          [32]byte
+	DestinationToken   [32]byte
 	Sender             common.Address
 	Recipient          [32]byte
 	Amount             *big.Int
 	Index              *big.Int
+	MessageId          [32]byte
 	Raw                types.Log // Blockchain specific contextual infos
 }
 
-// FilterMTokenSent is a free log retrieval operation binding the contract event 0x5b89200a06a504bee6b4e357fe58bee68910ddfd4bdf6bd54c233df75a380d30.
+// FilterMTokenSent is a free log retrieval operation binding the contract event 0x98195478444bfed374ee6b111345e4c2088ade272cebe3ab76ed80bb170e400e.
 //
-// Solidity: event MTokenSent(uint16 indexed destinationChainId, bytes32 messageId, address indexed sender, bytes32 indexed recipient, uint256 amount, uint128 index)
-func (_Bindings *BindingsFilterer) FilterMTokenSent(opts *bind.FilterOpts, destinationChainId []uint16, sender []common.Address, recipient [][32]byte) (*BindingsMTokenSentIterator, error) {
+// Solidity: event MTokenSent(address indexed sourceToken, uint16 destinationChainId, bytes32 destinationToken, address indexed sender, bytes32 indexed recipient, uint256 amount, uint128 index, bytes32 messageId)
+func (_Bindings *BindingsFilterer) FilterMTokenSent(opts *bind.FilterOpts, sourceToken []common.Address, sender []common.Address, recipient [][32]byte) (*BindingsMTokenSentIterator, error) {
 
-	var destinationChainIdRule []interface{}
-	for _, destinationChainIdItem := range destinationChainId {
-		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
+	var sourceTokenRule []interface{}
+	for _, sourceTokenItem := range sourceToken {
+		sourceTokenRule = append(sourceTokenRule, sourceTokenItem)
 	}
 
 	var senderRule []interface{}
@@ -3015,21 +3432,21 @@ func (_Bindings *BindingsFilterer) FilterMTokenSent(opts *bind.FilterOpts, desti
 		recipientRule = append(recipientRule, recipientItem)
 	}
 
-	logs, sub, err := _Bindings.contract.FilterLogs(opts, "MTokenSent", destinationChainIdRule, senderRule, recipientRule)
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "MTokenSent", sourceTokenRule, senderRule, recipientRule)
 	if err != nil {
 		return nil, err
 	}
 	return &BindingsMTokenSentIterator{contract: _Bindings.contract, event: "MTokenSent", logs: logs, sub: sub}, nil
 }
 
-// WatchMTokenSent is a free log subscription operation binding the contract event 0x5b89200a06a504bee6b4e357fe58bee68910ddfd4bdf6bd54c233df75a380d30.
+// WatchMTokenSent is a free log subscription operation binding the contract event 0x98195478444bfed374ee6b111345e4c2088ade272cebe3ab76ed80bb170e400e.
 //
-// Solidity: event MTokenSent(uint16 indexed destinationChainId, bytes32 messageId, address indexed sender, bytes32 indexed recipient, uint256 amount, uint128 index)
-func (_Bindings *BindingsFilterer) WatchMTokenSent(opts *bind.WatchOpts, sink chan<- *BindingsMTokenSent, destinationChainId []uint16, sender []common.Address, recipient [][32]byte) (event.Subscription, error) {
+// Solidity: event MTokenSent(address indexed sourceToken, uint16 destinationChainId, bytes32 destinationToken, address indexed sender, bytes32 indexed recipient, uint256 amount, uint128 index, bytes32 messageId)
+func (_Bindings *BindingsFilterer) WatchMTokenSent(opts *bind.WatchOpts, sink chan<- *BindingsMTokenSent, sourceToken []common.Address, sender []common.Address, recipient [][32]byte) (event.Subscription, error) {
 
-	var destinationChainIdRule []interface{}
-	for _, destinationChainIdItem := range destinationChainId {
-		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
+	var sourceTokenRule []interface{}
+	for _, sourceTokenItem := range sourceToken {
+		sourceTokenRule = append(sourceTokenRule, sourceTokenItem)
 	}
 
 	var senderRule []interface{}
@@ -3041,7 +3458,7 @@ func (_Bindings *BindingsFilterer) WatchMTokenSent(opts *bind.WatchOpts, sink ch
 		recipientRule = append(recipientRule, recipientItem)
 	}
 
-	logs, sub, err := _Bindings.contract.WatchLogs(opts, "MTokenSent", destinationChainIdRule, senderRule, recipientRule)
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "MTokenSent", sourceTokenRule, senderRule, recipientRule)
 	if err != nil {
 		return nil, err
 	}
@@ -3073,9 +3490,9 @@ func (_Bindings *BindingsFilterer) WatchMTokenSent(opts *bind.WatchOpts, sink ch
 	}), nil
 }
 
-// ParseMTokenSent is a log parse operation binding the contract event 0x5b89200a06a504bee6b4e357fe58bee68910ddfd4bdf6bd54c233df75a380d30.
+// ParseMTokenSent is a log parse operation binding the contract event 0x98195478444bfed374ee6b111345e4c2088ade272cebe3ab76ed80bb170e400e.
 //
-// Solidity: event MTokenSent(uint16 indexed destinationChainId, bytes32 messageId, address indexed sender, bytes32 indexed recipient, uint256 amount, uint128 index)
+// Solidity: event MTokenSent(address indexed sourceToken, uint16 destinationChainId, bytes32 destinationToken, address indexed sender, bytes32 indexed recipient, uint256 amount, uint128 index, bytes32 messageId)
 func (_Bindings *BindingsFilterer) ParseMTokenSent(log types.Log) (*BindingsMTokenSent, error) {
 	event := new(BindingsMTokenSent)
 	if err := _Bindings.contract.UnpackLog(event, "MTokenSent", log); err != nil {
@@ -3638,6 +4055,141 @@ func (_Bindings *BindingsFilterer) WatchOutboundTransferCancelled(opts *bind.Wat
 func (_Bindings *BindingsFilterer) ParseOutboundTransferCancelled(log types.Log) (*BindingsOutboundTransferCancelled, error) {
 	event := new(BindingsOutboundTransferCancelled)
 	if err := _Bindings.contract.UnpackLog(event, "OutboundTransferCancelled", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// BindingsOutboundTransferLimitUpdatedIterator is returned from FilterOutboundTransferLimitUpdated and is used to iterate over the raw logs and unpacked data for OutboundTransferLimitUpdated events raised by the Bindings contract.
+type BindingsOutboundTransferLimitUpdatedIterator struct {
+	Event *BindingsOutboundTransferLimitUpdated // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BindingsOutboundTransferLimitUpdatedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BindingsOutboundTransferLimitUpdated)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BindingsOutboundTransferLimitUpdated)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BindingsOutboundTransferLimitUpdatedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BindingsOutboundTransferLimitUpdatedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BindingsOutboundTransferLimitUpdated represents a OutboundTransferLimitUpdated event raised by the Bindings contract.
+type BindingsOutboundTransferLimitUpdated struct {
+	OldLimit *big.Int
+	NewLimit *big.Int
+	Raw      types.Log // Blockchain specific contextual infos
+}
+
+// FilterOutboundTransferLimitUpdated is a free log retrieval operation binding the contract event 0x7e3b0fc388be9d36273f66210aed83be975df3a9adfffa4c734033f498f362cd.
+//
+// Solidity: event OutboundTransferLimitUpdated(uint256 oldLimit, uint256 newLimit)
+func (_Bindings *BindingsFilterer) FilterOutboundTransferLimitUpdated(opts *bind.FilterOpts) (*BindingsOutboundTransferLimitUpdatedIterator, error) {
+
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "OutboundTransferLimitUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return &BindingsOutboundTransferLimitUpdatedIterator{contract: _Bindings.contract, event: "OutboundTransferLimitUpdated", logs: logs, sub: sub}, nil
+}
+
+// WatchOutboundTransferLimitUpdated is a free log subscription operation binding the contract event 0x7e3b0fc388be9d36273f66210aed83be975df3a9adfffa4c734033f498f362cd.
+//
+// Solidity: event OutboundTransferLimitUpdated(uint256 oldLimit, uint256 newLimit)
+func (_Bindings *BindingsFilterer) WatchOutboundTransferLimitUpdated(opts *bind.WatchOpts, sink chan<- *BindingsOutboundTransferLimitUpdated) (event.Subscription, error) {
+
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "OutboundTransferLimitUpdated")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BindingsOutboundTransferLimitUpdated)
+				if err := _Bindings.contract.UnpackLog(event, "OutboundTransferLimitUpdated", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOutboundTransferLimitUpdated is a log parse operation binding the contract event 0x7e3b0fc388be9d36273f66210aed83be975df3a9adfffa4c734033f498f362cd.
+//
+// Solidity: event OutboundTransferLimitUpdated(uint256 oldLimit, uint256 newLimit)
+func (_Bindings *BindingsFilterer) ParseOutboundTransferLimitUpdated(log types.Log) (*BindingsOutboundTransferLimitUpdated, error) {
+	event := new(BindingsOutboundTransferLimitUpdated)
+	if err := _Bindings.contract.UnpackLog(event, "OutboundTransferLimitUpdated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -4836,6 +5388,169 @@ func (_Bindings *BindingsFilterer) ParseRegistrarListStatusSent(log types.Log) (
 	return event, nil
 }
 
+// BindingsSupportedBridgingPathSetIterator is returned from FilterSupportedBridgingPathSet and is used to iterate over the raw logs and unpacked data for SupportedBridgingPathSet events raised by the Bindings contract.
+type BindingsSupportedBridgingPathSetIterator struct {
+	Event *BindingsSupportedBridgingPathSet // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BindingsSupportedBridgingPathSetIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BindingsSupportedBridgingPathSet)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BindingsSupportedBridgingPathSet)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BindingsSupportedBridgingPathSetIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BindingsSupportedBridgingPathSetIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BindingsSupportedBridgingPathSet represents a SupportedBridgingPathSet event raised by the Bindings contract.
+type BindingsSupportedBridgingPathSet struct {
+	SourceToken        common.Address
+	DestinationChainId uint16
+	DestinationToken   [32]byte
+	Supported          bool
+	Raw                types.Log // Blockchain specific contextual infos
+}
+
+// FilterSupportedBridgingPathSet is a free log retrieval operation binding the contract event 0xeb8377c150d1438121333afa2027232605a400b1208ae6f9cfa156438e453f6d.
+//
+// Solidity: event SupportedBridgingPathSet(address indexed sourceToken, uint16 indexed destinationChainId, bytes32 indexed destinationToken, bool supported)
+func (_Bindings *BindingsFilterer) FilterSupportedBridgingPathSet(opts *bind.FilterOpts, sourceToken []common.Address, destinationChainId []uint16, destinationToken [][32]byte) (*BindingsSupportedBridgingPathSetIterator, error) {
+
+	var sourceTokenRule []interface{}
+	for _, sourceTokenItem := range sourceToken {
+		sourceTokenRule = append(sourceTokenRule, sourceTokenItem)
+	}
+	var destinationChainIdRule []interface{}
+	for _, destinationChainIdItem := range destinationChainId {
+		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
+	}
+	var destinationTokenRule []interface{}
+	for _, destinationTokenItem := range destinationToken {
+		destinationTokenRule = append(destinationTokenRule, destinationTokenItem)
+	}
+
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "SupportedBridgingPathSet", sourceTokenRule, destinationChainIdRule, destinationTokenRule)
+	if err != nil {
+		return nil, err
+	}
+	return &BindingsSupportedBridgingPathSetIterator{contract: _Bindings.contract, event: "SupportedBridgingPathSet", logs: logs, sub: sub}, nil
+}
+
+// WatchSupportedBridgingPathSet is a free log subscription operation binding the contract event 0xeb8377c150d1438121333afa2027232605a400b1208ae6f9cfa156438e453f6d.
+//
+// Solidity: event SupportedBridgingPathSet(address indexed sourceToken, uint16 indexed destinationChainId, bytes32 indexed destinationToken, bool supported)
+func (_Bindings *BindingsFilterer) WatchSupportedBridgingPathSet(opts *bind.WatchOpts, sink chan<- *BindingsSupportedBridgingPathSet, sourceToken []common.Address, destinationChainId []uint16, destinationToken [][32]byte) (event.Subscription, error) {
+
+	var sourceTokenRule []interface{}
+	for _, sourceTokenItem := range sourceToken {
+		sourceTokenRule = append(sourceTokenRule, sourceTokenItem)
+	}
+	var destinationChainIdRule []interface{}
+	for _, destinationChainIdItem := range destinationChainId {
+		destinationChainIdRule = append(destinationChainIdRule, destinationChainIdItem)
+	}
+	var destinationTokenRule []interface{}
+	for _, destinationTokenItem := range destinationToken {
+		destinationTokenRule = append(destinationTokenRule, destinationTokenItem)
+	}
+
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "SupportedBridgingPathSet", sourceTokenRule, destinationChainIdRule, destinationTokenRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BindingsSupportedBridgingPathSet)
+				if err := _Bindings.contract.UnpackLog(event, "SupportedBridgingPathSet", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseSupportedBridgingPathSet is a log parse operation binding the contract event 0xeb8377c150d1438121333afa2027232605a400b1208ae6f9cfa156438e453f6d.
+//
+// Solidity: event SupportedBridgingPathSet(address indexed sourceToken, uint16 indexed destinationChainId, bytes32 indexed destinationToken, bool supported)
+func (_Bindings *BindingsFilterer) ParseSupportedBridgingPathSet(log types.Log) (*BindingsSupportedBridgingPathSet, error) {
+	event := new(BindingsSupportedBridgingPathSet)
+	if err := _Bindings.contract.UnpackLog(event, "SupportedBridgingPathSet", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // BindingsThresholdChangedIterator is returned from FilterThresholdChanged and is used to iterate over the raw logs and unpacked data for ThresholdChanged events raised by the Bindings contract.
 type BindingsThresholdChangedIterator struct {
 	Event *BindingsThresholdChanged // Event containing the contract specifics and raw log
@@ -5466,10 +6181,19 @@ type BindingsTransferSent struct {
 
 // FilterTransferSent is a free log retrieval operation binding the contract event 0xe54e51e42099622516fa3b48e9733581c9dbdcb771cafb093f745a0532a35982.
 //
-// Solidity: event TransferSent(bytes32 recipient, bytes32 refundAddress, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence)
-func (_Bindings *BindingsFilterer) FilterTransferSent(opts *bind.FilterOpts) (*BindingsTransferSentIterator, error) {
+// Solidity: event TransferSent(bytes32 indexed recipient, bytes32 indexed refundAddress, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence)
+func (_Bindings *BindingsFilterer) FilterTransferSent(opts *bind.FilterOpts, recipient [][32]byte, refundAddress [][32]byte) (*BindingsTransferSentIterator, error) {
 
-	logs, sub, err := _Bindings.contract.FilterLogs(opts, "TransferSent")
+	var recipientRule []interface{}
+	for _, recipientItem := range recipient {
+		recipientRule = append(recipientRule, recipientItem)
+	}
+	var refundAddressRule []interface{}
+	for _, refundAddressItem := range refundAddress {
+		refundAddressRule = append(refundAddressRule, refundAddressItem)
+	}
+
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "TransferSent", recipientRule, refundAddressRule)
 	if err != nil {
 		return nil, err
 	}
@@ -5478,10 +6202,19 @@ func (_Bindings *BindingsFilterer) FilterTransferSent(opts *bind.FilterOpts) (*B
 
 // WatchTransferSent is a free log subscription operation binding the contract event 0xe54e51e42099622516fa3b48e9733581c9dbdcb771cafb093f745a0532a35982.
 //
-// Solidity: event TransferSent(bytes32 recipient, bytes32 refundAddress, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence)
-func (_Bindings *BindingsFilterer) WatchTransferSent(opts *bind.WatchOpts, sink chan<- *BindingsTransferSent) (event.Subscription, error) {
+// Solidity: event TransferSent(bytes32 indexed recipient, bytes32 indexed refundAddress, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence)
+func (_Bindings *BindingsFilterer) WatchTransferSent(opts *bind.WatchOpts, sink chan<- *BindingsTransferSent, recipient [][32]byte, refundAddress [][32]byte) (event.Subscription, error) {
 
-	logs, sub, err := _Bindings.contract.WatchLogs(opts, "TransferSent")
+	var recipientRule []interface{}
+	for _, recipientItem := range recipient {
+		recipientRule = append(recipientRule, recipientItem)
+	}
+	var refundAddressRule []interface{}
+	for _, refundAddressItem := range refundAddress {
+		refundAddressRule = append(refundAddressRule, refundAddressItem)
+	}
+
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "TransferSent", recipientRule, refundAddressRule)
 	if err != nil {
 		return nil, err
 	}
@@ -5515,7 +6248,7 @@ func (_Bindings *BindingsFilterer) WatchTransferSent(opts *bind.WatchOpts, sink 
 
 // ParseTransferSent is a log parse operation binding the contract event 0xe54e51e42099622516fa3b48e9733581c9dbdcb771cafb093f745a0532a35982.
 //
-// Solidity: event TransferSent(bytes32 recipient, bytes32 refundAddress, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence)
+// Solidity: event TransferSent(bytes32 indexed recipient, bytes32 indexed refundAddress, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence)
 func (_Bindings *BindingsFilterer) ParseTransferSent(log types.Log) (*BindingsTransferSent, error) {
 	event := new(BindingsTransferSent)
 	if err := _Bindings.contract.UnpackLog(event, "TransferSent", log); err != nil {
@@ -5807,6 +6540,160 @@ func (_Bindings *BindingsFilterer) WatchUpgraded(opts *bind.WatchOpts, sink chan
 func (_Bindings *BindingsFilterer) ParseUpgraded(log types.Log) (*BindingsUpgraded, error) {
 	event := new(BindingsUpgraded)
 	if err := _Bindings.contract.UnpackLog(event, "Upgraded", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// BindingsWrapFailedIterator is returned from FilterWrapFailed and is used to iterate over the raw logs and unpacked data for WrapFailed events raised by the Bindings contract.
+type BindingsWrapFailedIterator struct {
+	Event *BindingsWrapFailed // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BindingsWrapFailedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BindingsWrapFailed)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BindingsWrapFailed)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BindingsWrapFailedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BindingsWrapFailedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BindingsWrapFailed represents a WrapFailed event raised by the Bindings contract.
+type BindingsWrapFailed struct {
+	DestinationWrappedToken common.Address
+	Recipient               common.Address
+	Amount                  *big.Int
+	Raw                     types.Log // Blockchain specific contextual infos
+}
+
+// FilterWrapFailed is a free log retrieval operation binding the contract event 0x5e484dc77b9161908da1d2f0da5131cdaabac752ae7f0dd633ec8905627b5189.
+//
+// Solidity: event WrapFailed(address indexed destinationWrappedToken, address indexed recipient, uint256 amount)
+func (_Bindings *BindingsFilterer) FilterWrapFailed(opts *bind.FilterOpts, destinationWrappedToken []common.Address, recipient []common.Address) (*BindingsWrapFailedIterator, error) {
+
+	var destinationWrappedTokenRule []interface{}
+	for _, destinationWrappedTokenItem := range destinationWrappedToken {
+		destinationWrappedTokenRule = append(destinationWrappedTokenRule, destinationWrappedTokenItem)
+	}
+	var recipientRule []interface{}
+	for _, recipientItem := range recipient {
+		recipientRule = append(recipientRule, recipientItem)
+	}
+
+	logs, sub, err := _Bindings.contract.FilterLogs(opts, "WrapFailed", destinationWrappedTokenRule, recipientRule)
+	if err != nil {
+		return nil, err
+	}
+	return &BindingsWrapFailedIterator{contract: _Bindings.contract, event: "WrapFailed", logs: logs, sub: sub}, nil
+}
+
+// WatchWrapFailed is a free log subscription operation binding the contract event 0x5e484dc77b9161908da1d2f0da5131cdaabac752ae7f0dd633ec8905627b5189.
+//
+// Solidity: event WrapFailed(address indexed destinationWrappedToken, address indexed recipient, uint256 amount)
+func (_Bindings *BindingsFilterer) WatchWrapFailed(opts *bind.WatchOpts, sink chan<- *BindingsWrapFailed, destinationWrappedToken []common.Address, recipient []common.Address) (event.Subscription, error) {
+
+	var destinationWrappedTokenRule []interface{}
+	for _, destinationWrappedTokenItem := range destinationWrappedToken {
+		destinationWrappedTokenRule = append(destinationWrappedTokenRule, destinationWrappedTokenItem)
+	}
+	var recipientRule []interface{}
+	for _, recipientItem := range recipient {
+		recipientRule = append(recipientRule, recipientItem)
+	}
+
+	logs, sub, err := _Bindings.contract.WatchLogs(opts, "WrapFailed", destinationWrappedTokenRule, recipientRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BindingsWrapFailed)
+				if err := _Bindings.contract.UnpackLog(event, "WrapFailed", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseWrapFailed is a log parse operation binding the contract event 0x5e484dc77b9161908da1d2f0da5131cdaabac752ae7f0dd633ec8905627b5189.
+//
+// Solidity: event WrapFailed(address indexed destinationWrappedToken, address indexed recipient, uint256 amount)
+func (_Bindings *BindingsFilterer) ParseWrapFailed(log types.Log) (*BindingsWrapFailed, error) {
+	event := new(BindingsWrapFailed)
+	if err := _Bindings.contract.UnpackLog(event, "WrapFailed", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

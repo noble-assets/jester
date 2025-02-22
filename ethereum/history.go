@@ -61,20 +61,29 @@ func (e *Eth) GetHistory(
 		return
 	}
 
-	nobleChainIDHash := common.BigToHash(big.NewInt(int64(e.Config.WormholeNobleChainID)))
-
-	mTokenSentFuncSig := mPortalAbi.Events["MTokenSent"].ID
-	mTokenSentFunclogs, err := e.filterLogs(
+	mTokenSentLogs, err := e.filterLogs(
 		ctx, start, end,
 		e.Config.HubPortal,
-		[][]common.Hash{{mTokenSentFuncSig}, {nobleChainIDHash}},
+		[][]common.Hash{{mPortalAbi.Events["MTokenSent"].ID}},
 	)
 	if err != nil {
 		log.Error("unable to filter `mTokenSent` logs when querying history", "error", err)
 		return
 	}
+	var filteredMTokenSentLogs []ethTypes.Log
+	for _, mTokenSentLog := range mTokenSentLogs {
+		var event mportal.BindingsMTokenSent
+		if err := mPortalAbi.UnpackIntoInterface(&event, "MTokenSent", mTokenSentLog.Data); err != nil {
+			log.Error("error unpacking portal abi into interface when querying history", "error", err)
+		}
+
+		if event.DestinationChainId == e.Config.WormholeNobleChainID {
+			filteredMTokenSentLogs = append(filteredMTokenSentLogs, mTokenSentLog)
+		}
+	}
 
 	mTokenIndexSentSig := mPortalAbi.Events["MTokenIndexSent"].ID
+	nobleChainIDHash := common.BigToHash(big.NewInt(int64(e.Config.WormholeNobleChainID)))
 	mTokenIndexSentLogs, err := e.filterLogs(
 		ctx, start, end,
 		e.Config.HubPortal,
@@ -85,7 +94,7 @@ func (e *Eth) GetHistory(
 		return
 	}
 
-	allM0Logs := append(mTokenSentFunclogs, mTokenIndexSentLogs...)
+	allM0Logs := append(filteredMTokenSentLogs, mTokenIndexSentLogs...)
 
 	if len(allM0Logs) == 0 {
 		return

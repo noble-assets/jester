@@ -188,11 +188,11 @@ func (e *Eth) StartM0TokenSentListener(ctx context.Context, log *slog.Logger, lo
 				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
 			}
 
+			// TODO(@dan): We need to add filtering by Noble's Wormhole Chain ID!
 			return binding.WatchMTokenSent(
 				&bind.WatchOpts{Context: ctx},
 				sink,
-				[]uint16{e.Config.WormholeNobleChainID},
-				nil, nil,
+				nil, nil, nil,
 			)
 		},
 		func(ctx context.Context, log *slog.Logger, event *mportal.BindingsMTokenSent) {
