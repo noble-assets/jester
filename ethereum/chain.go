@@ -121,10 +121,11 @@ func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, over
 		c.WormholeTransceiver = "0x0763196A091575adF99e2306E5e90E0Be5154841"
 	default:
 		c.WormholeSrcChainId = 2
-		c.WormholeApiUrl = ""      // TODO
-		c.HubPortal = ""           // TODO
-		c.WormholeCore = ""        // TODO
-		c.WormholeTransceiver = "" // TODO
+		c.WormholeApiUrl = "https://api.wormholescan.io/v1/signed_vaa"
+		c.HubPortal = "0x83Ae82Bd4054e815fB7B189C39D9CE670369ea16"
+		// https://wormhole.com/docs/build/reference/contract-addresses/#__tabbed_1_1
+		c.WormholeCore = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
+		c.WormholeTransceiver = "0xc7Dd372c39E38BF11451ab4A8427B4Ae38ceF644"
 	}
 
 	// Overrides
