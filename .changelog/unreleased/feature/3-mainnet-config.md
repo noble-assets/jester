@@ -1,0 +1,1 @@
+- Add default mainnet config values. ([#3](https://github.com/noble-assets/jester/pull/3))
