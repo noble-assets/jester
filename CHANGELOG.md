@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v1.0.0-rc.1
+
+*Feb 26, 2025*
+
+### BUG FIXES
+
+- Update ABI to be compatible with the latest design of the M Hub Portal. ([#12](https://github.com/noble-assets/jester/pull/12))
+
+### FEATURE
+
+- Add default mainnet config values. ([#3](https://github.com/noble-assets/jester/pull/3))
+
 ## v1.0.0-rc.0
 
 *Feb 19, 2025*
