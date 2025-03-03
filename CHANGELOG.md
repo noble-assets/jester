@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v1.0.0
+
+*Mar 3, 2025*
+
+Introduces the first production-ready version of Jester.
+
+No changes have been made since the release candidate v1.0.0-rc.1.
+
 ## v1.0.0-rc.1
 
 *Feb 26, 2025*
