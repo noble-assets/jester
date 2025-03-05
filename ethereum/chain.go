@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 	"sync"
 	"time"
 
@@ -81,12 +80,12 @@ func NewEth(
 	ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics,
 	websocketurl, rpcurl string, testnet bool, overrides Overrides,
 ) (*Eth, error) {
-	webSocketClient, err := dialClient(ctx, log, websocketurl)
+	webSocketClient, err := dialClient(ctx, log, websocketurl, "websocket")
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial websocket client: %v", err)
 	}
 
-	rpcClient, err := dialClient(ctx, log, rpcurl)
+	rpcClient, err := dialClient(ctx, log, rpcurl, "RPC")
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial RPC client: %v", err)
 	}
@@ -122,9 +121,11 @@ func newConfig(log *slog.Logger, websocketurl, rpcurl string, testnet bool, over
 	default:
 		c.WormholeSrcChainId = 2
 		c.WormholeApiUrl = "https://api.wormholescan.io/v1/signed_vaa"
+		// https://github.com/m0-foundation/m-portal/blob/dbe93da561c94dfc04beec8a144b11b287957b7a/deployments/noble/1.json#L2
 		c.HubPortal = "0x83Ae82Bd4054e815fB7B189C39D9CE670369ea16"
 		// https://wormhole.com/docs/build/reference/contract-addresses/#__tabbed_1_1
 		c.WormholeCore = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
+		// https://github.com/m0-foundation/m-portal/blob/dbe93da561c94dfc04beec8a144b11b287957b7a/deployments/noble/1.json#L3
 		c.WormholeTransceiver = "0xc7Dd372c39E38BF11451ab4A8427B4Ae38ceF644"
 	}
 
@@ -169,12 +170,8 @@ func newRedial() *redial {
 
 // dialClient creates an Ethereum Client.
 // Based on the URL provided it will create either an RPC or Websocket client.
-func dialClient(ctx context.Context, log *slog.Logger, url string) (client *ethclient.Client, err error) {
-	clientType := "RPC"
-	if strings.HasPrefix(url, "ws") {
-		clientType = "websocket"
-	}
-
+// The clientType parameter is used for logging purposes only.
+func dialClient(ctx context.Context, log *slog.Logger, url string, clientType string) (client *ethclient.Client, err error) {
 	err = retry.Do(func() error {
 		client, err = ethclient.DialContext(ctx, url)
 		if err != nil {
@@ -232,7 +229,7 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 
 	e.Metrics.IncEthSubInterruptionCounter()
 
-	client, err := dialClient(ctx, log, e.Config.WebsocketURL)
+	client, err := dialClient(ctx, log, e.Config.WebsocketURL, "websocket")
 	if err != nil {
 		return err
 	}
