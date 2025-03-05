@@ -1,0 +1,1 @@
+- Improve logging when redialing clients. ([#15](https://github.com/noble-assets/jester/pull/15))
