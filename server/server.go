@@ -48,6 +48,7 @@ type JesterGrpcServer struct {
 func NewJesterGrpcServer(log *slog.Logger, m *metrics.PrometheusMetrics, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList) *JesterGrpcServer {
 	return &JesterGrpcServer{
 		log:           log.With("server", "grpc"),
+		Metrics:       m,
 		mux:           mux,
 		serverAddress: serverAddress,
 		vaaList:       vaaList,
