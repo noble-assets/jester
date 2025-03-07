@@ -57,7 +57,7 @@ func StartWormholeWorker(
 	wormHoleChainID uint16,
 	dequeued *QueryData,
 	vaaList *state.VaaList,
-	fetchVAAAttempts uint16,
+	fetchVAAAttempts uint,
 ) {
 	resp, err := fetchVaa(ctx, log, m, wormholeApiUrl, wormHoleChainID, dequeued.Sequence, emitter, dequeued.TxHash, fetchVAAAttempts)
 	if err != nil {
@@ -81,7 +81,7 @@ func fetchVaa(
 	chainID uint16,
 	seq uint64,
 	emitter, txHash string,
-	fetchVAAAttempts uint16,
+	fetchVAAAttempts uint,
 ) (WormholeResp, error) {
 	chainIdStr := strconv.FormatUint(uint64(chainID), 10)
 	seqStr := strconv.FormatUint(seq, 10)
@@ -145,7 +145,7 @@ func fetchVaa(
 		}),
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
-		retry.Attempts(uint(fetchVAAAttempts)),
+		retry.Attempts(fetchVAAAttempts),
 		retry.Delay(30*time.Second),
 		retry.Context(ctx),
 		retry.DelayType(retry.FixedDelay),
@@ -160,7 +160,7 @@ func fetchVaa(
 	)
 
 	if err != nil {
-		if currentAttempt == uint(fetchVAAAttempts)-1 {
+		if currentAttempt == fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
 			m.VAAFailedMaxAttemptsReached.Inc()
 		}
