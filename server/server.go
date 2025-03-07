@@ -29,6 +29,7 @@ import (
 	"connectrpc.com/grpcreflect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/state"
 
 	api "jester.noble.xyz/api"
@@ -38,14 +39,16 @@ var _ api.QueryServiceHandler = &JesterGrpcServer{}
 
 type JesterGrpcServer struct {
 	log           *slog.Logger
+	Metrics       *metrics.PrometheusMetrics
 	mux           *http.ServeMux
 	serverAddress string
 	vaaList       *state.VaaList
 }
 
-func NewJesterGrpcServer(log *slog.Logger, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList) *JesterGrpcServer {
+func NewJesterGrpcServer(log *slog.Logger, m *metrics.PrometheusMetrics, mux *http.ServeMux, serverAddress string, vaaList *state.VaaList) *JesterGrpcServer {
 	return &JesterGrpcServer{
 		log:           log.With("server", "grpc"),
+		Metrics:       m,
 		mux:           mux,
 		serverAddress: serverAddress,
 		vaaList:       vaaList,
@@ -107,6 +110,8 @@ func (s *JesterGrpcServer) GetVoteExtension(
 			Vaas: vaas,
 		},
 	})
+
+	s.Metrics.IncGetVoteExtensionCounter()
 
 	return res, nil
 }

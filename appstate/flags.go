@@ -35,6 +35,7 @@ const (
 	flagMetricsEnabled              = "metrics.enabled"
 	flagMetricsAddress              = "metrics.address"
 	FlagHushLogo                    = "hush-logo"
+	FlagDeveloperMode               = "dev"
 )
 
 // if the flag is being added to multiple commands, you must use the flags that accepts pointers
