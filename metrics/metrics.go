@@ -30,7 +30,7 @@ type PrometheusMetrics struct {
 	LogMessagedPublishedCounter prometheus.Counter
 	MTokenSentCounter           prometheus.Counter
 	MTokenIndexSentCounter      prometheus.Counter
-	VAAReceiveDuration          prometheus.Histogram
+	VAAReceiveDuration          prometheus.Summary
 	VAAFoundTotal               prometheus.Counter
 	VAAFailedTotal              prometheus.Counter
 	VAAFailedMaxAttemptsReached prometheus.Counter
@@ -64,11 +64,10 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Name: "mTokenIndexSent_counter",
 			Help: "The total number of times the Ethereum event `MTokenIndexSent` is observed.",
 		}),
-
-		VAAReceiveDuration: factory.NewHistogram(prometheus.HistogramOpts{
-			Name:    "vaa_receive_duration_minutes",
-			Help:    "Histogram of the time it takes for Wormhole to pick up the VAA in minutes. This metric is not recorded if the VAA is found on the first query attempt.",
-			Buckets: []float64{10, 12, 14, 16, 18, 20, 22, 24, 26, 30},
+		VAAReceiveDuration: factory.NewSummary(prometheus.SummaryOpts{
+			Name:       "vaa_receive_duration_minutes",
+			Help:       "Summary of the time it takes for Wormhole to pick up the VAA in minutes. This metric is not recorded if the VAA is found on the first query attempt.",
+			Objectives: map[float64]float64{0.5: 0.01, 0.9: 0.01, 0.99: 0.001},
 		}),
 		VAAFoundTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "vaa_found_total",
@@ -146,7 +145,7 @@ func (m *PrometheusMetrics) AddMTokenIndexSentCounter(n int) {
 	}
 }
 
-// ObserveVAAReceiveDuration is a histogram that tracks the time it takes wormhole to pick up the VAA in minutes.
+// ObserveVAAReceiveDuration is a summary that tracks the time it takes wormhole to pick up the VAA in minutes.
 // `duration` is in minutes.
 func (m *PrometheusMetrics) ObserveVAAReceiveDuration(duration float64) {
 	if m.enabled {

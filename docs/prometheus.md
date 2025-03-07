@@ -13,11 +13,11 @@ All metrics are served at `/metrics`.
 | **Exported Metric**             | **Description**                                                                                                                 | **Type**  |
 |---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|-----------|
 | eth_sub_interruption_counter    | Total number of Ethereum subscription interruptions causing Jester to redial the websocket client                               | Counter   |
-| getVoteExtension_counter        | Total number of times `getVoteExtension` is queried. If you are a validator, this should happen each time you are the proposer | Counter   |
+| getVoteExtension_counter        | Total number of times `getVoteExtension` is queried. If you are a validator, this should happen each time you are the proposer  | Counter   |
 | logMessagePublished_counter     | Total number of times the Ethereum event `LogMessagePublished` is observed                                                      | Counter   |
 | mTokenSent_counter              | Total number of times the Ethereum event `mTokenSent` is observed                                                               | Counter   |
 | mTokenIndexSent_counter         | Total number of times the Ethereum event `mTokenIndexSent` is observed                                                          | Counter   |
-| vaa_receive_duration_minutes    | Histogram of the time it takes wormhole to pick up the VAA in minutes                                                           | Histogram |
+| vaa_receive_duration_minutes    | Summary of the time it takes wormhole to pick up the VAA in minutes                                                             | Summary   |
 | vaa_found_total                 | Total number of times a VAA was found                                                                                           | Counter   |
 | vaa_failed_total                | Total number of times fetching a VAA failed                                                                                     | Counter   |
 | vaa_failed_max_attempts_reached | Total number of times fetching a VAA failed after reaching the maximum number of attempts                                       | Counter   |
