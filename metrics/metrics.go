@@ -25,7 +25,15 @@ type PrometheusMetrics struct {
 	enabled  bool
 	registry *prometheus.Registry
 
-	EthSubInteruptionCounter prometheus.Counter
+	EthSubInterruptionCounter   prometheus.Counter
+	GetVoteExtensionsCounter    prometheus.Counter
+	LogMessagedPublishedCounter prometheus.Counter
+	MTokenSentCounter           prometheus.Counter
+	MTokenIndexSentCounter      prometheus.Counter
+	VAAReceiveDuration          prometheus.Histogram
+	VAAFoundTotal               prometheus.Counter
+	VAAFailedTotal              prometheus.Counter
+	VAAFailedMaxAttemptsReached prometheus.Counter
 }
 
 // NewPrometheusMetrics creates a new PrometheusMetrics object
@@ -35,17 +43,135 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 
 	return &PrometheusMetrics{
 		registry: registry,
-		EthSubInteruptionCounter: factory.NewCounter(prometheus.CounterOpts{
+		EthSubInterruptionCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "eth_sub_interruption_counter",
-			Help: "The total number of Ethereum subscription interruptions causing Jester to redial the websocket client",
+			Help: "The total number of Ethereum subscription interruptions causing Jester to redial the websocket client.",
+		}),
+		GetVoteExtensionsCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "getVoteExtensionsCounter",
+			Help: "The number of times `getVoteExtensions` is queried. If you are a validator, this should happen each time you are the proposer.",
+		}),
+		LogMessagedPublishedCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "logMessagePublished_counter",
+			Help: "The total number of times the Ethereum event `LogMessagePublished` is observed.",
+		}),
+		MTokenSentCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "mTokenSent_counter",
+			Help: "The total number of times the Ethereum event `MTokenSent` is observed.",
+		}),
+
+		MTokenIndexSentCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "mTokenIndexSent_counter",
+			Help: "The total number of times the Ethereum event `MTokenIndexSent` is observed.",
+		}),
+
+		VAAReceiveDuration: factory.NewHistogram(prometheus.HistogramOpts{
+			Name:    "vaa_receive_duration_minutes",
+			Help:    "Histogram of the time it takes for Wormhole to pick up the VAA in minutes. This metric is not recorded if the VAA is found on the first query attempt.",
+			Buckets: []float64{10, 12, 14, 16, 18, 20, 22, 24, 26, 30},
+		}),
+		VAAFoundTotal: factory.NewCounter(prometheus.CounterOpts{
+			Name: "vaa_found_total",
+			Help: "The total number of times a VAA was found.",
+		}),
+		VAAFailedTotal: factory.NewCounter(prometheus.CounterOpts{
+			Subsystem: "vaa_failed",
+			Name:      "total",
+			Help:      "The total number of times fetching a VAA failed.",
+		}),
+		VAAFailedMaxAttemptsReached: factory.NewCounter(prometheus.CounterOpts{
+			Subsystem: "vaa_failed",
+			Name:      "max_attempts_reached_total",
+			Help:      "The total number of times fetching a VAA failed after reaching the maximum number of attempts.",
 		}),
 	}
 }
 
 // Methods to interact with metrics
 
+// IncEthSubInterruptionCounter increments the metric tracking the total number of Ethereum subscription interruptions
+// causing Jester to redial the websocket client.
 func (m *PrometheusMetrics) IncEthSubInterruptionCounter() {
 	if m.enabled {
-		m.EthSubInteruptionCounter.Inc()
+		m.EthSubInterruptionCounter.Inc()
+	}
+}
+
+// IncGetVoteExtensionsCounter increments the metric tracking the total number of times `GetVoteExtensions` is queried.
+func (m *PrometheusMetrics) IncGetVoteExtensionsCounter() {
+	if m.enabled {
+		m.GetVoteExtensionsCounter.Inc()
+	}
+}
+
+// IncLogMessagePublishedCounter increments the metric tracking the total number of times `logMessagePublished` is observed.
+func (m *PrometheusMetrics) IncLogMessagePublishedCounter() {
+	if m.enabled {
+		m.LogMessagedPublishedCounter.Inc()
+	}
+}
+
+// AddLogMessagePublishedCounter adds to the metric tracking the total number of times `logMessagePublished` is observed.
+func (m *PrometheusMetrics) AddLogMessagePublishedCounter(n int) {
+	if m.enabled {
+		m.LogMessagedPublishedCounter.Add(float64(n))
+	}
+}
+
+// IncMTokenSentCounter increments the metric tracking the total number of times `MTokenSent` is observed.
+func (m *PrometheusMetrics) IncMTokenSentCounter() {
+	if m.enabled {
+		m.MTokenSentCounter.Inc()
+	}
+}
+
+// AddMTokenSentCounter adds to the metric tracking the total number of times `MTokenSent` is observed.
+func (m *PrometheusMetrics) AddMTokenSentCounter(n int) {
+	if m.enabled {
+		m.MTokenSentCounter.Add(float64(n))
+	}
+}
+
+// IncMTokenIndexSentCounter increments the metric tracking the total number of times `MTokenIndexSent` is observed.
+func (m *PrometheusMetrics) IncMTokenIndexSentCounter() {
+	if m.enabled {
+		m.MTokenIndexSentCounter.Inc()
+	}
+}
+
+// AddMTokenIndexSentCounter adds to the metric tracking the total number of times `MTokenIndexSent` is observed.
+func (m *PrometheusMetrics) AddMTokenIndexSentCounter(n int) {
+	if m.enabled {
+		m.MTokenIndexSentCounter.Add(float64(n))
+	}
+}
+
+// ObserveVAAReceiveDuration is a histogram that tracks the time it takes wormhole to pick up the VAA in minutes.
+// `duration` is in minutes.
+func (m *PrometheusMetrics) ObserveVAAReceiveDuration(duration float64) {
+	if m.enabled {
+		m.VAAReceiveDuration.Observe(duration)
+	}
+}
+
+// IncVAAFoundTotalCounter increments the metric tracking the total number of times a VAA was found.
+func (m *PrometheusMetrics) IncVAAFoundTotal() {
+	if m.enabled {
+		m.VAAFoundTotal.Inc()
+	}
+}
+
+// IncVAAFailedTotal increments the metric tracking the total number of times Jester failed to fetch a VAA.
+func (m *PrometheusMetrics) IncVAAFailedTotal() {
+	if m.enabled {
+		m.VAAFailedTotal.Inc()
+	}
+}
+
+// IncVAAFailedMaxAttemptsReached increments the metric tracking the total number of times Jester failed to
+// fetch a VAA after reaching the maximum number of attempts.
+func (m *PrometheusMetrics) IncVAAFailedMaxAttemptsReached() {
+	if m.enabled {
+		m.VAAFailedMaxAttemptsReached.Inc()
 	}
 }

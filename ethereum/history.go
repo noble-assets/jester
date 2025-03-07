@@ -70,6 +70,9 @@ func (e *Eth) GetHistory(
 		log.Error("unable to filter `mTokenSent` logs when querying history", "error", err)
 		return
 	}
+
+	e.Metrics.AddMTokenSentCounter(len(mTokenSentLogs))
+
 	var filteredMTokenSentLogs []ethTypes.Log
 	for _, mTokenSentLog := range mTokenSentLogs {
 		var event mportal.AbiMTokenSent
@@ -94,6 +97,8 @@ func (e *Eth) GetHistory(
 		return
 	}
 
+	e.Metrics.AddMTokenIndexSentCounter(len(mTokenIndexSentLogs))
+
 	allM0Logs := append(filteredMTokenSentLogs, mTokenIndexSentLogs...)
 
 	if len(allM0Logs) == 0 {
@@ -117,6 +122,8 @@ func (e *Eth) GetHistory(
 		log.Error("unable to filter `logMessagePublished` logs when querying history", "error", err)
 		return
 	}
+
+	e.Metrics.AddLogMessagePublishedCounter(len(logMessagePublishedLogs))
 
 	event := struct {
 		wormhole.AbiLogMessagePublished

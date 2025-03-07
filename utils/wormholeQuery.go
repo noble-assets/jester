@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/state"
 )
 
@@ -51,12 +52,13 @@ var (
 // Once found, the VAA is added to the vaaList which is queryable via gRPC
 func StartWormholeWorker(
 	ctx context.Context, log *slog.Logger,
+	m *metrics.PrometheusMetrics,
 	wormholeApiUrl, emitter string,
 	wormHoleChainID uint16,
 	dequeued *QueryData,
 	vaaList *state.VaaList,
 ) {
-	resp, err := fetchVaa(ctx, log, wormholeApiUrl, wormHoleChainID, dequeued.Sequence, emitter, dequeued.TxHash)
+	resp, err := fetchVaa(ctx, log, m, wormholeApiUrl, wormHoleChainID, dequeued.Sequence, emitter, dequeued.TxHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
 		return
@@ -73,6 +75,7 @@ func StartWormholeWorker(
 // `txHash` is used for logging purposes only
 func fetchVaa(
 	ctx context.Context, log *slog.Logger,
+	m *metrics.PrometheusMetrics,
 	wormholeApiUrl string,
 	chainID uint16,
 	seq uint64,
@@ -82,10 +85,14 @@ func fetchVaa(
 	seqStr := strconv.FormatUint(seq, 10)
 	url := fmt.Sprintf("%s/%s/%s/%s", wormholeApiUrl, chainIdStr, emitter, seqStr)
 
-	var wormholeResp WormholeResp
+	var (
+		wormholeResp   WormholeResp
+		elapsed        time.Duration
+		currentAttempt uint
+	)
 
 	fistAttempt := time.Now()
-	retryAttemps := 50
+	retryAttempts := 50
 
 	err := retry.Do(
 		func() error {
@@ -137,21 +144,35 @@ func fetchVaa(
 		}),
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
-		retry.Attempts(uint(retryAttemps)),
+		retry.Attempts(uint(retryAttempts)),
 		retry.Delay(30*time.Second),
 		retry.Context(ctx),
 		retry.DelayType(retry.FixedDelay),
 		retry.Delay(30*time.Second),
 		retry.OnRetry(func(attempt uint, err error) {
-			since := time.Since(fistAttempt).Round(time.Second)
+			elapsed = time.Since(fistAttempt).Round(time.Second)
+			currentAttempt = attempt
 			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf(
-				"%d/%d", attempt+1, retryAttemps), "seq", seq, "error", err, "since-first-attempt", since, "txHash", txHash,
+				"%d/%d", attempt+1, retryAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
 			)
 		}),
 	)
+
 	if err != nil {
-		return WormholeResp{}, err
+		if currentAttempt == uint(retryAttempts)-1 {
+			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
+			m.VAAFailedMaxAttemptsReached.Inc()
+		}
+		m.VAAFailedTotal.Inc()
+		return WormholeResp{}, fmt.Errorf("query URL: %s: %w", url, err)
 	}
 
+	// keep metrics on how long it takes wormhole to pickup transaction
+	// if current attempt is 0, we assume it was a historical query and ignore
+	if currentAttempt > 0 {
+		m.VAAReceiveDuration.Observe(float64(elapsed.Minutes()))
+	}
+
+	m.VAAFoundTotal.Inc()
 	return wormholeResp, nil
 }
