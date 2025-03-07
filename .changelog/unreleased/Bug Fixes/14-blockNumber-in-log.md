@@ -1,1 +1,1 @@
-- fixes the `blockNumber` reported a debug log ([#14](https://github.com/noble-assets/jester/pull/14))
+- correctly log `blockNumber` in debug logs ([#14](https://github.com/noble-assets/jester/pull/14))
