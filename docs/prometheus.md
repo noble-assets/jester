@@ -13,7 +13,7 @@ All metrics are served at `/metrics`.
 | **Exported Metric**             | **Description**                                                                                                                 | **Type**  |
 |---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|-----------|
 | eth_sub_interruption_counter    | Total number of Ethereum subscription interruptions causing Jester to redial the websocket client                               | Counter   |
-| getVoteExtensionsCounter        | Total number of times `getVoteExtensions` is queried. If you are a validator, this should happen each time you are the proposer | Counter   |
+| getVoteExtension_counter        | Total number of times `getVoteExtension` is queried. If you are a validator, this should happen each time you are the proposer | Counter   |
 | logMessagePublished_counter     | Total number of times the Ethereum event `LogMessagePublished` is observed                                                      | Counter   |
 | mTokenSent_counter              | Total number of times the Ethereum event `mTokenSent` is observed                                                               | Counter   |
 | mTokenIndexSent_counter         | Total number of times the Ethereum event `mTokenIndexSent` is observed                                                          | Counter   |

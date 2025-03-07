@@ -26,7 +26,7 @@ type PrometheusMetrics struct {
 	registry *prometheus.Registry
 
 	EthSubInterruptionCounter   prometheus.Counter
-	GetVoteExtensionsCounter    prometheus.Counter
+	GetVoteExtensionCounter     prometheus.Counter
 	LogMessagedPublishedCounter prometheus.Counter
 	MTokenSentCounter           prometheus.Counter
 	MTokenIndexSentCounter      prometheus.Counter
@@ -47,9 +47,9 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Name: "eth_sub_interruption_counter",
 			Help: "The total number of Ethereum subscription interruptions causing Jester to redial the websocket client.",
 		}),
-		GetVoteExtensionsCounter: factory.NewCounter(prometheus.CounterOpts{
-			Name: "getVoteExtensionsCounter",
-			Help: "The number of times `getVoteExtensions` is queried. If you are a validator, this should happen each time you are the proposer.",
+		GetVoteExtensionCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "getVoteExtension_counter",
+			Help: "The number of times `getVoteExtension` is queried. If you are a validator, this should happen each time you are the proposer.",
 		}),
 		LogMessagedPublishedCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "logMessagePublished_counter",
@@ -97,10 +97,10 @@ func (m *PrometheusMetrics) IncEthSubInterruptionCounter() {
 	}
 }
 
-// IncGetVoteExtensionsCounter increments the metric tracking the total number of times `GetVoteExtensions` is queried.
-func (m *PrometheusMetrics) IncGetVoteExtensionsCounter() {
+// IncGetVoteExtensionCounter increments the metric tracking the total number of times `GetVoteExtension` is queried.
+func (m *PrometheusMetrics) IncGetVoteExtensionCounter() {
 	if m.enabled {
-		m.GetVoteExtensionsCounter.Inc()
+		m.GetVoteExtensionCounter.Inc()
 	}
 }
 

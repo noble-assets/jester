@@ -110,7 +110,7 @@ func (s *JesterGrpcServer) GetVoteExtension(
 		},
 	})
 
-	s.Metrics.IncGetVoteExtensionsCounter()
+	s.Metrics.IncGetVoteExtensionCounter()
 
 	return res, nil
 }
