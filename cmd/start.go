@@ -182,6 +182,7 @@ You can override contracts and configurations with the relevant "override" flags
 								a.Eth.Config.PaddedWormholeTransceiver,
 								a.Eth.Config.WormholeSrcChainId,
 								data, vaaList,
+								a.Viper.GetUint16(appstate.FlagOverrideFetchVAAAttempts),
 							)
 						}(dequeued)
 					}
@@ -238,6 +239,7 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().String(appstate.FlagOverrideHubPortal, "", "override the hub portal contract address")
 	cmd.Flags().String(appstate.FlagOverrideWormholeCore, "", "override the wormhole core contract address")
 	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
+	cmd.Flags().Uint16(appstate.FlagOverrideFetchVAAAttempts, 60, "override the maximum number of attempts made to query the Wormhole API for VAAs (Attempts are spaced 30 seconds apart)")
 
 	// misc flags
 	cmd.Flags().BoolP(appstate.FlagHushLogo, "l", false, "suppress logo")

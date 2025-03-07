@@ -32,6 +32,7 @@ const (
 	FlagOverrideHubPortal           = "override-hub-portal"
 	FlagOverrideWormholeTransceiver = "override-wormhole-transceiver"
 	FlagOverrideWormholeCore        = "override-wormhole-core"
+	FlagOverrideFetchVAAAttempts    = "override-fetch-vaa-attempts"
 	flagMetricsEnabled              = "metrics.enabled"
 	flagMetricsAddress              = "metrics.address"
 	FlagHushLogo                    = "hush-logo"
