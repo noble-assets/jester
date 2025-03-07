@@ -27,7 +27,7 @@ type PrometheusMetrics struct {
 
 	EthSubInterruptionCounter   prometheus.Counter
 	GetVoteExtensionCounter     prometheus.Counter
-	LogMessagedPublishedCounter prometheus.Counter
+	LogMessagePublishedCounter  prometheus.Counter
 	MTokenSentCounter           prometheus.Counter
 	MTokenIndexSentCounter      prometheus.Counter
 	VAAReceiveDuration          prometheus.Summary
@@ -51,7 +51,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Name: "getVoteExtension_counter",
 			Help: "The number of times `getVoteExtension` is queried. If you are a validator, this should happen each time you are the proposer.",
 		}),
-		LogMessagedPublishedCounter: factory.NewCounter(prometheus.CounterOpts{
+		LogMessagePublishedCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "logMessagePublished_counter",
 			Help: "The total number of times the Ethereum event `LogMessagePublished` is observed.",
 		}),
@@ -106,14 +106,14 @@ func (m *PrometheusMetrics) IncGetVoteExtensionCounter() {
 // IncLogMessagePublishedCounter increments the metric tracking the total number of times `logMessagePublished` is observed.
 func (m *PrometheusMetrics) IncLogMessagePublishedCounter() {
 	if m.enabled {
-		m.LogMessagedPublishedCounter.Inc()
+		m.LogMessagePublishedCounter.Inc()
 	}
 }
 
 // AddLogMessagePublishedCounter adds to the metric tracking the total number of times `logMessagePublished` is observed.
 func (m *PrometheusMetrics) AddLogMessagePublishedCounter(n int) {
 	if m.enabled {
-		m.LogMessagedPublishedCounter.Add(float64(n))
+		m.LogMessagePublishedCounter.Add(float64(n))
 	}
 }
 
