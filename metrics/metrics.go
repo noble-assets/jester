@@ -26,11 +26,11 @@ type PrometheusMetrics struct {
 	registry *prometheus.Registry
 
 	EthSubInterruptionCounter   prometheus.Counter
-	GetVoteExtensionsCounter    prometheus.Counter
-	LogMessagedPublishedCounter prometheus.Counter
+	GetVoteExtensionCounter     prometheus.Counter
+	LogMessagePublishedCounter  prometheus.Counter
 	MTokenSentCounter           prometheus.Counter
 	MTokenIndexSentCounter      prometheus.Counter
-	VAAReceiveDuration          prometheus.Histogram
+	VAAReceiveDuration          prometheus.Summary
 	VAAFoundTotal               prometheus.Counter
 	VAAFailedTotal              prometheus.Counter
 	VAAFailedMaxAttemptsReached prometheus.Counter
@@ -47,11 +47,11 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Name: "eth_sub_interruption_counter",
 			Help: "The total number of Ethereum subscription interruptions causing Jester to redial the websocket client.",
 		}),
-		GetVoteExtensionsCounter: factory.NewCounter(prometheus.CounterOpts{
-			Name: "getVoteExtensionsCounter",
-			Help: "The number of times `getVoteExtensions` is queried. If you are a validator, this should happen each time you are the proposer.",
+		GetVoteExtensionCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "getVoteExtension_counter",
+			Help: "The number of times `getVoteExtension` is queried. If you are a validator, this should happen each time you are the proposer.",
 		}),
-		LogMessagedPublishedCounter: factory.NewCounter(prometheus.CounterOpts{
+		LogMessagePublishedCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "logMessagePublished_counter",
 			Help: "The total number of times the Ethereum event `LogMessagePublished` is observed.",
 		}),
@@ -64,11 +64,10 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Name: "mTokenIndexSent_counter",
 			Help: "The total number of times the Ethereum event `MTokenIndexSent` is observed.",
 		}),
-
-		VAAReceiveDuration: factory.NewHistogram(prometheus.HistogramOpts{
-			Name:    "vaa_receive_duration_minutes",
-			Help:    "Histogram of the time it takes for Wormhole to pick up the VAA in minutes. This metric is not recorded if the VAA is found on the first query attempt.",
-			Buckets: []float64{10, 12, 14, 16, 18, 20, 22, 24, 26, 30},
+		VAAReceiveDuration: factory.NewSummary(prometheus.SummaryOpts{
+			Name:       "vaa_receive_duration_minutes",
+			Help:       "Summary of the time it takes for Wormhole to pick up the VAA in minutes. This metric is not recorded if the VAA is found on the first query attempt.",
+			Objectives: map[float64]float64{0.5: 0.01, 0.9: 0.01, 0.99: 0.001},
 		}),
 		VAAFoundTotal: factory.NewCounter(prometheus.CounterOpts{
 			Name: "vaa_found_total",
@@ -97,24 +96,24 @@ func (m *PrometheusMetrics) IncEthSubInterruptionCounter() {
 	}
 }
 
-// IncGetVoteExtensionsCounter increments the metric tracking the total number of times `GetVoteExtensions` is queried.
-func (m *PrometheusMetrics) IncGetVoteExtensionsCounter() {
+// IncGetVoteExtensionCounter increments the metric tracking the total number of times `GetVoteExtension` is queried.
+func (m *PrometheusMetrics) IncGetVoteExtensionCounter() {
 	if m.enabled {
-		m.GetVoteExtensionsCounter.Inc()
+		m.GetVoteExtensionCounter.Inc()
 	}
 }
 
 // IncLogMessagePublishedCounter increments the metric tracking the total number of times `logMessagePublished` is observed.
 func (m *PrometheusMetrics) IncLogMessagePublishedCounter() {
 	if m.enabled {
-		m.LogMessagedPublishedCounter.Inc()
+		m.LogMessagePublishedCounter.Inc()
 	}
 }
 
 // AddLogMessagePublishedCounter adds to the metric tracking the total number of times `logMessagePublished` is observed.
 func (m *PrometheusMetrics) AddLogMessagePublishedCounter(n int) {
 	if m.enabled {
-		m.LogMessagedPublishedCounter.Add(float64(n))
+		m.LogMessagePublishedCounter.Add(float64(n))
 	}
 }
 
@@ -146,7 +145,7 @@ func (m *PrometheusMetrics) AddMTokenIndexSentCounter(n int) {
 	}
 }
 
-// ObserveVAAReceiveDuration is a histogram that tracks the time it takes wormhole to pick up the VAA in minutes.
+// ObserveVAAReceiveDuration is a summary that tracks the time it takes wormhole to pick up the VAA in minutes.
 // `duration` is in minutes.
 func (m *PrometheusMetrics) ObserveVAAReceiveDuration(duration float64) {
 	if m.enabled {
