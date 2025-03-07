@@ -72,6 +72,13 @@ type Overrides struct {
 	WormholeTransceiver  string
 }
 
+type clientType string
+
+const (
+	RPCClientType       clientType = "RPC"
+	WebsocketClientType clientType = "Websocket"
+)
+
 // NewEth creates a new Ethereum instance with a websocket and rpc client.
 // The intent behind this is to have this command run during cobras `PreRunE` or
 // `PersistentPreRunE`.
@@ -80,12 +87,12 @@ func NewEth(
 	ctx context.Context, log *slog.Logger, m *metrics.PrometheusMetrics,
 	websocketurl, rpcurl string, testnet bool, overrides Overrides,
 ) (*Eth, error) {
-	webSocketClient, err := dialClient(ctx, log, websocketurl, "websocket")
+	webSocketClient, err := dialClient(ctx, log, websocketurl, WebsocketClientType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial websocket client: %v", err)
 	}
 
-	rpcClient, err := dialClient(ctx, log, rpcurl, "RPC")
+	rpcClient, err := dialClient(ctx, log, rpcurl, RPCClientType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial RPC client: %v", err)
 	}
@@ -171,7 +178,7 @@ func newRedial() *redial {
 // dialClient creates an Ethereum Client.
 // Based on the URL provided it will create either an RPC or Websocket client.
 // The clientType parameter is used for logging purposes only.
-func dialClient(ctx context.Context, log *slog.Logger, url string, clientType string) (client *ethclient.Client, err error) {
+func dialClient(ctx context.Context, log *slog.Logger, url string, clientType clientType) (client *ethclient.Client, err error) {
 	err = retry.Do(func() error {
 		client, err = ethclient.DialContext(ctx, url)
 		if err != nil {
