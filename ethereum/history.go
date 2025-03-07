@@ -136,7 +136,7 @@ func (e *Eth) GetHistory(
 				if err := wormholeAbi.UnpackIntoInterface(&event, "LogMessagePublished", lLog.Data); err != nil {
 					log.Error("error unpacking wormhole abi into interface when querying history", "error", err)
 				}
-				log.Debug("found relevant events during historical query", "block", event.Raw.BlockNumber, "seq", event.Sequence)
+				log.Debug("found relevant events during historical query", "block", lLog.BlockNumber, "seq", event.Sequence)
 				processingQueue <- &utils.QueryData{
 					Sequence: event.Sequence,
 					TxHash:   txHash.String(),
