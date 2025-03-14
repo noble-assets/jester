@@ -1,0 +1,1 @@
+- Update retry logic when fetching VAA's. ([#18](https://github.com/noble-assets/jester/pull/18))
