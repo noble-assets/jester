@@ -1,0 +1,1 @@
+- Catch context `DeadlineExceeded` error and retry Wormhole query. ([#18](https://github.com/noble-assets/jester/pull/18))

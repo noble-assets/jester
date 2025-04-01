@@ -236,7 +236,7 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 
 	e.Metrics.IncEthSubInterruptionCounter()
 
-	client, err := dialClient(ctx, log, e.Config.WebsocketURL, "websocket")
+	client, err := dialClient(ctx, log, e.Config.WebsocketURL, WebsocketClientType)
 	if err != nil {
 		return err
 	}
