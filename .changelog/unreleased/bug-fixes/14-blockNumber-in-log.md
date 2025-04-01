@@ -1,1 +1,0 @@
-- correctly log `blockNumber` in debug logs ([#14](https://github.com/noble-assets/jester/pull/14))

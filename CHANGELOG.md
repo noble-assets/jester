@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v1.0.1
+
+*Mar 14, 2025*
+
+### BUG FIXES
+
+- Correctly log `blockNumber` in debug logs. ([#14](https://github.com/noble-assets/jester/pull/14))
+- Catch context `DeadlineExceeded` error and retry Wormhole query. ([#18](https://github.com/noble-assets/jester/pull/18))
+
+### IMPROVEMENTS
+
+- Improve logging when redialing clients. ([#15](https://github.com/noble-assets/jester/pull/15))
+
 ## v1.0.0
 
 *Mar 3, 2025*

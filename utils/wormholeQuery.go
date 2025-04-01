@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -91,7 +92,7 @@ func fetchVaa(
 		currentAttempt uint
 	)
 
-	fistAttempt := time.Now()
+	firstAttempt := time.Now()
 	retryAttempts := 50
 
 	err := retry.Do(
@@ -135,6 +136,9 @@ func fetchVaa(
 			return nil
 		},
 		retry.RetryIf(func(err error) bool {
+			if errors.Is(err, context.DeadlineExceeded) {
+				return true
+			}
 			switch err {
 			case errServerError, errTooManyRequests, errNotFound:
 				return true
@@ -145,13 +149,11 @@ func fetchVaa(
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
 		retry.Attempts(uint(retryAttempts)),
-		retry.Delay(30*time.Second),
 		retry.Context(ctx),
-		retry.DelayType(retry.FixedDelay),
 		retry.Delay(30*time.Second),
+		retry.DelayType(retry.FixedDelay),
 		retry.OnRetry(func(attempt uint, err error) {
-			elapsed = time.Since(fistAttempt).Round(time.Second)
-			currentAttempt = attempt
+			elapsed = time.Since(firstAttempt).Round(time.Second)
 			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf(
 				"%d/%d", attempt+1, retryAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
 			)
