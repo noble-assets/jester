@@ -172,6 +172,7 @@ func (e *Eth) StartWormholeLMPListener(ctx context.Context, log *slog.Logger, lo
 		func(ctx context.Context, log *slog.Logger, event *wormhole.AbiLogMessagePublished) {
 			log.Debug("observed event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
 			logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
+			e.Metrics.IncLogMessagePublishedCounter()
 		},
 	)
 }
@@ -197,6 +198,7 @@ func (e *Eth) StartM0TokenSentListener(ctx context.Context, log *slog.Logger, lo
 		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenSent) {
 			if event.DestinationChainId == e.Config.WormholeNobleChainID {
 				processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
+				e.Metrics.IncMTokenSentCounter()
 			}
 		},
 	)
@@ -222,6 +224,7 @@ func (e *Eth) StartM0MTokenIndexSentListener(ctx context.Context, log *slog.Logg
 		},
 		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenIndexSent) {
 			processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
+			e.Metrics.IncMTokenIndexSentCounter()
 		},
 	)
 }

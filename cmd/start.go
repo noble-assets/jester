@@ -110,7 +110,6 @@ You can override contracts and configurations with the relevant "override" flags
 			processingQueue := make(chan *utils.QueryData, 1000)
 			vaaList := state.NewVaaList()
 
-			// Start Prometheus metrics server
 			if a.Config.Metrics.Enabled {
 				g.Go(func() error {
 					return a.Metrics.StartServer(ctx, log, a.Mux, a.Config.Metrics.Address)
@@ -151,7 +150,7 @@ You can override contracts and configurations with the relevant "override" flags
 				}
 			}()
 
-			gRPCServer := server.NewJesterGrpcServer(log, a.Mux, a.Config.ServerAddress, vaaList)
+			gRPCServer := server.NewJesterGrpcServer(log, a.Metrics, a.Mux, a.Config.ServerAddress, vaaList)
 			g.Go(func() error {
 				return gRPCServer.StartServer(ctx)
 			})
@@ -178,6 +177,7 @@ You can override contracts and configurations with the relevant "override" flags
 							defer sem.Release(1)
 							utils.StartWormholeWorker(
 								ctx, log,
+								a.Metrics,
 								a.Eth.Config.WormholeApiUrl,
 								a.Eth.Config.PaddedWormholeTransceiver,
 								a.Eth.Config.WormholeSrcChainId,
@@ -194,6 +194,24 @@ You can override contracts and configurations with the relevant "override" flags
 				endBlock := a.Viper.GetInt64(appstate.FlagEndBlock)
 				go func() {
 					a.Eth.GetHistory(ctx, log, processingQueue, startBlock, endBlock)
+				}()
+			}
+
+			// developer mode
+			if a.Viper.GetBool(appstate.FlagDeveloperMode) {
+				log.Warn("developer mode enabled")
+				go func() {
+					ticker := time.NewTicker(1 * time.Hour)
+					defer ticker.Stop()
+					for {
+						select {
+						case <-ctx.Done():
+							return
+						case <-ticker.C:
+							vaas := vaaList.GetThenClearAll()
+							log.Info("developer mode: VAA's cleared", "vaa-count", len(vaas), "vaa-list", vaas)
+						}
+					}
 				}()
 			}
 
@@ -223,7 +241,7 @@ You can override contracts and configurations with the relevant "override" flags
 
 	// misc flags
 	cmd.Flags().BoolP(appstate.FlagHushLogo, "l", false, "suppress logo")
-
+	cmd.Flags().Bool(appstate.FlagDeveloperMode, false, "enable developer mode (clears VAA cache every hour; useful for non-validators tracking Prometheus metrics)")
 	return cmd
 }
 

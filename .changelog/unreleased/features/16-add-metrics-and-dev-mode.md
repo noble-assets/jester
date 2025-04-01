@@ -1,0 +1,1 @@
+- Add more metrics and a developer mode to assist in running Jester when you are not a validator ([#16](https://github.com/noble-assets/jester/pull/16))
