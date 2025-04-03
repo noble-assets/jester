@@ -1,0 +1,1 @@
+- Compartmentalize and refactor Wormhole listeners to ensure future development in Jester remains organized ([\#18](https://github.com/noble-assets/jester/pull/18)).
