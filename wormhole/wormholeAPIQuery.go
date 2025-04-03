@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package wormhole
 
 import (
 	"context"
@@ -30,13 +30,12 @@ import (
 
 	"github.com/avast/retry-go/v4"
 	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/state"
 )
 
 // QueryData contains the metadata needed to query VAA's from the Wormhole API.
-type QueryData struct {
-	Sequence uint64
-	TxHash   string // logging purposes only
+type queryData struct {
+	sequence uint64
+	txHash   string // logging purposes only
 }
 
 type WormholeResp struct {
@@ -51,42 +50,35 @@ var (
 
 // StartWormholeWorker starts a worker to query the Wormhole API for VAA's.
 // Once found, the VAA is added to the vaaList which is queryable via gRPC
-func StartWormholeWorker(
+func (w *Wormhole) StartWormholeWorker(
 	ctx context.Context, log *slog.Logger,
 	m *metrics.PrometheusMetrics,
-	wormholeApiUrl, emitter string,
-	wormHoleChainID uint16,
-	dequeued *QueryData,
-	vaaList *state.VaaList,
-	fetchVAAAttempts uint,
+	dequeued *queryData,
 ) {
-	resp, err := fetchVaa(ctx, log, m, wormholeApiUrl, wormHoleChainID, dequeued.Sequence, emitter, dequeued.TxHash, fetchVAAAttempts)
+	resp, err := w.fetchVaa(ctx, log, m, dequeued.sequence, dequeued.txHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
 		return
 	}
 
-	log.Info("found VAA", "txHash", dequeued.TxHash)
+	log.Info("found VAA", "txHash", dequeued.txHash)
 
 	vaa, _ := base64.StdEncoding.DecodeString(resp.VaaBytes)
-	vaaList.Add(vaa)
+	w.VaaList.Add(vaa)
 }
 
 // fetchVaa sends a GET request with retry logic to the wormhole API
 //
 // `txHash` is used for logging purposes only
-func fetchVaa(
+func (w *Wormhole) fetchVaa(
 	ctx context.Context, log *slog.Logger,
 	m *metrics.PrometheusMetrics,
-	wormholeApiUrl string,
-	chainID uint16,
 	seq uint64,
-	emitter, txHash string,
-	fetchVAAAttempts uint,
+	txHash string,
 ) (WormholeResp, error) {
-	chainIdStr := strconv.FormatUint(uint64(chainID), 10)
+	chainIdStr := strconv.FormatUint(uint64(w.config.wormholeSrcChainId), 10)
 	seqStr := strconv.FormatUint(seq, 10)
-	url := fmt.Sprintf("%s/%s/%s/%s", wormholeApiUrl, chainIdStr, emitter, seqStr)
+	url := fmt.Sprintf("%s/%s/%s/%s", w.config.wormholeApiUrl, chainIdStr, w.config.paddedWormholeTransceiver, seqStr)
 
 	var (
 		wormholeResp   WormholeResp
@@ -94,7 +86,7 @@ func fetchVaa(
 		currentAttempt uint
 	)
 
-	fistAttempt := time.Now()
+	firstAttempt := time.Now()
 
 	err := retry.Do(
 		func() error {
@@ -149,21 +141,21 @@ func fetchVaa(
 		}),
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
-		retry.Attempts(fetchVAAAttempts),
+		retry.Attempts(w.config.fetchVAAAttempts),
 		retry.Context(ctx),
 		retry.Delay(30*time.Second),
 		retry.DelayType(retry.FixedDelay),
 		retry.OnRetry(func(attempt uint, err error) {
-			elapsed = time.Since(fistAttempt).Round(time.Second)
+			elapsed = time.Since(firstAttempt).Round(time.Second)
 			currentAttempt = attempt
 			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf(
-				"%d/%d", attempt+1, fetchVAAAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
+				"%d/%d", attempt+1, w.config.fetchVAAAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
 			)
 		}),
 	)
 
 	if err != nil {
-		if currentAttempt == fetchVAAAttempts-1 {
+		if currentAttempt == w.config.fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
 			m.VAAFailedMaxAttemptsReached.Inc()
 		}
