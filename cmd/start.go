@@ -79,7 +79,7 @@ You can override contracts and configurations with the relevant "override" flags
 				log.Warn("prometheus metrics server disabled")
 			}
 
-			w := wormhole.NewWormhole(log, a.Config.Testnet, a.Metrics, getWormholeOverrides(a.Viper))
+			w := wormhole.NewWormhole(log, a.Config.Testnet, a.Metrics, getOverrides(a.Viper))
 			g.Go(func() error {
 				return w.Start(ctx, log, a.Eth, a.Metrics)
 			})
@@ -168,7 +168,7 @@ You can override contracts and configurations with the relevant "override" flags
 	return cmd
 }
 
-func getWormholeOverrides(v *viper.Viper) wormhole.Overrides {
+func getOverrides(v *viper.Viper) wormhole.Overrides {
 	return wormhole.Overrides{
 		WormholeSrcChainId:   v.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
 		WormholeNobleChainID: v.GetUint16(appstate.FlagOverrideNobleChainID),

@@ -62,7 +62,7 @@ func (w *Wormhole) GetHistory(
 
 	mTokenSentLogs, err := e.FilterLogs(
 		ctx, start, end,
-		w.Config.HubPortal,
+		w.Config.hubPortal,
 		[][]common.Hash{{mPortalAbi.Events["MTokenSent"].ID}},
 	)
 	if err != nil {
@@ -79,16 +79,16 @@ func (w *Wormhole) GetHistory(
 			log.Error("error unpacking portal abi into interface when querying history", "error", err)
 		}
 
-		if event.DestinationChainId == w.Config.WormholeNobleChainID {
+		if event.DestinationChainId == w.Config.wormholeNobleChainID {
 			filteredMTokenSentLogs = append(filteredMTokenSentLogs, mTokenSentLog)
 		}
 	}
 
 	mTokenIndexSentSig := mPortalAbi.Events["MTokenIndexSent"].ID
-	nobleChainIDHash := common.BigToHash(big.NewInt(int64(w.Config.WormholeNobleChainID)))
+	nobleChainIDHash := common.BigToHash(big.NewInt(int64(w.Config.wormholeNobleChainID)))
 	mTokenIndexSentLogs, err := e.FilterLogs(
 		ctx, start, end,
-		w.Config.HubPortal,
+		w.Config.hubPortal,
 		[][]common.Hash{{mTokenIndexSentSig}, {nobleChainIDHash}},
 	)
 	if err != nil {
@@ -114,8 +114,8 @@ func (w *Wormhole) GetHistory(
 	logMessagePublishedFuncSig := wormholeAbi.Events["LogMessagePublished"].ID
 	logMessagePublishedLogs, err := e.FilterLogs(
 		ctx, start, end,
-		w.Config.WormholeCore,
-		[][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(w.Config.WormholeTransceiver)}},
+		w.Config.wormholeCore,
+		[][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(w.Config.wormholeTransceiver)}},
 	)
 	if err != nil {
 		log.Error("unable to filter `logMessagePublished` logs when querying history", "error", err)

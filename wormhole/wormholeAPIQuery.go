@@ -76,9 +76,9 @@ func (w *Wormhole) fetchVaa(
 	seq uint64,
 	txHash string,
 ) (WormholeResp, error) {
-	chainIdStr := strconv.FormatUint(uint64(w.Config.WormholeSrcChainId), 10)
+	chainIdStr := strconv.FormatUint(uint64(w.Config.wormholeSrcChainId), 10)
 	seqStr := strconv.FormatUint(seq, 10)
-	url := fmt.Sprintf("%s/%s/%s/%s", w.Config.WormholeApiUrl, chainIdStr, w.Config.PaddedWormholeTransceiver, seqStr)
+	url := fmt.Sprintf("%s/%s/%s/%s", w.Config.wormholeApiUrl, chainIdStr, w.Config.paddedWormholeTransceiver, seqStr)
 
 	var (
 		wormholeResp   WormholeResp
@@ -141,7 +141,7 @@ func (w *Wormhole) fetchVaa(
 		}),
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
-		retry.Attempts(w.Config.FetchVAAAttempts),
+		retry.Attempts(w.Config.fetchVAAAttempts),
 		retry.Context(ctx),
 		retry.Delay(30*time.Second),
 		retry.DelayType(retry.FixedDelay),
@@ -149,13 +149,13 @@ func (w *Wormhole) fetchVaa(
 			elapsed = time.Since(firstAttempt).Round(time.Second)
 			currentAttempt = attempt
 			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf(
-				"%d/%d", attempt+1, w.Config.FetchVAAAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
+				"%d/%d", attempt+1, w.Config.fetchVAAAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
 			)
 		}),
 	)
 
 	if err != nil {
-		if currentAttempt == w.Config.FetchVAAAttempts-1 {
+		if currentAttempt == w.Config.fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
 			m.VAAFailedMaxAttemptsReached.Inc()
 		}

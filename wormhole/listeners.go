@@ -40,7 +40,7 @@ func (w *Wormhole) StartWormholeLMPListener(ctx context.Context, log *slog.Logge
 		ctx, log, e,
 		contractName, eventName,
 		func(ctx context.Context, sink chan *wormholeabi.AbiLogMessagePublished) (event.Subscription, error) {
-			wormholeBinding, err := wormholeabi.NewAbiFilterer(common.HexToAddress(w.Config.WormholeCore), e.WebsocketClient)
+			wormholeBinding, err := wormholeabi.NewAbiFilterer(common.HexToAddress(w.Config.wormholeCore), e.WebsocketClient)
 			if err != nil {
 				return nil, fmt.Errorf("failed to bind client to wormhole contract: %w", err)
 			}
@@ -48,7 +48,7 @@ func (w *Wormhole) StartWormholeLMPListener(ctx context.Context, log *slog.Logge
 			return wormholeBinding.WatchLogMessagePublished(
 				&bind.WatchOpts{Context: ctx},
 				sink,
-				[]common.Address{common.HexToAddress(w.Config.WormholeTransceiver)},
+				[]common.Address{common.HexToAddress(w.Config.wormholeTransceiver)},
 			)
 		},
 		func(ctx context.Context, log *slog.Logger, event *wormholeabi.AbiLogMessagePublished) {
@@ -66,7 +66,7 @@ func (w *Wormhole) StartM0TokenSentListener(ctx context.Context, log *slog.Logge
 	return eth.StartEventListener(
 		ctx, log, e, contractName, eventName,
 		func(ctx context.Context, sink chan *mportal.AbiMTokenSent) (event.Subscription, error) {
-			binding, err := mportal.NewAbi(common.HexToAddress(w.Config.HubPortal), e.WebsocketClient)
+			binding, err := mportal.NewAbi(common.HexToAddress(w.Config.hubPortal), e.WebsocketClient)
 			if err != nil {
 				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
 			}
@@ -78,7 +78,7 @@ func (w *Wormhole) StartM0TokenSentListener(ctx context.Context, log *slog.Logge
 			)
 		},
 		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenSent) {
-			if event.DestinationChainId == w.Config.WormholeNobleChainID {
+			if event.DestinationChainId == w.Config.wormholeNobleChainID {
 				w.processM0Event(ctx, log, event.Raw.TxHash.String())
 				w.metrics.IncMTokenSentCounter()
 			}
@@ -93,7 +93,7 @@ func (w *Wormhole) StartM0MTokenIndexSentListener(ctx context.Context, log *slog
 	return eth.StartEventListener(
 		ctx, log, e, contractName, eventName,
 		func(ctx context.Context, sink chan *mportal.AbiMTokenIndexSent) (event.Subscription, error) {
-			binding, err := mportal.NewAbi(common.HexToAddress(w.Config.HubPortal), e.WebsocketClient)
+			binding, err := mportal.NewAbi(common.HexToAddress(w.Config.hubPortal), e.WebsocketClient)
 			if err != nil {
 				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
 			}
@@ -101,7 +101,7 @@ func (w *Wormhole) StartM0MTokenIndexSentListener(ctx context.Context, log *slog
 			return binding.WatchMTokenIndexSent(
 				&bind.WatchOpts{Context: ctx},
 				sink,
-				[]uint16{w.Config.WormholeNobleChainID},
+				[]uint16{w.Config.wormholeNobleChainID},
 			)
 		},
 		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenIndexSent) {
