@@ -17,20 +17,17 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/sync/semaphore"
 	"jester.noble.xyz/appstate"
 	eth "jester.noble.xyz/ethereum"
 	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/server"
-	"jester.noble.xyz/state"
-	"jester.noble.xyz/utils"
+	"jester.noble.xyz/wormhole"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,9 +41,6 @@ func startCmd(a *appstate.AppState) *cobra.Command {
 		Long: `Jester is a sidecar application designed to be run by the Noble validator set.
 
 Jester facilitates the implementation of the Noble Dollar, powered by M0.
-
-When started, Jester listens for events on the Ethereum blockchain and queries the Wormhole API for VAAs (Verifiable Action Approvals).
-These VAAs are accumulated and served via a gRPC endpoint. This data acts as an ABCI Vote Extension.
 
 By default, Jester's gRPC server listens and serves on localhost:9091. This assumes that port 9090 is being used by the Noble binary. 
 You can override this default address with the --server_address flag.
@@ -66,8 +60,6 @@ You can override contracts and configurations with the relevant "override" flags
 				cmd.Context(), a.Log, a.Metrics,
 				a.Config.Ethereum.WebsocketURL,
 				a.Config.Ethereum.RPCURL,
-				a.Config.Testnet,
-				getOverrides(a.Viper),
 			)
 			return err
 		},
@@ -79,37 +71,6 @@ You can override contracts and configurations with the relevant "override" flags
 			log := a.Log
 			g, ctx := errgroup.WithContext(ctx)
 
-			// Event subscription logic:
-			// 	We watch for three Ethereum events:
-			//  	1. `LogMessagePublished` from wormhole
-			// 		2. `MTokenSent` from M0
-			// 		3. `MTokenIndexSent` from M0
-			//
-			// As `LogMessagePublished` events are observed, their transaction hashes are mapped
-			// to the sequence number emitted. This mapping is stored in `logMessagePublishedMap`.
-			// This sequence number is needed later to query the Wormhole API.
-			//
-			// As we observe `MTokenSent` and `MTokenIndexSent` events, we use the tx hash to look up
-			// the sequence number from the corresponding `LogMessagePublished` event. This event happens
-			// in the same transaction as the M0 event. This metadata is then used to query the Wormhole API
-			// for the VAA associated with the event.
-			//
-			// Note:
-			//	`LogMessagePublished` events are generic to Wormhole and appear often.
-			// 	While we do initially store all `LogMessagePublished` events, we periodically cleanup old entries.
-			//
-			// The `processingQueue` is a channel that holds `QueryData` structs. These structs
-			// contain the necessary metadata to query the Wormhole API for VAAs.
-			//
-			// The `vaaList` is a state object that holds the VAAs we accumulate from the Wormhole API.
-			// This list is served via gRPC to the Noble binary. Hitting this endpoint returns accumulated
-			// VAA's and then clears the list. This is meant to only be queried by the Noble binary requesting the
-			// Vote Extension.
-
-			logMessagePublishedMap := state.NewLogMessagePublishedMap()
-			processingQueue := make(chan *utils.QueryData, 1000)
-			vaaList := state.NewVaaList()
-
 			if a.Config.Metrics.Enabled {
 				g.Go(func() error {
 					return a.Metrics.StartServer(ctx, log, a.Mux, a.Config.Metrics.Address)
@@ -118,87 +79,47 @@ You can override contracts and configurations with the relevant "override" flags
 				log.Warn("prometheus metrics server disabled")
 			}
 
+			w := wormhole.NewWormhole(log, a.Config.Testnet, a.Metrics, getWormholeOverrides(a.Viper))
 			g.Go(func() error {
-				return a.Eth.StartWormholeLMPListener(ctx, log, logMessagePublishedMap)
-			})
-
-			g.Go(func() error {
-				return a.Eth.StartM0TokenSentListener(ctx, log, logMessagePublishedMap, processingQueue)
-			})
-
-			g.Go(func() error {
-				return a.Eth.StartM0MTokenIndexSentListener(ctx, log, logMessagePublishedMap, processingQueue)
+				return w.Start(ctx, log, a.Eth, a.Metrics)
 			})
 
 			// Watch for websocket interruptions and get historical data to catch up.
+			// Since historical data is not crucial to Jester, we do not return an error.
 			go func() {
-				a.Eth.WatchForHistoryTrigger(ctx, log, processingQueue)
-			}()
-
-			// logMessagePublished events without an accompanying M0 event are irrelevant to us.
-			// We periodically cleanup old entries from the map.
-			go func() {
-				ticker := time.NewTicker(10 * time.Second)
-				defer ticker.Stop()
 				for {
 					select {
 					case <-ctx.Done():
 						return
-					case <-ticker.C:
-						logMessagePublishedMap.Cleanup()
+					case <-a.Eth.Redial.GetHistory:
+						lookBack := uint64(50)
+						log.Info(fmt.Sprintf("getting historical events for %d blocks", lookBack))
+						latest, err := a.Eth.RPCClient.BlockNumber(ctx)
+						if err != nil {
+							log.Error("failed to get latest block number", "error", err)
+							continue
+						}
+						start := latest - lookBack
+						w.GetHistory(ctx, log, a.Eth, int64(start), 0)
 					}
 				}
 			}()
 
-			gRPCServer := server.NewJesterGrpcServer(log, a.Metrics, a.Mux, a.Config.ServerAddress, vaaList)
+			gRPCServer := server.NewJesterGrpcServer(log, a.Metrics, a.Mux, a.Config.ServerAddress, w.VaaList)
 			g.Go(func() error {
 				return gRPCServer.StartServer(ctx)
 			})
 
-			// Worker pool to query the Wormhole API for VAAs.
-			// Due to rate limits with wormhole's API, there is a fine balance between
-			// `maxWorkers`` and "GET" retries in `fetchVaa`.
-			maxWorkers := int64(3)
-			sem := semaphore.NewWeighted(maxWorkers)
-			g.Go(func() error {
-				for {
-					select {
-					case <-ctx.Done():
-						return nil
-					case dequeued, ok := <-processingQueue:
-						if !ok {
-							return errors.New("processingQueue channel closed unexpectedly")
-						}
-						if err := sem.Acquire(ctx, 1); err != nil {
-							return errors.Join(errors.New("failed to acquire semaphore"), err)
-						}
-
-						go func(data *utils.QueryData) {
-							defer sem.Release(1)
-							utils.StartWormholeWorker(
-								ctx, log,
-								a.Metrics,
-								a.Eth.Config.WormholeApiUrl,
-								a.Eth.Config.PaddedWormholeTransceiver,
-								a.Eth.Config.WormholeSrcChainId,
-								data, vaaList,
-								a.Viper.GetUint(appstate.FlagOverrideFetchVAAAttempts),
-							)
-						}(dequeued)
-					}
-				}
-			})
-
-			// Get history on Jester start if startBlock is set
+			// Fetch historical data if startBlock is set.
 			startBlock := a.Viper.GetInt64(appstate.FlagStartBlock)
 			if startBlock != 0 {
 				endBlock := a.Viper.GetInt64(appstate.FlagEndBlock)
 				go func() {
-					a.Eth.GetHistory(ctx, log, processingQueue, startBlock, endBlock)
+					w.GetHistory(ctx, log, a.Eth, startBlock, endBlock)
 				}()
 			}
 
-			// developer mode
+			// Developer mode
 			if a.Viper.GetBool(appstate.FlagDeveloperMode) {
 				log.Warn("developer mode enabled")
 				go func() {
@@ -209,7 +130,7 @@ You can override contracts and configurations with the relevant "override" flags
 						case <-ctx.Done():
 							return
 						case <-ticker.C:
-							vaas := vaaList.GetThenClearAll()
+							vaas := w.VaaList.GetThenClearAll()
 							log.Info("developer mode: VAA's cleared", "vaa-count", len(vaas), "vaa-list", vaas)
 						}
 					}
@@ -232,7 +153,7 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().Int64(appstate.FlagStartBlock, 0, "block number to start ethereum historical query")
 	cmd.Flags().Int64(appstate.FlagEndBlock, 0, "block number to end ethereum historical query, 0 for latest height")
 
-	// Contract and configuration override flags
+	// Wormhole overrides
 	cmd.Flags().Uint16(appstate.FlagOverrideWormholeSrcChainId, 0, "override Wormhole source chain ID. This is likely the chain ID associated with Ethereum on Wormhole")
 	cmd.Flags().Uint16(appstate.FlagOverrideNobleChainID, 0, "override noble Wormhole chain ID")
 	cmd.Flags().String(appstate.FlagOverrideWormholeApiUrl, "", "override wormhole API URL")
@@ -247,14 +168,15 @@ You can override contracts and configurations with the relevant "override" flags
 	return cmd
 }
 
-func getOverrides(v *viper.Viper) eth.Overrides {
-	return eth.Overrides{
+func getWormholeOverrides(v *viper.Viper) wormhole.Overrides {
+	return wormhole.Overrides{
 		WormholeSrcChainId:   v.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
 		WormholeNobleChainID: v.GetUint16(appstate.FlagOverrideNobleChainID),
 		WormholeApiUrl:       v.GetString(appstate.FlagOverrideWormholeApiUrl),
 		HubPortal:            v.GetString(appstate.FlagOverrideHubPortal),
 		WormholeCore:         v.GetString(appstate.FlagOverrideWormholeCore),
 		WormholeTransceiver:  v.GetString(appstate.FlagOverrideWormholeTransceiver),
+		FetchVAAAttempts:     v.GetUint(appstate.FlagOverrideFetchVAAAttempts),
 	}
 }
 
