@@ -37,7 +37,7 @@ import (
 func (w *Wormhole) GetHistory(
 	ctx context.Context, log *slog.Logger,
 	e *eth.Eth,
-	startBlock int64, endBlock int64,
+	startBlock, endBlock int64,
 ) {
 	start := big.NewInt(startBlock)
 	var end *big.Int
@@ -45,12 +45,13 @@ func (w *Wormhole) GetHistory(
 		end = big.NewInt(endBlock)
 	}
 
-	log = log.With(slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
-	log.Info("starting to query wormhole related history")
+	log = log.With(slog.String("interop-framework", "wormhole"), slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
+
+	log.Info("starting historical query", "start-block", startBlock, "end-block", endBlock)
 
 	var totalVaas int
 	defer func() {
-		log.Info("finished querying wormhole related history", "vaas-found", totalVaas)
+		log.Info("finished historical query", "vaas-found", totalVaas)
 	}()
 
 	// load mPortal ABI to get function signatures

@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"math/big"
 	"sync"
-	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum"
@@ -126,57 +125,7 @@ func dialClient(ctx context.Context, log *slog.Logger, url string, clientType cl
 	return client, nil
 }
 
-// handleRedial handles the redial of the websocket client between multiple websocket subscriptions.
-// Because the websocket client is shared between multiple subscriptions, this function
-// is used to ensure that only one redial is in progress at a time.
-func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
-	redial := e.Redial
-	redial.inProgressMutex.Lock()
-
-	// Another goroutine is already handling redial
-	if redial.inProgress {
-		redial.inProgressMutex.Unlock()
-		log.Info("client redial already in progress")
-		redial.cond.L.Lock()   // Lock mutex to call wait()
-		redial.cond.Wait()     // Wait for the redial to complete; unlocks mutex, waits for Broadcast(), re-locks mutex
-		redial.cond.L.Unlock() // Unlock mutex
-		errExists := false
-		if redial.err != nil {
-			errExists = true
-		}
-		log.Info("received client redial complete", "error-exists", errExists)
-		return redial.err
-	}
-
-	// Mark redial as in progress and prepare a new signal channel
-	redial.inProgress = true
-	redial.cond = sync.NewCond(&redial.inProgressMutex)
-	redial.inProgressMutex.Unlock()
-
-	defer func() {
-		redial.inProgressMutex.Lock()
-		redial.inProgress = false
-		redial.err = err
-		redial.cond.Broadcast() // Signal all waiting goroutines that the redial operation is complete
-		redial.inProgressMutex.Unlock()
-	}()
-
-	e.metrics.IncEthSubInterruptionCounter()
-
-	client, err := dialClient(ctx, log, e.config.websocketURL, websocketClientType)
-	if err != nil {
-		return err
-	}
-	e.websocketClientMutex.Lock()
-	e.WebsocketClient = client
-	e.websocketClientMutex.Unlock()
-
-	time.Sleep(1 * time.Second)     // Allow other redial signals to accumulate
-	redial.GetHistory <- struct{}{} // Trigger historical lookup to catch up on missed events
-	return nil
-}
-
-// filterLogs uses an RPC client to query Ethereum within a specified block range.
+// FilterLogs uses an RPC client to query Ethereum within a specified block range.
 // It returns filtered logs based on contract address and topics.
 func (e *Eth) FilterLogs(ctx context.Context, start, end *big.Int, contractAddress string, topics [][]common.Hash) ([]ethTypes.Log, error) {
 	query := ethereum.FilterQuery{
@@ -188,6 +137,7 @@ func (e *Eth) FilterLogs(ctx context.Context, start, end *big.Int, contractAddre
 	return e.RPCClient.FilterLogs(ctx, query)
 }
 
+// CloseClients closes the websocket and RPC clients.
 func (e *Eth) CloseClients() {
 	if e.WebsocketClient != nil {
 		e.WebsocketClient.Close()
