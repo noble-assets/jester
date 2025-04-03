@@ -25,10 +25,10 @@ import (
 )
 
 type Wormhole struct {
-	Config                 *config
+	config                 *config
 	metrics                *metrics.PrometheusMetrics
 	logMessagePublishedMap *state.LogMessagePublishedMap
-	processingQueue        chan *QueryData
+	processingQueue        chan *queryData
 	VaaList                *state.VaaList
 }
 
@@ -57,10 +57,10 @@ type Overrides struct {
 
 func NewWormhole(log *slog.Logger, testnet bool, metrics *metrics.PrometheusMetrics, overrides Overrides) *Wormhole {
 	return &Wormhole{
-		Config:                 newConfig(log, testnet, overrides),
+		config:                 newConfig(log, testnet, overrides),
 		metrics:                metrics,
 		logMessagePublishedMap: state.NewLogMessagePublishedMap(),
-		processingQueue:        make(chan *QueryData, 1000),
+		processingQueue:        make(chan *queryData, 1000),
 		VaaList:                state.NewVaaList(),
 	}
 }

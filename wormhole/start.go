@@ -108,7 +108,7 @@ func (w *Wormhole) Start(
 					return errors.Join(errors.New("failed to acquire semaphore"), err)
 				}
 
-				go func(data *QueryData) {
+				go func(data *queryData) {
 					defer sem.Release(1)
 					w.StartWormholeWorker(ctx, log, metrics, data)
 				}(dequeued)

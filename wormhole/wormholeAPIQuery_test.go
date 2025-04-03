@@ -30,7 +30,7 @@ func TestFetchVaa(t *testing.T) {
 	ctx := context.TODO()
 
 	w := &Wormhole{
-		Config: &config{
+		config: &config{
 			wormholeApiUrl:            "https://api.testnet.wormscan.io/v1/signed_vaa",
 			wormholeSrcChainId:        10002,
 			paddedWormholeTransceiver: "0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470",

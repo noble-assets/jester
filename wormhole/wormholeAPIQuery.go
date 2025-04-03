@@ -33,9 +33,9 @@ import (
 )
 
 // QueryData contains the metadata needed to query VAA's from the Wormhole API.
-type QueryData struct {
-	Sequence uint64
-	TxHash   string // logging purposes only
+type queryData struct {
+	sequence uint64
+	txHash   string // logging purposes only
 }
 
 type WormholeResp struct {
@@ -53,15 +53,15 @@ var (
 func (w *Wormhole) StartWormholeWorker(
 	ctx context.Context, log *slog.Logger,
 	m *metrics.PrometheusMetrics,
-	dequeued *QueryData,
+	dequeued *queryData,
 ) {
-	resp, err := w.fetchVaa(ctx, log, m, dequeued.Sequence, dequeued.TxHash)
+	resp, err := w.fetchVaa(ctx, log, m, dequeued.sequence, dequeued.txHash)
 	if err != nil {
 		log.Error("wormhole VAA query failed", "error", err)
 		return
 	}
 
-	log.Info("found VAA", "txHash", dequeued.TxHash)
+	log.Info("found VAA", "txHash", dequeued.txHash)
 
 	vaa, _ := base64.StdEncoding.DecodeString(resp.VaaBytes)
 	w.VaaList.Add(vaa)
@@ -76,9 +76,9 @@ func (w *Wormhole) fetchVaa(
 	seq uint64,
 	txHash string,
 ) (WormholeResp, error) {
-	chainIdStr := strconv.FormatUint(uint64(w.Config.wormholeSrcChainId), 10)
+	chainIdStr := strconv.FormatUint(uint64(w.config.wormholeSrcChainId), 10)
 	seqStr := strconv.FormatUint(seq, 10)
-	url := fmt.Sprintf("%s/%s/%s/%s", w.Config.wormholeApiUrl, chainIdStr, w.Config.paddedWormholeTransceiver, seqStr)
+	url := fmt.Sprintf("%s/%s/%s/%s", w.config.wormholeApiUrl, chainIdStr, w.config.paddedWormholeTransceiver, seqStr)
 
 	var (
 		wormholeResp   WormholeResp
@@ -141,7 +141,7 @@ func (w *Wormhole) fetchVaa(
 		}),
 		// adjust Attempts and Delay to ensure we don't give up querying
 		// wormhole too soon
-		retry.Attempts(w.Config.fetchVAAAttempts),
+		retry.Attempts(w.config.fetchVAAAttempts),
 		retry.Context(ctx),
 		retry.Delay(30*time.Second),
 		retry.DelayType(retry.FixedDelay),
@@ -149,13 +149,13 @@ func (w *Wormhole) fetchVaa(
 			elapsed = time.Since(firstAttempt).Round(time.Second)
 			currentAttempt = attempt
 			log.Info("retry: VAA lookup", "attempt", fmt.Sprintf(
-				"%d/%d", attempt+1, w.Config.fetchVAAAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
+				"%d/%d", attempt+1, w.config.fetchVAAAttempts), "seq", seq, "error", err, "since-first-attempt", elapsed, "txHash", txHash,
 			)
 		}),
 	)
 
 	if err != nil {
-		if currentAttempt == w.Config.fetchVAAAttempts-1 {
+		if currentAttempt == w.config.fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
 			m.VAAFailedMaxAttemptsReached.Inc()
 		}
