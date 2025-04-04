@@ -22,15 +22,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"jester.noble.xyz/appstate"
 	eth "jester.noble.xyz/ethereum"
+	"jester.noble.xyz/hyperlane"
 	"jester.noble.xyz/metrics"
 	"jester.noble.xyz/server"
 	"jester.noble.xyz/wormhole"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // startCmd represents the start command
@@ -70,6 +70,7 @@ You can override contracts and configurations with the relevant "override" flags
 			ctx := cmd.Context()
 			log := a.Log
 			g, ctx := errgroup.WithContext(ctx)
+			wormholeOverrides, hyperlaneOverrides := getOverrides(a.Viper)
 
 			if a.Config.Metrics.Enabled {
 				g.Go(func() error {
@@ -79,9 +80,14 @@ You can override contracts and configurations with the relevant "override" flags
 				log.Warn("prometheus metrics server disabled")
 			}
 
-			w := wormhole.NewWormhole(log, a.Config.Testnet, a.Metrics, getOverrides(a.Viper))
+			w := wormhole.NewWormhole(log, a.Config.Testnet, a.Metrics, wormholeOverrides)
 			g.Go(func() error {
 				return w.Start(ctx, log, a.Eth, a.Metrics)
+			})
+
+			h := hyperlane.NewHyperlane(log, a.Config.Testnet, a.Metrics, hyperlaneOverrides)
+			g.Go(func() error {
+				return h.Start(ctx, log, a.Eth, a.Metrics)
 			})
 
 			// Watch for websocket interruptions and get historical data to catch up.
@@ -162,22 +168,30 @@ You can override contracts and configurations with the relevant "override" flags
 	cmd.Flags().String(appstate.FlagOverrideWormholeTransceiver, "", "override the wormhole transceiver contract address")
 	cmd.Flags().Uint(appstate.FlagOverrideFetchVAAAttempts, 60, "override the maximum number of attempts made to query the Wormhole API for VAAs (Attempts are spaced 30 seconds apart)")
 
+	// Hyperlane overrides
+	cmd.Flags().String(appstate.FlagOverrideHyperlaneMailbox, "", "override the hyperlane mailbox contract address")
+	cmd.Flags().Uint32(appstate.FlagOverrideHyperlaneNobleChainId, 0, "override the hyperlane chain ID")
+
 	// misc flags
 	cmd.Flags().BoolP(appstate.FlagHushLogo, "l", false, "suppress logo")
 	cmd.Flags().Bool(appstate.FlagDeveloperMode, false, "enable developer mode (clears VAA cache every hour; useful for non-validators tracking Prometheus metrics)")
 	return cmd
 }
 
-func getOverrides(v *viper.Viper) wormhole.Overrides {
+func getOverrides(v *viper.Viper) (wormhole.Overrides, hyperlane.Overrides) {
 	return wormhole.Overrides{
-		WormholeSrcChainId:   v.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
-		WormholeNobleChainID: v.GetUint16(appstate.FlagOverrideNobleChainID),
-		WormholeApiUrl:       v.GetString(appstate.FlagOverrideWormholeApiUrl),
-		HubPortal:            v.GetString(appstate.FlagOverrideHubPortal),
-		WormholeCore:         v.GetString(appstate.FlagOverrideWormholeCore),
-		WormholeTransceiver:  v.GetString(appstate.FlagOverrideWormholeTransceiver),
-		FetchVAAAttempts:     v.GetUint(appstate.FlagOverrideFetchVAAAttempts),
-	}
+			WormholeSrcChainId:   v.GetUint16(appstate.FlagOverrideWormholeSrcChainId),
+			WormholeNobleChainID: v.GetUint16(appstate.FlagOverrideNobleChainID),
+			WormholeApiUrl:       v.GetString(appstate.FlagOverrideWormholeApiUrl),
+			HubPortal:            v.GetString(appstate.FlagOverrideHubPortal),
+			WormholeCore:         v.GetString(appstate.FlagOverrideWormholeCore),
+			WormholeTransceiver:  v.GetString(appstate.FlagOverrideWormholeTransceiver),
+			FetchVAAAttempts:     v.GetUint(appstate.FlagOverrideFetchVAAAttempts),
+		},
+		hyperlane.Overrides{
+			HyperlaneMailbox:      v.GetString(appstate.FlagOverrideHyperlaneMailbox),
+			HyperlaneNobleChainId: v.GetUint32(appstate.FlagOverrideHyperlaneNobleChainId),
+		}
 }
 
 func plogo() {
