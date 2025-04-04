@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"jester.noble.xyz/metrics"
+	"jester.noble.xyz/v2/metrics"
 )
 
 func TestFetchVaa(t *testing.T) {

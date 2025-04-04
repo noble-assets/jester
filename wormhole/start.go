@@ -24,8 +24,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
-	eth "jester.noble.xyz/ethereum"
-	"jester.noble.xyz/metrics"
+	eth "jester.noble.xyz/v2/ethereum"
+	"jester.noble.xyz/v2/metrics"
 )
 
 // Start starts Wormhole bridge integration.

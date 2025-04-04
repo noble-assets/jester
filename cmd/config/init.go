@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"jester.noble.xyz/appstate"
+	"jester.noble.xyz/v2/appstate"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"

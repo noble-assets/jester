@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-	"jester.noble.xyz/metrics"
+	"jester.noble.xyz/v2/metrics"
 )
 
 // QueryData contains the metadata needed to query VAA's from the Wormhole API.

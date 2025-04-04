@@ -24,7 +24,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
-	"jester.noble.xyz/cmd"
+	"jester.noble.xyz/v2/cmd"
 )
 
 func main() {

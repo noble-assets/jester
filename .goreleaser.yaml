@@ -7,8 +7,8 @@ builds:
    env:
       - CGO_ENABLED=0
    ldflags:
-      - -X jester.noble.xyz/cmd.Version={{ .Version }}
-      - -X jester.noble.xyz/cmd.Commit={{ .Commit }}
+      - -X jester.noble.xyz/v2/cmd.Version={{ .Version }}
+      - -X jester.noble.xyz/v2/cmd.Commit={{ .Commit }}
    goos:
       - linux
       - darwin

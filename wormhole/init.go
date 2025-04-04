@@ -20,8 +20,8 @@ import (
 	"log/slog"
 
 	"github.com/ethereum/go-ethereum/common"
-	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/wormhole/state"
+	"jester.noble.xyz/v2/metrics"
+	"jester.noble.xyz/v2/wormhole/state"
 )
 
 type Wormhole struct {
