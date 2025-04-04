@@ -25,8 +25,10 @@ type PrometheusMetrics struct {
 	enabled  bool
 	registry *prometheus.Registry
 
-	EthSubInterruptionCounter   prometheus.Counter
-	GetVoteExtensionCounter     prometheus.Counter
+	EthSubInterruptionCounter prometheus.Counter
+	GetVoteExtensionCounter   prometheus.Counter
+
+	// Wormhole
 	LogMessagePublishedCounter  prometheus.Counter
 	MTokenSentCounter           prometheus.Counter
 	MTokenIndexSentCounter      prometheus.Counter
@@ -34,6 +36,9 @@ type PrometheusMetrics struct {
 	VAAFoundTotal               prometheus.Counter
 	VAAFailedTotal              prometheus.Counter
 	VAAFailedMaxAttemptsReached prometheus.Counter
+
+	// Hyperlane
+	MailboxDispatchCounter prometheus.Counter
 }
 
 // NewPrometheusMetrics creates a new PrometheusMetrics object
@@ -82,6 +87,10 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Subsystem: "vaa_failed",
 			Name:      "max_attempts_reached_total",
 			Help:      "The total number of times fetching a VAA failed after reaching the maximum number of attempts.",
+		}),
+		MailboxDispatchCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "mailbox_dispatch_counter",
+			Help: "The total number of times the Hyperlane event `Dispatch` is observed.",
 		}),
 	}
 }
@@ -172,5 +181,12 @@ func (m *PrometheusMetrics) IncVAAFailedTotal() {
 func (m *PrometheusMetrics) IncVAAFailedMaxAttemptsReached() {
 	if m.enabled {
 		m.VAAFailedMaxAttemptsReached.Inc()
+	}
+}
+
+// IncMailboxDispatchedCounter increments the metric tracking the total number of times `Dispatch` is observed.
+func (m *PrometheusMetrics) IncMailboxDispatchCounter() {
+	if m.enabled {
+		m.MailboxDispatchCounter.Inc()
 	}
 }
