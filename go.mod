@@ -1,4 +1,4 @@
-module jester.noble.xyz
+module jester.noble.xyz/v2
 
 go 1.24
 

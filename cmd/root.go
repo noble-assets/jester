@@ -22,8 +22,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"jester.noble.xyz/appstate"
-	"jester.noble.xyz/cmd/config"
+	"jester.noble.xyz/v2/appstate"
+	"jester.noble.xyz/v2/cmd/config"
 )
 
 const (

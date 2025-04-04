@@ -23,11 +23,11 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"jester.noble.xyz/appstate"
-	eth "jester.noble.xyz/ethereum"
-	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/server"
-	"jester.noble.xyz/wormhole"
+	"jester.noble.xyz/v2/appstate"
+	eth "jester.noble.xyz/v2/ethereum"
+	"jester.noble.xyz/v2/metrics"
+	"jester.noble.xyz/v2/server"
+	"jester.noble.xyz/v2/wormhole"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

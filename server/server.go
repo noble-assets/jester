@@ -29,8 +29,8 @@ import (
 	"connectrpc.com/grpcreflect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/wormhole/state"
+	"jester.noble.xyz/v2/metrics"
+	"jester.noble.xyz/v2/wormhole/state"
 
 	api "jester.noble.xyz/api"
 )
