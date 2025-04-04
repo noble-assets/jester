@@ -1,0 +1,1 @@
+- Update go.mod to v2 ([#21](https://github.com/noble-assets/jester/pull/21)).
