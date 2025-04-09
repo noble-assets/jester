@@ -57,13 +57,11 @@ func (h *Hyperlane) startHyperlaneDispatchListener(
 		},
 		func(ctx context.Context, log *slog.Logger, event *hyperlaneabi.HyperlaneDispatch) {
 			log.Info("observed event", "txHash", event.Raw.TxHash.String())
-			// TODO: process event
-			e.EnsureFinality <- &eth.EthEventForFinality{
-				EthLogs: event.Raw,
-				RouteAfterFinality: func(l ethTypes.Log) {
+			e.EnsureFinality(
+				event.Raw,
+				func(l ethTypes.Log) {
 					h.processingQueue <- &l
-				},
-			}
+				})
 
 			h.metrics.IncMailboxDispatchCounter()
 		},

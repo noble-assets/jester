@@ -38,7 +38,7 @@ type Eth struct {
 	RPCClient            *ethclient.Client
 	currentHeight        atomic.Int64
 
-	EnsureFinality        chan *EthEventForFinality
+	ensureFinalityCh      chan *ethEventForFinality
 	finalizedHeightPoller *finalizedHeightPoller
 
 	Redial *Redial
@@ -95,7 +95,7 @@ func NewEth(
 		WebsocketClient:       webSocketClient,
 		RPCClient:             rpcClient,
 		Redial:                newRedial(),
-		EnsureFinality:        make(chan *EthEventForFinality, 100), // TODO Size?
+		ensureFinalityCh:      make(chan *ethEventForFinality, 100), // TODO Size?
 		finalizedHeightPoller: newFinalizedHeightPoller(),
 	}, nil
 }

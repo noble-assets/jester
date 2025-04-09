@@ -41,19 +41,38 @@ const (
 	finalityPollInterval = 30 * time.Second
 )
 
-// EthEventForFinality is used to track Ethereum events that need to be finalized.
+// RouteAfterFinality is a callback function that is called after an Ethereum event has been finalized.
+// It should pass the Ethereum log to its respective processing queue.
+//
+// Example:
+//
+//	f := func(ethLog ethTypes.Log) {
+//	    processingQueue <- ethLog
+//	}
+type RouteAfterFinality func(ethTypes.Log)
+
+// ethEventForFinality is used to track Ethereum events that need to be finalized.
+type ethEventForFinality struct {
+	ethLogs ethTypes.Log
+
+	routeAfterFinality RouteAfterFinality
+
+	timeObserved time.Time
+}
+
+// EnsureFinality sends an Ethereum event to the finality process.
+// This is used to ensure that the event is finalized before processing it.
+//
 // The finality check includes:
 // 1. Verifying the event's block is part of the canonical chain
 // 2. Checking if the block number is below the current finalized block height
 // 3. Attempting to recover the event if a reorg is detected
-type EthEventForFinality struct {
-	EthLogs ethTypes.Log
-
-	// RouteAfterFinality is called after the ethereum event has been finalized.
-	// This callback should pass the Ethereum log to its respected processing queue.
-	// Due to Ethereum re-orgs, it is important to use the log passed into this callback
-	// as the source of truth, as the block number and other details may have changed.
-	RouteAfterFinality func(ethTypes.Log)
+func (e *Eth) EnsureFinality(ethLog ethTypes.Log, routeAfterFinality RouteAfterFinality) {
+	e.ensureFinalityCh <- &ethEventForFinality{
+		ethLogs:            ethLog,
+		routeAfterFinality: routeAfterFinality,
+		timeObserved:       time.Now(),
+	}
 }
 
 // startFinalityRoutine watches and handles new ethereum events that need to be finalized.
@@ -65,7 +84,7 @@ func (e *Eth) startFinalityRoutine(ctx context.Context, log *slog.Logger) error 
 		select {
 		case <-ctx.Done():
 			return nil
-		case dequeued, ok := <-e.EnsureFinality:
+		case dequeued, ok := <-e.ensureFinalityCh:
 			if !ok {
 				return errors.New("ensureFinalityProcess channel closed unexpectedly")
 			}
@@ -74,7 +93,7 @@ func (e *Eth) startFinalityRoutine(ctx context.Context, log *slog.Logger) error 
 				return errors.Join(errors.New("failed to acquire semaphore"), err)
 			}
 
-			go func(event *EthEventForFinality) {
+			go func(event *ethEventForFinality) {
 				defer sem.Release(1)
 				if err := e.waitForFinality(ctx, log, event); err != nil {
 					errChan <- err
@@ -87,11 +106,11 @@ func (e *Eth) startFinalityRoutine(ctx context.Context, log *slog.Logger) error 
 }
 
 // waitForFinality checks and/or waits for the event to be finalized.
-func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *EthEventForFinality) (err error) {
+func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *ethEventForFinality) (err error) {
 	var finalized, lostInReorg bool
 
 	// first, check if the event is already finalized. This will be the case for historical events.
-	finalized, lostInReorg, event.EthLogs, err = e.checkForFinality(ctx, log, event)
+	finalized, lostInReorg, event.ethLogs, err = e.checkForFinality(ctx, log, event)
 	if err != nil {
 		return fmt.Errorf("failed to check for finality: %w", err)
 	}
@@ -101,7 +120,7 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *EthE
 	}
 
 	if finalized {
-		event.RouteAfterFinality(event.EthLogs)
+		event.routeAfterFinality(event.ethLogs)
 		return nil
 	}
 
@@ -114,7 +133,7 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *EthE
 		case <-ctx.Done():
 			return nil
 		case <-subFinalizedBlock:
-			finalized, lostInReorg, event.EthLogs, err = e.checkForFinality(ctx, log, event)
+			finalized, lostInReorg, event.ethLogs, err = e.checkForFinality(ctx, log, event)
 			if err != nil {
 				return fmt.Errorf("failed to check for finality: %w", err)
 			}
@@ -124,7 +143,8 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *EthE
 			}
 
 			if finalized {
-				event.RouteAfterFinality(event.EthLogs)
+				event.routeAfterFinality(event.ethLogs)
+				e.metrics.ObserveFinalityReachedSeconds(time.Since(event.timeObserved).Seconds())
 				return nil
 			}
 		}
@@ -136,24 +156,25 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *EthE
 //
 // Because of the potential for a re-org, we must ensure we return new the ethLog as this log will be the
 // new source of truth.
-func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *EthEventForFinality) (finalized, lostInReorg bool, ethLog ethTypes.Log, err error) {
+func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *ethEventForFinality) (finalized, lostInReorg bool, ethLog ethTypes.Log, err error) {
 	// first check for re-org by comparing the block hash of the event with the canonical block hash.
-	canonicalBlock, err := e.headerByNumber(ctx, log, big.NewInt(int64(event.EthLogs.BlockNumber)))
+	canonicalBlock, err := e.headerByNumber(ctx, log, big.NewInt(int64(event.ethLogs.BlockNumber)))
 	if err != nil {
 		return false, false, ethTypes.Log{}, err
 	}
 
-	if canonicalBlock.Hash() != event.EthLogs.BlockHash {
+	if canonicalBlock.Hash() != event.ethLogs.BlockHash {
 		log.Info("re-org detected!",
-			"txHash", event.EthLogs.TxHash.Hex(),
-			"observed-height", event.EthLogs.BlockNumber,
-			"expected-block-hash", event.EthLogs.BlockHash.Hex(),
+			"txHash", event.ethLogs.TxHash.Hex(),
+			"observed-height", event.ethLogs.BlockNumber,
+			"expected-block-hash", event.ethLogs.BlockHash.Hex(),
 			"received-block-hash", canonicalBlock.Hash().Hex(),
+			"timer", time.Since(event.timeObserved).Round(time.Second).String(),
 		)
 
-		// TODO: add re-org metric
+		e.metrics.IncReorgDetectedCounter()
 
-		success, newLog, err := e.attemptEventRecovery(ctx, log, event.EthLogs)
+		success, newLog, err := e.attemptEventRecovery(ctx, log, event.ethLogs)
 		if err != nil {
 			return false, false, ethTypes.Log{}, err
 		}
@@ -162,28 +183,30 @@ func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *Eth
 			return false, true, ethTypes.Log{}, nil
 		}
 
-		event.EthLogs = newLog
+		event.ethLogs = newLog
 	}
 
 	// then check if the event is finalized by comparing the block number with the current finalized block.
 	finalizedHeight := e.finalizedHeightPoller.currentFinalizedHeight.Load()
 
-	if finalizedHeight >= event.EthLogs.BlockNumber {
+	if finalizedHeight >= event.ethLogs.BlockNumber {
 		log.Info("finality reached",
-			"txHash", event.EthLogs.TxHash.Hex(),
-			"observed-block", event.EthLogs.BlockNumber,
+			"txHash", event.ethLogs.TxHash.Hex(),
+			"observed-block", event.ethLogs.BlockNumber,
 			"current-finalized-block", finalizedHeight,
+			"timer", time.Since(event.timeObserved).Round(time.Second).String(),
 		)
-		return true, false, event.EthLogs, nil
+		return true, false, event.ethLogs, nil
 	}
 
 	log.Info("waiting for finality",
-		"txHash", event.EthLogs.TxHash.Hex(),
-		"observed-height", event.EthLogs.BlockNumber,
+		"txHash", event.ethLogs.TxHash.Hex(),
+		"observed-height", event.ethLogs.BlockNumber,
 		"current-finalized-height", finalizedHeight,
+		"timer", time.Since(event.timeObserved).Round(time.Second).String(),
 	)
 
-	return false, false, event.EthLogs, nil
+	return false, false, event.ethLogs, nil
 }
 
 // attemptEventRecovery attempts to recover an event in the event of an Ethereum re-org.
@@ -210,7 +233,7 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 				"observed-height", ethLog.BlockNumber,
 				"new-height", vLog.BlockNumber)
 
-			// TODO: add recovered event metric
+			e.metrics.IncReorgEventRecoveredCounter()
 
 			return true, vLog, nil
 		}
@@ -220,7 +243,8 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 		"txHash", ethLog.TxHash.String(),
 		"observed-height", ethLog.BlockNumber,
 	)
-	// TODO add failed to recover event metric
+
+	e.metrics.IncReorgEventLostCounter()
 
 	return false, ethTypes.Log{}, nil
 }
@@ -255,7 +279,7 @@ func newFinalizedHeightPoller() *finalizedHeightPoller {
 // along with an unsubscribe function to cancel the subscription.
 // You can get the new finalized block height by calling e.finalizedHeightPoller.currentFinalizedHeight.Load().
 //
-// Since getting the finalized block is only available via RPC, uisng this subscription method and only polling
+// Since getting the finalized block is only available via RPC, using this subscription method and only polling
 // when necessary helps reduce the amount of RPC calls needed.
 func (e *Eth) subToFinalizedBlocks(ctx context.Context, log *slog.Logger) (newFinalizedHeight <-chan struct{}, unsubscribe func()) {
 	p := e.finalizedHeightPoller

@@ -25,11 +25,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// startProcessor starts the hyplane processor
+// startProcessor starts the hyperlane processor
 func (h *Hyperlane) startProcessor(ctx context.Context, log *slog.Logger) error {
 	g, ctx := errgroup.WithContext(ctx)
 
-	// TODO: worker pool?
+	// TODO: worker pool
 
 	g.Go(func() error {
 		for {
@@ -53,5 +53,4 @@ func (h *Hyperlane) startProcessor(ctx context.Context, log *slog.Logger) error 
 	}
 
 	return nil
-
 }

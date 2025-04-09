@@ -25,8 +25,15 @@ type PrometheusMetrics struct {
 	enabled  bool
 	registry *prometheus.Registry
 
+	// Misc
 	EthSubInterruptionCounter prometheus.Counter
 	GetVoteExtensionCounter   prometheus.Counter
+
+	// Ethereum
+	ReorgDetectedCounter          prometheus.Counter
+	ReorgEventRecoveredCounter    prometheus.Counter
+	ReorgEventLostCounter         prometheus.Counter
+	FinalityReachedSecondsSummary prometheus.Summary
 
 	// Wormhole
 	LogMessagePublishedCounter  prometheus.Counter
@@ -58,16 +65,16 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		}),
 		LogMessagePublishedCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "logMessagePublished_counter",
-			Help: "The total number of times the Ethereum event `LogMessagePublished` is observed.",
+			Help: "Total number of times Wormhole's Ethereum event `LogMessagePublished` is observed.",
 		}),
 		MTokenSentCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "mTokenSent_counter",
-			Help: "The total number of times the Ethereum event `MTokenSent` is observed.",
+			Help: "Total number of times M0's Ethereum event `mTokenSent` is observed.",
 		}),
 
 		MTokenIndexSentCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "mTokenIndexSent_counter",
-			Help: "The total number of times the Ethereum event `MTokenIndexSent` is observed.",
+			Help: "Total number of times M0's Ethereum event `mTokenIndexSent` is observed  .",
 		}),
 		VAAReceiveDuration: factory.NewSummary(prometheus.SummaryOpts{
 			Name:       "vaa_receive_duration_minutes",
@@ -91,6 +98,22 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		MailboxDispatchCounter: factory.NewCounter(prometheus.CounterOpts{
 			Name: "mailbox_dispatch_counter",
 			Help: "The total number of times the Hyperlane event `Dispatch` is observed.",
+		}),
+		ReorgDetectedCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "reorg_detected_counter",
+			Help: "The total number of times a relevant event was included in an Ethereum reorg.",
+		}),
+		ReorgEventRecoveredCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "reorg_event_recovered_counter",
+			Help: "The total number of times a relevant event was recovered after an Ethereum reorg.",
+		}),
+		ReorgEventLostCounter: factory.NewCounter(prometheus.CounterOpts{
+			Name: "reorg_event_lost_counter",
+			Help: "The total number of times a relevant event was lost after an Ethereum reorg.",
+		}),
+		FinalityReachedSecondsSummary: factory.NewSummary(prometheus.SummaryOpts{
+			Name: "finality_reached_seconds_summary",
+			Help: "Summary of the time it takes for a block to reach finality in seconds.",
 		}),
 	}
 }
@@ -188,5 +211,33 @@ func (m *PrometheusMetrics) IncVAAFailedMaxAttemptsReached() {
 func (m *PrometheusMetrics) IncMailboxDispatchCounter() {
 	if m.enabled {
 		m.MailboxDispatchCounter.Inc()
+	}
+}
+
+// IncReorgDetectedCounter increments the metric tracking the total number of times a relevant event was included in an Ethereum reorg.
+func (m *PrometheusMetrics) IncReorgDetectedCounter() {
+	if m.enabled {
+		m.ReorgDetectedCounter.Inc()
+	}
+}
+
+// IncReorgEventRecovered increments the metric tracking the total number of times a relevant event was recovered after an Ethereum reorg.
+func (m *PrometheusMetrics) IncReorgEventRecoveredCounter() {
+	if m.enabled {
+		m.ReorgEventRecoveredCounter.Inc()
+	}
+}
+
+// IncReorgEventLost increments the metric tracking the total number of times a relevant event was lost after an Ethereum reorg.
+func (m *PrometheusMetrics) IncReorgEventLostCounter() {
+	if m.enabled {
+		m.ReorgEventLostCounter.Inc()
+	}
+}
+
+// ObserveFinalityReachedDuration observes the time it takes for a block to reach finality in seconds.
+func (m *PrometheusMetrics) ObserveFinalityReachedSeconds(duration float64) {
+	if m.enabled {
+		m.FinalityReachedSecondsSummary.Observe(duration)
 	}
 }
