@@ -185,7 +185,7 @@ func (m *PrometheusMetrics) ObserveVAAReceiveDuration(duration float64) {
 	}
 }
 
-// IncVAAFoundTotalCounter increments the metric tracking the total number of times a VAA was found.
+// IncVAAFoundTotal increments the metric tracking the total number of times a VAA was found.
 func (m *PrometheusMetrics) IncVAAFoundTotal() {
 	if m.enabled {
 		m.VAAFoundTotal.Inc()
@@ -207,7 +207,7 @@ func (m *PrometheusMetrics) IncVAAFailedMaxAttemptsReached() {
 	}
 }
 
-// IncMailboxDispatchedCounter increments the metric tracking the total number of times `Dispatch` is observed.
+// IncMailboxDispatchCounter increments the metric tracking the total number of times `Dispatch` is observed.
 func (m *PrometheusMetrics) IncMailboxDispatchCounter() {
 	if m.enabled {
 		m.MailboxDispatchCounter.Inc()
@@ -221,21 +221,21 @@ func (m *PrometheusMetrics) IncReorgDetectedCounter() {
 	}
 }
 
-// IncReorgEventRecovered increments the metric tracking the total number of times a relevant event was recovered after an Ethereum reorg.
+// IncReorgEventRecoveredCounter increments the metric tracking the total number of times a relevant event was recovered after an Ethereum reorg.
 func (m *PrometheusMetrics) IncReorgEventRecoveredCounter() {
 	if m.enabled {
 		m.ReorgEventRecoveredCounter.Inc()
 	}
 }
 
-// IncReorgEventLost increments the metric tracking the total number of times a relevant event was lost after an Ethereum reorg.
+// IncReorgEventLostCounter increments the metric tracking the total number of times a relevant event was lost after an Ethereum reorg.
 func (m *PrometheusMetrics) IncReorgEventLostCounter() {
 	if m.enabled {
 		m.ReorgEventLostCounter.Inc()
 	}
 }
 
-// ObserveFinalityReachedDuration observes the time it takes for a block to reach finality in seconds.
+// ObserveFinalityReachedSeconds observes the time it takes for a block to reach finality in seconds.
 func (m *PrometheusMetrics) ObserveFinalityReachedSeconds(duration float64) {
 	if m.enabled {
 		m.FinalityReachedSecondsSummary.Observe(duration)
