@@ -232,6 +232,5 @@ require (
 replace jester.noble.xyz/api => ./api
 
 tool (
-	github.com/golangci/golangci-lint/cmd/golangci-lint
-	mvdan.cc/gofumpt
+	github.com/golangci/golangci-lint/cmd/golangci-lint/v2
 )

@@ -153,7 +153,6 @@ func (w *Wormhole) fetchVaa(
 			)
 		}),
 	)
-
 	if err != nil {
 		if currentAttempt == w.config.fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
