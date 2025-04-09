@@ -55,13 +55,13 @@ func (e *Eth) headerByNumber(ctx context.Context, log *slog.Logger, block *big.I
 		func() error {
 			header, err = e.RPCClient.HeaderByNumber(ctx, block)
 			if err != nil {
-				return fmt.Errorf("headerByNumber failed: %w", err)
+				return fmt.Errorf("headerByNumber failed for block %s: %w", block.String(), err)
 			}
 			return nil
 		},
 		retry.Context(ctx),
 		retry.OnRetry(func(attempt uint, err error) {
-			log.Warn("retrying HeaderByNumber", "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "error", err)
+			log.Warn("retrying HeaderByNumber", "block", block.String(), "attempt", fmt.Sprintf("%d/%d", attempt+1, 10), "error", err)
 		}),
 	)
 	if err != nil {

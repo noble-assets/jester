@@ -230,9 +230,11 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 // finalizedHeightPoller tracks the finalized block height and notifies subscribers on updates.
 type finalizedHeightPoller struct {
 	currentFinalizedHeight atomic.Uint64
+	mu                     sync.Mutex
+
 	// subscribers holds all active subscription channels.
-	subscribers   map[chan struct{}]struct{}
-	subscribersMu sync.Mutex
+	subscribers map[chan struct{}]struct{}
+
 	// done signals the polling routine that there are no more subscribers and can stop polling.
 	done    chan struct{}
 	running bool
@@ -248,14 +250,17 @@ func newFinalizedHeightPoller() *finalizedHeightPoller {
 	}
 }
 
-// subToFinalizedBlocks returns a channel to receive finalized height updates and an unsubscribe function.
+// subToFinalizedBlocks establishes a subscription to receive updates on the finalized block height.
+// It returns a buffered channel that emits a notification each time a new finalized block is detected,
+// along with an unsubscribe function to cancel the subscription.
+// You can get the new finalized block height by calling e.finalizedHeightPoller.currentFinalizedHeight.Load().
 //
 // Since getting the finalized block is only available via RPC, uisng this subscription method and only polling
 // when necessary helps reduce the amount of RPC calls needed.
 func (e *Eth) subToFinalizedBlocks(ctx context.Context, log *slog.Logger) (newFinalizedHeight <-chan struct{}, unsubscribe func()) {
 	p := e.finalizedHeightPoller
-	p.subscribersMu.Lock()
-	defer p.subscribersMu.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	ch := make(chan struct{}, 1)
 	p.subscribers[ch] = struct{}{}
@@ -268,8 +273,8 @@ func (e *Eth) subToFinalizedBlocks(ctx context.Context, log *slog.Logger) (newFi
 	// TODO: Data race on quit here
 
 	unsubscribe = func() {
-		p.subscribersMu.Lock()
-		defer p.subscribersMu.Unlock()
+		p.mu.Lock()
+		defer p.mu.Unlock()
 		if _, exists := p.subscribers[ch]; exists {
 			delete(p.subscribers, ch)
 			close(ch)
@@ -308,7 +313,7 @@ func (e *Eth) pollFinalizedHeight(ctx context.Context, log *slog.Logger) {
 			p.currentFinalizedHeight.Store(newFinalized)
 			log.Debug("finalized height updated", "height", newFinalized)
 
-			p.subscribersMu.Lock()
+			p.mu.Lock()
 			for sub := range p.subscribers {
 				// Non-blocking send to avoid blocking the poller.
 				select {
@@ -316,17 +321,21 @@ func (e *Eth) pollFinalizedHeight(ctx context.Context, log *slog.Logger) {
 				default:
 				}
 			}
-			p.subscribersMu.Unlock()
+			p.mu.Unlock()
 		}
 	}
 
 	updateHeight()
 
 	for {
+		p.mu.Lock()
+		doneCh := p.done
+		p.mu.Unlock()
+
 		select {
 		case <-ctx.Done():
 			return
-		case <-p.done:
+		case <-doneCh:
 			log.Debug("no subscribers remain, stopping finalized height poller")
 			return
 		case <-ticker.C:

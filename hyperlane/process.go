@@ -41,7 +41,7 @@ func (h *Hyperlane) startProcessor(ctx context.Context, log *slog.Logger) error 
 					return errors.New("processingQueue channel closed unexpectedly")
 				}
 				// TODO
-				fmt.Println("Process Me!", dequeued.Address.Hex())
+				fmt.Println("Process Me!", dequeued.TxHash.Hex())
 
 			}
 		}
