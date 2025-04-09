@@ -23,6 +23,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	eth "jester.noble.xyz/ethereum"
 	hyperlaneabi "jester.noble.xyz/hyperlane/abi"
@@ -49,13 +50,21 @@ func (h *Hyperlane) startHyperlaneDispatchListener(
 				&bind.WatchOpts{Context: ctx},
 				sink,
 				nil,
-				[]uint32{h.config.hyperlaneNobleChainId},
+				nil,
+				// []uint32{h.config.hyperlaneNobleChainId}, // TODO: filter for noble
 				nil,
 			)
 		},
 		func(ctx context.Context, log *slog.Logger, event *hyperlaneabi.HyperlaneDispatch) {
 			log.Info("observed event", "txHash", event.Raw.TxHash.String())
 			// TODO: process event
+			e.EnsureFinality <- &eth.EthEventForFinality{
+				EthLogs: event.Raw,
+				RouteAfterFinality: func(l ethTypes.Log) {
+					h.processingQueue <- &l
+				},
+			}
+
 			h.metrics.IncMailboxDispatchCounter()
 		},
 	)

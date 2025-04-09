@@ -21,3 +21,5 @@ All metrics are served at `/metrics`.
 | vaa_found_total                 | Total number of times a VAA was found                                                                                           | Counter   |
 | vaa_failed_total                | Total number of times fetching a VAA failed                                                                                     | Counter   |
 | vaa_failed_max_attempts_reached | Total number of times fetching a VAA failed after reaching the maximum number of attempts                                       | Counter   |
+
+<!-- TODO: Add metric: IncMailboxDispatchCounter  -->

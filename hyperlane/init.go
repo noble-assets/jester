@@ -19,12 +19,14 @@ package hyperlane
 import (
 	"log/slog"
 
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"jester.noble.xyz/metrics"
 )
 
 type Hyperlane struct {
-	config  *config
-	metrics *metrics.PrometheusMetrics
+	config          *config
+	metrics         *metrics.PrometheusMetrics
+	processingQueue chan *ethTypes.Log
 }
 
 type config struct {
@@ -39,8 +41,9 @@ type Overrides struct {
 
 func NewHyperlane(log *slog.Logger, testnet bool, metrics *metrics.PrometheusMetrics, overrides Overrides) *Hyperlane {
 	return &Hyperlane{
-		config:  newConfig(log, testnet, overrides),
-		metrics: metrics,
+		config:          newConfig(log, testnet, overrides),
+		metrics:         metrics,
+		processingQueue: make(chan *ethTypes.Log, 100), // TODO: how big?
 	}
 }
 

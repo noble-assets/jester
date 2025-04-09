@@ -14,34 +14,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package hyperlane
+package ethereum
 
 import (
 	"context"
 	"log/slog"
 
 	"golang.org/x/sync/errgroup"
-	eth "jester.noble.xyz/ethereum"
-	"jester.noble.xyz/metrics"
 )
 
-// Start starts Hyperlane interoperability integration.
-func (h *Hyperlane) Start(
-	ctx context.Context, log *slog.Logger, Eth *eth.Eth,
-	metrics *metrics.PrometheusMetrics,
-) error {
+// Start starts Ethereum related processes.
+func (e *Eth) Start(ctx context.Context, log *slog.Logger) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return h.startProcessor(ctx, log)
+		return e.trackCurrentHeight(ctx, log)
 	})
 
 	g.Go(func() error {
-		return h.startHyperlaneDispatchListener(ctx, log, Eth)
+		return e.startFinalityRoutine(ctx, log)
+	})
+
+	g.Go(func() error {
+		return e.watchForFinalizedHeightPollerErrors(ctx)
 	})
 
 	if err := g.Wait(); err != nil {
-		log.Error("hyperlane error", "error", err)
+		log.Error("ethereum error", "error", err)
 		return err
 	}
 

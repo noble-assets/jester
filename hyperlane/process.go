@@ -18,26 +18,33 @@ package hyperlane
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
 	"golang.org/x/sync/errgroup"
-	eth "jester.noble.xyz/ethereum"
-	"jester.noble.xyz/metrics"
 )
 
-// Start starts Hyperlane interoperability integration.
-func (h *Hyperlane) Start(
-	ctx context.Context, log *slog.Logger, Eth *eth.Eth,
-	metrics *metrics.PrometheusMetrics,
-) error {
+// startProcessor starts the hyplane processor
+func (h *Hyperlane) startProcessor(ctx context.Context, log *slog.Logger) error {
 	g, ctx := errgroup.WithContext(ctx)
 
-	g.Go(func() error {
-		return h.startProcessor(ctx, log)
-	})
+	// TODO: worker pool?
 
 	g.Go(func() error {
-		return h.startHyperlaneDispatchListener(ctx, log, Eth)
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case dequeued, ok := <-h.processingQueue:
+				if !ok {
+					return errors.New("processingQueue channel closed unexpectedly")
+				}
+				// TODO
+				fmt.Println("Process Me!", dequeued.Address.Hex())
+
+			}
+		}
 	})
 
 	if err := g.Wait(); err != nil {
@@ -46,4 +53,5 @@ func (h *Hyperlane) Start(
 	}
 
 	return nil
+
 }

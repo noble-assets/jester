@@ -20,14 +20,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math/big"
 	"sync"
+	"sync/atomic"
 
 	"github.com/avast/retry-go/v4"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/event"
 	"jester.noble.xyz/metrics"
 )
 
@@ -37,6 +36,10 @@ type Eth struct {
 	WebsocketClient      *ethclient.Client
 	websocketClientMutex sync.Mutex
 	RPCClient            *ethclient.Client
+	currentHeight        atomic.Int64
+
+	EnsureFinality        chan *EthEventForFinality
+	finalizedHeightPoller *finalizedHeightPoller
 
 	Redial *Redial
 }
@@ -87,11 +90,13 @@ func NewEth(
 	}
 
 	return &Eth{
-		metrics:         m,
-		config:          config,
-		WebsocketClient: webSocketClient,
-		RPCClient:       rpcClient,
-		Redial:          newRedial(),
+		metrics:               m,
+		config:                config,
+		WebsocketClient:       webSocketClient,
+		RPCClient:             rpcClient,
+		Redial:                newRedial(),
+		EnsureFinality:        make(chan *EthEventForFinality, 100), // TODO Size?
+		finalizedHeightPoller: newFinalizedHeightPoller(),
 	}, nil
 }
 
@@ -125,18 +130,6 @@ func dialClient(ctx context.Context, log *slog.Logger, url string, clientType cl
 	return client, nil
 }
 
-// FilterLogs uses an RPC client to query Ethereum within a specified block range.
-// It returns filtered logs based on contract address and topics.
-func (e *Eth) FilterLogs(ctx context.Context, start, end *big.Int, contractAddress string, topics [][]common.Hash) ([]ethTypes.Log, error) {
-	query := ethereum.FilterQuery{
-		FromBlock: start,
-		ToBlock:   end,
-		Addresses: []common.Address{common.HexToAddress(contractAddress)},
-		Topics:    topics,
-	}
-	return e.RPCClient.FilterLogs(ctx, query)
-}
-
 // CloseClients closes the websocket and RPC clients.
 func (e *Eth) CloseClients() {
 	if e.WebsocketClient != nil {
@@ -146,3 +139,23 @@ func (e *Eth) CloseClients() {
 		e.RPCClient.Close()
 	}
 }
+
+// trackCurrentHeight tracks the current Ethereum block height.
+func (e *Eth) trackCurrentHeight(ctx context.Context, log *slog.Logger) error {
+	return StartEventListener(
+		ctx, log, e, "newHeads", "NewHead",
+		func(ctx context.Context, sink chan *ethTypes.Header) (event.Subscription, error) {
+			return e.WebsocketClient.SubscribeNewHead(ctx, sink)
+		},
+		func(ctx context.Context, log *slog.Logger, event *ethTypes.Header) {
+			e.currentHeight.Store(event.Number.Int64())
+		},
+	)
+}
+
+// GetCurrentHeight returns the current Ethereum block height.
+func (e *Eth) GetCurrentHeight() int64 {
+	return e.currentHeight.Load()
+}
+
+func (e *Eth) TrackCurrentBlockTime() {}
