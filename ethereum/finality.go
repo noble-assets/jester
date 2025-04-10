@@ -47,7 +47,7 @@ const (
 // Example:
 //
 //	f := func(ethLog ethTypes.Log) {
-//	    processingQueue <- ethLog
+//	    processingQueue <- &ethLog
 //	}
 type RouteAfterFinality func(ethTypes.Log)
 
@@ -62,6 +62,7 @@ type ethEventForFinality struct {
 
 // EnsureFinality sends an Ethereum event to the finality process.
 // This is used to ensure that the event is finalized before processing it.
+// Once finalized the event is passed to the RouteAfterFinality callback.
 //
 // The finality check includes:
 // 1. Verifying the event's block is part of the canonical chain
@@ -158,7 +159,9 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *ethE
 // new source of truth.
 func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *ethEventForFinality) (finalized, lostInReorg bool, ethLog ethTypes.Log, err error) {
 	// first check for re-org by comparing the block hash of the event with the canonical block hash.
-	canonicalBlock, err := e.headerByNumber(ctx, log, big.NewInt(int64(event.ethLogs.BlockNumber)))
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*5)
+	canonicalBlock, err := e.headerByNumber(ctxWithTimeout, log, big.NewInt(int64(event.ethLogs.BlockNumber)))
+	cancel()
 	if err != nil {
 		return false, false, ethTypes.Log{}, err
 	}
@@ -213,8 +216,9 @@ func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *eth
 func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog ethTypes.Log) (success bool, newLogs ethTypes.Log, err error) {
 	fromBlock := big.NewInt(int64(ethLog.BlockNumber))
 
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*5)
 	logs, err := e.FilterLogs(
-		ctx, log,
+		ctxWithTimeout, log,
 		ethereum.FilterQuery{
 			FromBlock: fromBlock,
 			ToBlock:   nil,
@@ -222,6 +226,7 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 			Topics:    [][]common.Hash{ethLog.Topics},
 		},
 	)
+	cancel()
 	if err != nil {
 		return false, ethTypes.Log{}, fmt.Errorf("failed to filter logs in event recovery: %w", err)
 	}
@@ -249,7 +254,9 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 	return false, ethTypes.Log{}, nil
 }
 
-//
+/////////////////////
+// Finality Poller //
+/////////////////////
 
 // finalizedHeightPoller tracks the finalized block height and notifies subscribers on updates.
 type finalizedHeightPoller struct {
@@ -265,7 +272,7 @@ type finalizedHeightPoller struct {
 	errChan chan error
 }
 
-// newFinalizedHeightTracker creates a new tracker.
+// newFinalizedHeightPoller creates a new poller.
 func newFinalizedHeightPoller() *finalizedHeightPoller {
 	return &finalizedHeightPoller{
 		subscribers: make(map[chan struct{}]struct{}),
@@ -293,8 +300,6 @@ func (e *Eth) subToFinalizedBlocks(ctx context.Context, log *slog.Logger) (newFi
 		p.running = true
 		go e.pollFinalizedHeight(ctx, log)
 	}
-
-	// TODO: Data race on quit here
 
 	unsubscribe = func() {
 		p.mu.Lock()

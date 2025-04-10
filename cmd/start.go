@@ -102,7 +102,6 @@ You can override contracts and configurations with the relevant "override" flags
 					case <-ctx.Done():
 						return
 					case <-a.Eth.Redial.GetHistory:
-						// TODO: make lookback dynamic via current block and current block time
 						lookBack := uint64(50)
 						log.Info(fmt.Sprintf("getting historical events for %d blocks", lookBack))
 						latest, err := a.Eth.RPCClient.BlockNumber(ctx)

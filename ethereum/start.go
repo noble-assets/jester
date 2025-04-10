@@ -28,10 +28,6 @@ func (e *Eth) Start(ctx context.Context, log *slog.Logger) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return e.trackCurrentHeight(ctx, log)
-	})
-
-	g.Go(func() error {
 		return e.startFinalityRoutine(ctx, log)
 	})
 

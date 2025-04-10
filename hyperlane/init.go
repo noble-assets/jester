@@ -43,7 +43,7 @@ func NewHyperlane(log *slog.Logger, testnet bool, metrics *metrics.PrometheusMet
 	return &Hyperlane{
 		config:          newConfig(log, testnet, overrides),
 		metrics:         metrics,
-		processingQueue: make(chan *ethTypes.Log, 100), // TODO: how big?
+		processingQueue: make(chan *ethTypes.Log, 10000),
 	}
 }
 

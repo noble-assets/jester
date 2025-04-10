@@ -21,12 +21,9 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 
 	"github.com/avast/retry-go/v4"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/event"
 	"jester.noble.xyz/metrics"
 )
 
@@ -36,7 +33,6 @@ type Eth struct {
 	WebsocketClient      *ethclient.Client
 	websocketClientMutex sync.Mutex
 	RPCClient            *ethclient.Client
-	currentHeight        atomic.Int64
 
 	ensureFinalityCh      chan *ethEventForFinality
 	finalizedHeightPoller *finalizedHeightPoller
@@ -95,7 +91,7 @@ func NewEth(
 		WebsocketClient:       webSocketClient,
 		RPCClient:             rpcClient,
 		Redial:                newRedial(),
-		ensureFinalityCh:      make(chan *ethEventForFinality, 100), // TODO Size?
+		ensureFinalityCh:      make(chan *ethEventForFinality, 10000),
 		finalizedHeightPoller: newFinalizedHeightPoller(),
 	}, nil
 }
@@ -139,23 +135,3 @@ func (e *Eth) CloseClients() {
 		e.RPCClient.Close()
 	}
 }
-
-// trackCurrentHeight tracks the current Ethereum block height.
-func (e *Eth) trackCurrentHeight(ctx context.Context, log *slog.Logger) error {
-	return StartEventListener(
-		ctx, log, e, "newHeads", "NewHead",
-		func(ctx context.Context, sink chan *ethTypes.Header) (event.Subscription, error) {
-			return e.WebsocketClient.SubscribeNewHead(ctx, sink)
-		},
-		func(ctx context.Context, log *slog.Logger, event *ethTypes.Header) {
-			e.currentHeight.Store(event.Number.Int64())
-		},
-	)
-}
-
-// GetCurrentHeight returns the current Ethereum block height.
-func (e *Eth) GetCurrentHeight() int64 {
-	return e.currentHeight.Load()
-}
-
-func (e *Eth) TrackCurrentBlockTime() {}
