@@ -214,6 +214,13 @@ func (m *PrometheusMetrics) IncMailboxDispatchCounter() {
 	}
 }
 
+// AddMailboxDispatchCounter adds to the metric tracking the total number of times `Dispatch` is observed.
+func (m *PrometheusMetrics) AddMailboxDispatchCounter(n int) {
+	if m.enabled {
+		m.MailboxDispatchCounter.Add(float64(n))
+	}
+}
+
 // IncReorgDetectedCounter increments the metric tracking the total number of times a relevant event was included in an Ethereum reorg.
 func (m *PrometheusMetrics) IncReorgDetectedCounter() {
 	if m.enabled {

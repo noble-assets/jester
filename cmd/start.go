@@ -110,7 +110,8 @@ You can override contracts and configurations with the relevant "override" flags
 							continue
 						}
 						start := latest - lookBack
-						w.GetHistory(ctx, log, a.Eth, int64(start), 0)
+						go func() { w.GetHistory(ctx, log, a.Eth, int64(start), 0) }()
+						go func() { h.GetHistory(ctx, log, a.Eth, int64(start), 0) }()
 					}
 				}
 			}()
@@ -124,9 +125,8 @@ You can override contracts and configurations with the relevant "override" flags
 			startBlock := a.Viper.GetInt64(appstate.FlagStartBlock)
 			if startBlock != 0 {
 				endBlock := a.Viper.GetInt64(appstate.FlagEndBlock)
-				go func() {
-					w.GetHistory(ctx, log, a.Eth, startBlock, endBlock)
-				}()
+				go func() { w.GetHistory(ctx, log, a.Eth, startBlock, endBlock) }()
+				go func() { h.GetHistory(ctx, log, a.Eth, startBlock, endBlock) }()
 			}
 
 			// Developer mode

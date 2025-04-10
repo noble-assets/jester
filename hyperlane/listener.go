@@ -29,7 +29,13 @@ import (
 	hyperlaneabi "jester.noble.xyz/hyperlane/abi"
 )
 
-// StartHyperlaneDispatchListener listens for Hyperlane's `Dispatch` events
+// hyperlaneDispatchRouter routes finalized `Dispatch` events to the processing queue.
+// This is a callback for the `eth.EnsureFinality` method.
+func (h *Hyperlane) hyperlaneDispatchRouter(l ethTypes.Log) {
+	h.processingQueue <- &l
+}
+
+// startHyperlaneDispatchListener listens for Hyperlane's `Dispatch` events
 func (h *Hyperlane) startHyperlaneDispatchListener(
 	ctx context.Context,
 	log *slog.Logger,
@@ -58,10 +64,7 @@ func (h *Hyperlane) startHyperlaneDispatchListener(
 		func(ctx context.Context, log *slog.Logger, event *hyperlaneabi.HyperlaneDispatch) {
 			log.Info("observed event", "txHash", event.Raw.TxHash.String())
 			e.EnsureFinality(
-				event.Raw,
-				func(l ethTypes.Log) {
-					h.processingQueue <- &l
-				})
+				event.Raw, h.hyperlaneDispatchRouter)
 
 			h.metrics.IncMailboxDispatchCounter()
 		},

@@ -48,7 +48,7 @@ func (w *Wormhole) GetHistory(
 
 	log = log.With(slog.String("interop-framework", "wormhole"), slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
 
-	log.Info("starting historical query", "start-block", startBlock, "end-block", endBlock)
+	log.Info("starting historical query")
 
 	var totalVaas int
 	defer func() {

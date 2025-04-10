@@ -160,8 +160,8 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *ethE
 func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *ethEventForFinality) (finalized, lostInReorg bool, ethLog ethTypes.Log, err error) {
 	// first check for re-org by comparing the block hash of the event with the canonical block hash.
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	canonicalBlock, err := e.headerByNumber(ctxWithTimeout, log, big.NewInt(int64(event.ethLogs.BlockNumber)))
-	cancel()
 	if err != nil {
 		return false, false, ethTypes.Log{}, err
 	}
@@ -217,6 +217,7 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 	fromBlock := big.NewInt(int64(ethLog.BlockNumber))
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	logs, err := e.FilterLogs(
 		ctxWithTimeout, log,
 		ethereum.FilterQuery{
@@ -226,7 +227,6 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 			Topics:    [][]common.Hash{ethLog.Topics},
 		},
 	)
-	cancel()
 	if err != nil {
 		return false, ethTypes.Log{}, fmt.Errorf("failed to filter logs in event recovery: %w", err)
 	}
@@ -327,9 +327,8 @@ func (e *Eth) pollFinalizedHeight(ctx context.Context, log *slog.Logger) {
 
 	updateHeight := func() {
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, finalityPollInterval/2)
+		defer cancel()
 		header, err := e.headerByNumber(ctxWithTimeout, log, big.NewInt(rpc.FinalizedBlockNumber.Int64()))
-		cancel()
-
 		if err != nil {
 			p.errChan <- err
 			return

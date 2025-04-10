@@ -20,10 +20,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math/big"
 	"sync"
+	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"jester.noble.xyz/metrics"
 )
 
@@ -85,7 +88,7 @@ func NewEth(
 		rpcURL:       rpcURL,
 	}
 
-	return &Eth{
+	e := Eth{
 		metrics:               m,
 		config:                config,
 		WebsocketClient:       webSocketClient,
@@ -93,7 +96,17 @@ func NewEth(
 		Redial:                newRedial(),
 		ensureFinalityCh:      make(chan *ethEventForFinality, 10000),
 		finalizedHeightPoller: newFinalizedHeightPoller(),
-	}, nil
+	}
+
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	header, err := e.headerByNumber(ctxWithTimeout, log, big.NewInt(rpc.FinalizedBlockNumber.Int64()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get finalized block header: %v", err)
+	}
+	e.finalizedHeightPoller.currentFinalizedHeight.Store(header.Number.Uint64())
+
+	return &e, nil
 }
 
 func newRedial() *Redial {
