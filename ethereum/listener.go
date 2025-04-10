@@ -43,12 +43,12 @@ type subscribeToEvent[T any] func(ctx context.Context, sink chan T) (event.Subsc
 // Note:
 // - This function does not return an error to ensure the listener remains operational regardless of processing issues.
 // - Any errors encountered should be logged within the implementation.
-// - Panics during event processing are recovered within the startEventListener function to ensure resilience.
+// - Panics during event processing are recovered within the StartEventListener function to ensure resilience.
 //
 // T is the type representing the Ethereum event being processed.
 type processEvent[T any] func(ctx context.Context, log *slog.Logger, event T)
 
-// startEventListener manages the lifecycle of Ethereum event subscriptions and their processing logic.
+// StartEventListener manages the lifecycle of Ethereum event subscriptions and their processing logic.
 // This function ensures consistent error handling and resiliency across multiple subscriptions using the
 // same websocket client.
 //
@@ -72,7 +72,7 @@ type processEvent[T any] func(ctx context.Context, log *slog.Logger, event T)
 //
 // Example Usage:
 //
-//	err := startEventListener(
+//	err := StartEventListener(
 //	    ctx, log, e, "MyContract", "MyEvent",
 //	    func(ctx context.Context, sink chan *MyEvent) (event.Subscription, error) {
 //			binding, err := myABIContract.NewBindings(common.HexToAddress(myContractAddress), websocketClient)
