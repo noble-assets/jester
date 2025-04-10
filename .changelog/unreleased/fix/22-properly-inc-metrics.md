@@ -1,0 +1,1 @@
+- Fixes an issues where Jester could crash if the user disables the metrics server. ([#22](https://github.com/noble-assets/jester/pull/22))
