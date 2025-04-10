@@ -30,7 +30,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"jester.noble.xyz/metrics"
-	"jester.noble.xyz/state"
+	"jester.noble.xyz/wormhole/state"
 
 	api "jester.noble.xyz/api"
 )

@@ -19,18 +19,11 @@ package ethereum
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
-	"github.com/avast/retry-go/v4"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
-	"jester.noble.xyz/ethereum/abi/mportal"
-	"jester.noble.xyz/ethereum/abi/wormhole"
-	"jester.noble.xyz/state"
-	"jester.noble.xyz/utils"
 )
 
 // subscribeToEvent defines a callback function for subscribing to Ethereum events.
@@ -50,12 +43,12 @@ type subscribeToEvent[T any] func(ctx context.Context, sink chan T) (event.Subsc
 // Note:
 // - This function does not return an error to ensure the listener remains operational regardless of processing issues.
 // - Any errors encountered should be logged within the implementation.
-// - Panics during event processing are recovered within the startEventListener function to ensure resilience.
+// - Panics during event processing are recovered within the StartEventListener function to ensure resilience.
 //
 // T is the type representing the Ethereum event being processed.
 type processEvent[T any] func(ctx context.Context, log *slog.Logger, event T)
 
-// startEventListener manages the lifecycle of Ethereum event subscriptions and their processing logic.
+// StartEventListener manages the lifecycle of Ethereum event subscriptions and their processing logic.
 // This function ensures consistent error handling and resiliency across multiple subscriptions using the
 // same websocket client.
 //
@@ -79,7 +72,7 @@ type processEvent[T any] func(ctx context.Context, log *slog.Logger, event T)
 //
 // Example Usage:
 //
-//	err := startEventListener(
+//	err := StartEventListener(
 //	    ctx, log, e, "MyContract", "MyEvent",
 //	    func(ctx context.Context, sink chan *MyEvent) (event.Subscription, error) {
 //			binding, err := myABIContract.NewBindings(common.HexToAddress(myContractAddress), websocketClient)
@@ -95,7 +88,7 @@ type processEvent[T any] func(ctx context.Context, log *slog.Logger, event T)
 //	if err != nil {
 //	    log.Error("failed to start event listener", "error", err)
 //	}
-func startEventListener[T any](
+func StartEventListener[T any](
 	ctx context.Context, log *slog.Logger,
 	e *Eth,
 	contractName, eventName string, // used for logging only
@@ -148,126 +141,52 @@ func startEventListener[T any](
 	}
 }
 
-//
+// handleRedial handles the redial of the websocket client between multiple websocket subscriptions.
+// Because the websocket client is shared between multiple subscriptions, this function
+// is used to ensure that only one redial is in progress at a time.
+func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
+	redial := e.Redial
+	redial.inProgressMutex.Lock()
 
-// StartWormholeLMPListener listens for Wormhole's `LogMessagePublished` events
-func (e *Eth) StartWormholeLMPListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *state.LogMessagePublishedMap) error {
-	contractName := "wormhole"
-	eventName := "LogMessagePublished"
-	return startEventListener(
-		ctx, log, e,
-		contractName, eventName,
-		func(ctx context.Context, sink chan *wormhole.AbiLogMessagePublished) (event.Subscription, error) {
-			wormholeBinding, err := wormhole.NewAbiFilterer(common.HexToAddress(e.Config.WormholeCore), e.WebsocketClient)
-			if err != nil {
-				return nil, fmt.Errorf("failed to bind client to wormhole contract: %w", err)
-			}
-
-			return wormholeBinding.WatchLogMessagePublished(
-				&bind.WatchOpts{Context: ctx},
-				sink,
-				[]common.Address{common.HexToAddress(e.Config.WormholeTransceiver)},
-			)
-		},
-		func(ctx context.Context, log *slog.Logger, event *wormhole.AbiLogMessagePublished) {
-			log.Debug("observed event", "txHash", event.Raw.TxHash.String(), "sequence", event.Sequence)
-			logMessagePublishedMap.Store(event.Raw.TxHash.String(), event.Sequence)
-			e.Metrics.IncLogMessagePublishedCounter()
-		},
-	)
-}
-
-// StartM0TokenSentListener listens for M0's `MTokenSent` events
-func (e *Eth) StartM0TokenSentListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *state.LogMessagePublishedMap, processingQueue chan *utils.QueryData) error {
-	contractName := "m0"
-	eventName := "MTokenSent"
-	return startEventListener(
-		ctx, log, e, contractName, eventName,
-		func(ctx context.Context, sink chan *mportal.AbiMTokenSent) (event.Subscription, error) {
-			binding, err := mportal.NewAbi(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
-			if err != nil {
-				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
-			}
-
-			return binding.WatchMTokenSent(
-				&bind.WatchOpts{Context: ctx},
-				sink,
-				nil, nil, nil,
-			)
-		},
-		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenSent) {
-			if event.DestinationChainId == e.Config.WormholeNobleChainID {
-				processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
-				e.Metrics.IncMTokenSentCounter()
-			}
-		},
-	)
-}
-
-// StartM0MTokenIndexSentListener listens for M0's `MTokenIndexSent` events
-func (e *Eth) StartM0MTokenIndexSentListener(ctx context.Context, log *slog.Logger, logMessagePublishedMap *state.LogMessagePublishedMap, processingQueue chan *utils.QueryData) error {
-	contractName := "m0"
-	eventName := "MTokenIndexSent"
-	return startEventListener(
-		ctx, log, e, contractName, eventName,
-		func(ctx context.Context, sink chan *mportal.AbiMTokenIndexSent) (event.Subscription, error) {
-			binding, err := mportal.NewAbi(common.HexToAddress(e.Config.HubPortal), e.WebsocketClient)
-			if err != nil {
-				return nil, fmt.Errorf("failed to bind client to mportal contract: %w", err)
-			}
-
-			return binding.WatchMTokenIndexSent(
-				&bind.WatchOpts{Context: ctx},
-				sink,
-				[]uint16{e.Config.WormholeNobleChainID},
-			)
-		},
-		func(ctx context.Context, log *slog.Logger, event *mportal.AbiMTokenIndexSent) {
-			processM0Event(ctx, log, event.Raw.TxHash.String(), logMessagePublishedMap, processingQueue)
-			e.Metrics.IncMTokenIndexSentCounter()
-		},
-	)
-}
-
-// processM0Event processes M0 events by looking up the logMessagePublished event that occur in the same transaction.
-// All relevant M0 events should have a corresponding logMessagePublished event.
-func processM0Event(
-	ctx context.Context, log *slog.Logger,
-	txHash string,
-	logMessagePublishedMap *state.LogMessagePublishedMap,
-	processingQueue chan *utils.QueryData,
-) {
-	log.Info("observed event", "txHash", txHash)
-
-	// Occasionally, the M0 event gets added to state before the LotMessagedPublished event (microseconds difference).
-	// To combat this, we retry.
-	var seq uint64
-	var found bool
-	retryAttempts := 5
-	err := retry.Do(func() error {
-		seq, found = logMessagePublishedMap.GetSequence(txHash)
-		if !found {
-			return errors.New("not found")
+	// Another goroutine is already handling redial
+	if redial.inProgress {
+		redial.inProgressMutex.Unlock()
+		log.Info("client redial already in progress")
+		redial.cond.L.Lock()   // Lock mutex to call wait()
+		redial.cond.Wait()     // Wait for the redial to complete; unlocks mutex, waits for Broadcast(), re-locks mutex
+		redial.cond.L.Unlock() // Unlock mutex
+		errExists := false
+		if redial.err != nil {
+			errExists = true
 		}
-		return nil
-	},
-		retry.Context(ctx),
-		retry.Attempts(uint(retryAttempts)),
-		retry.Delay(5*time.Millisecond),
-		retry.OnRetry(func(attempt uint, _ error) {
-			log.Debug("retry: logMessagePublished lookup", "attempt", fmt.Sprintf("%d/%d", attempt+1, retryAttempts), "txHash", txHash)
-		}),
-	)
+		log.Info("received client redial complete", "error-exists", errExists)
+		return redial.err
+	}
+
+	// Mark redial as in progress and prepare a new signal channel
+	redial.inProgress = true
+	redial.cond = sync.NewCond(&redial.inProgressMutex)
+	redial.inProgressMutex.Unlock()
+
+	defer func() {
+		redial.inProgressMutex.Lock()
+		redial.inProgress = false
+		redial.err = err
+		redial.cond.Broadcast() // Signal all waiting goroutines that the redial operation is complete
+		redial.inProgressMutex.Unlock()
+	}()
+
+	e.metrics.IncEthSubInterruptionCounter()
+
+	client, err := dialClient(ctx, log, e.config.websocketURL, websocketClientType)
 	if err != nil {
-		log.Error("`logMessagePublished` sequence not found in correlation to `M0` event", "txHash", txHash)
+		return err
 	}
-	if err == nil {
-		log.Info("found correlating `logMessagePublished` event", "txHash", txHash, "sequence", seq)
+	e.websocketClientMutex.Lock()
+	e.WebsocketClient = client
+	e.websocketClientMutex.Unlock()
 
-		processingQueue <- &utils.QueryData{
-			Sequence: seq,
-			TxHash:   txHash,
-		}
-		logMessagePublishedMap.Delete(txHash)
-	}
+	time.Sleep(1 * time.Second)     // Allow other redial signals to accumulate
+	redial.GetHistory <- struct{}{} // Trigger historical lookup to catch up on missed events
+	return nil
 }

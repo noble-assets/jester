@@ -41,7 +41,7 @@ docker-run-shell:
 gofumpt_cmd=mvdan.cc/gofumpt
 golangci_lint_cmd=github.com/golangci/golangci-lint/cmd/golangci-lint
 
-FILES := $(shell find . -name "*.go" -not -path "./ethereum/abi/*" -not -name "*.pb.go" -not -name "*.connect.go")
+FILES := $(shell find . -name "*.go" -not -path "*/abi/*" -not -name "*.pb.go" -not -name "*.connect.go")
 license:
 	@go-license --config .github/license.yml $(FILES)
 

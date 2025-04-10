@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ethereum
+package wormhole
 
 import (
 	"context"
@@ -22,23 +22,22 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"jester.noble.xyz/ethereum/abi/mportal"
-	"jester.noble.xyz/ethereum/abi/wormhole"
-	"jester.noble.xyz/utils"
+	eth "jester.noble.xyz/ethereum"
+	"jester.noble.xyz/wormhole/abi/mportal"
+	wormholeabi "jester.noble.xyz/wormhole/abi/wormhole"
 )
 
 // GetHistory queries historical data.
 //
 // Since getting historical data is not crucial to Jester, we do not return an error.
 // Instead, we log the error and continue.
-func (e *Eth) GetHistory(
+func (w *Wormhole) GetHistory(
 	ctx context.Context, log *slog.Logger,
-	processingQueue chan *utils.QueryData,
-	startBlock int64, endBlock int64,
+	e *eth.Eth,
+	startBlock, endBlock int64,
 ) {
 	start := big.NewInt(startBlock)
 	var end *big.Int
@@ -46,12 +45,13 @@ func (e *Eth) GetHistory(
 		end = big.NewInt(endBlock)
 	}
 
-	log = log.With(slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
-	log.Info("starting to query history")
+	log = log.With(slog.String("interop-framework", "wormhole"), slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
+
+	log.Info("starting historical query", "start-block", startBlock, "end-block", endBlock)
 
 	var totalVaas int
 	defer func() {
-		log.Info("finished querying history", "vaas-found", totalVaas)
+		log.Info("finished historical query", "vaas-found", totalVaas)
 	}()
 
 	// load mPortal ABI to get function signatures
@@ -61,9 +61,9 @@ func (e *Eth) GetHistory(
 		return
 	}
 
-	mTokenSentLogs, err := e.filterLogs(
+	mTokenSentLogs, err := e.FilterLogs(
 		ctx, start, end,
-		e.Config.HubPortal,
+		w.config.hubPortal,
 		[][]common.Hash{{mPortalAbi.Events["MTokenSent"].ID}},
 	)
 	if err != nil {
@@ -71,7 +71,7 @@ func (e *Eth) GetHistory(
 		return
 	}
 
-	e.Metrics.AddMTokenSentCounter(len(mTokenSentLogs))
+	w.metrics.AddMTokenSentCounter(len(mTokenSentLogs))
 
 	var filteredMTokenSentLogs []ethTypes.Log
 	for _, mTokenSentLog := range mTokenSentLogs {
@@ -80,16 +80,16 @@ func (e *Eth) GetHistory(
 			log.Error("error unpacking portal abi into interface when querying history", "error", err)
 		}
 
-		if event.DestinationChainId == e.Config.WormholeNobleChainID {
+		if event.DestinationChainId == w.config.wormholeNobleChainID {
 			filteredMTokenSentLogs = append(filteredMTokenSentLogs, mTokenSentLog)
 		}
 	}
 
 	mTokenIndexSentSig := mPortalAbi.Events["MTokenIndexSent"].ID
-	nobleChainIDHash := common.BigToHash(big.NewInt(int64(e.Config.WormholeNobleChainID)))
-	mTokenIndexSentLogs, err := e.filterLogs(
+	nobleChainIDHash := common.BigToHash(big.NewInt(int64(w.config.wormholeNobleChainID)))
+	mTokenIndexSentLogs, err := e.FilterLogs(
 		ctx, start, end,
-		e.Config.HubPortal,
+		w.config.hubPortal,
 		[][]common.Hash{{mTokenIndexSentSig}, {nobleChainIDHash}},
 	)
 	if err != nil {
@@ -97,7 +97,7 @@ func (e *Eth) GetHistory(
 		return
 	}
 
-	e.Metrics.AddMTokenIndexSentCounter(len(mTokenIndexSentLogs))
+	w.metrics.AddMTokenIndexSentCounter(len(mTokenIndexSentLogs))
 
 	allM0Logs := append(filteredMTokenSentLogs, mTokenIndexSentLogs...)
 
@@ -106,27 +106,27 @@ func (e *Eth) GetHistory(
 	}
 
 	// load wormhole ABI and get function signature
-	wormholeAbi, err := abi.JSON(strings.NewReader(wormhole.AbiABI))
+	wormholeAbi, err := abi.JSON(strings.NewReader(wormholeabi.AbiABI))
 	if err != nil {
 		log.Error("unable to parse Wormhole ABI when querying history", "error", err)
 		return
 	}
 
 	logMessagePublishedFuncSig := wormholeAbi.Events["LogMessagePublished"].ID
-	logMessagePublishedLogs, err := e.filterLogs(
+	logMessagePublishedLogs, err := e.FilterLogs(
 		ctx, start, end,
-		e.Config.WormholeCore,
-		[][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(e.Config.WormholeTransceiver)}},
+		w.config.wormholeCore,
+		[][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(w.config.wormholeTransceiver)}},
 	)
 	if err != nil {
 		log.Error("unable to filter `logMessagePublished` logs when querying history", "error", err)
 		return
 	}
 
-	e.Metrics.AddLogMessagePublishedCounter(len(logMessagePublishedLogs))
+	w.metrics.AddLogMessagePublishedCounter(len(logMessagePublishedLogs))
 
 	event := struct {
-		wormhole.AbiLogMessagePublished
+		wormholeabi.AbiLogMessagePublished
 	}{}
 
 	for _, l := range allM0Logs {
@@ -137,24 +137,12 @@ func (e *Eth) GetHistory(
 					log.Error("error unpacking wormhole abi into interface when querying history", "error", err)
 				}
 				log.Debug("found relevant events during historical query", "block", lLog.BlockNumber, "seq", event.Sequence)
-				processingQueue <- &utils.QueryData{
-					Sequence: event.Sequence,
-					TxHash:   txHash.String(),
+				w.processingQueue <- &queryData{
+					sequence: event.Sequence,
+					txHash:   txHash.String(),
 				}
 				totalVaas += 1
 			}
 		}
 	}
-}
-
-// filterLogs uses an RPC client to query Ethereum within a specified block range.
-// It returns filtered logs based on contract address and topics.
-func (e *Eth) filterLogs(ctx context.Context, start, end *big.Int, contractAddress string, topics [][]common.Hash) ([]ethTypes.Log, error) {
-	query := ethereum.FilterQuery{
-		FromBlock: start,
-		ToBlock:   end,
-		Addresses: []common.Address{common.HexToAddress(contractAddress)},
-		Topics:    topics,
-	}
-	return e.RPCClient.FilterLogs(ctx, query)
 }
