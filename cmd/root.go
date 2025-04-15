@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/viper"
 	"jester.noble.xyz/v2/appstate"
 	"jester.noble.xyz/v2/cmd/config"
+	"jester.noble.xyz/v2/cmd/keys"
 )
 
 const (
@@ -43,12 +44,14 @@ func NewRootCommand() *cobra.Command {
 		Long: `Jester is a 'sidecar' meant to run alongside the nobled binary.
 	
 Jester is only necessary if you are also a validator.`,
-		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// Inside persistent pre-run because this takes effect after flags are
 			// parsed for both root and all child commands.
 			a.ConfigureViper(cmd)
 			a.LoadConfig()
 			a.InitLogger()
+			a.NewCodec()
+			return a.NewKeyring()
 		},
 	}
 
@@ -62,6 +65,7 @@ Jester is only necessary if you are also a validator.`,
 
 	rootCmd.AddCommand(
 		config.ConfigCmd(a),
+		keys.KeysCmd(a),
 		startCmd(a),
 		versionCmd(),
 	)

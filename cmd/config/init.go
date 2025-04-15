@@ -36,7 +36,7 @@ func initCmd(a *appstate.AppState) *cobra.Command {
 populate values.`,
 
 		RunE: func(_ *cobra.Command, _ []string) error {
-			configPath := filepath.Join(a.Viper.GetString(appstate.FlagHome), ".jester", "config.toml")
+			configPath := filepath.Join(a.Home, ".jester", "config.toml")
 
 			// programmatically overwriting config file does not treat viper keys ase expected
 			// instead, notify user and have them delete config manually
