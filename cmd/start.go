@@ -102,16 +102,13 @@ You can override contracts and configurations with the relevant "override" flags
 					case <-ctx.Done():
 						return
 					case <-a.Eth.Redial.GetHistory:
-						lookBack := uint64(50)
-						log.Info(fmt.Sprintf("getting historical events for %d blocks", lookBack))
-						latest, err := a.Eth.RPCClient.BlockNumber(ctx)
-						if err != nil {
-							log.Error("failed to get latest block number", "error", err)
-							continue
-						}
-						start := latest - lookBack
-						go func() { w.GetHistory(ctx, log, a.Eth, int64(start), 0) }()
-						go func() { h.GetHistory(ctx, log, a.Eth, int64(start), 0) }()
+						twoMinOfBlocks := (time.Duration(2) * time.Minute) / a.Eth.GetAverageBlockTime()
+						lookBackStart := a.Eth.Redial.LastObservedBlock - int64(twoMinOfBlocks)
+
+						log.Info(fmt.Sprintf("getting historical events for %d blocks", (a.Eth.GetCurrentHeight() - lookBackStart)))
+
+						go func() { w.GetHistory(ctx, log, a.Eth, int64(lookBackStart), 0) }()
+						go func() { h.GetHistory(ctx, log, a.Eth, int64(lookBackStart), 0) }()
 					}
 				}
 			}()
