@@ -320,7 +320,7 @@ func (e *Eth) subToFinalizedBlocks(ctx context.Context, log *slog.Logger) (newFi
 
 // pollFinalizedHeight queries for the finalized height every 30 seconds.
 func (e *Eth) pollFinalizedHeight(ctx context.Context, log *slog.Logger) {
-	log.Debug("starting finalized height poller")
+	log.Info("starting finalized height poller")
 	p := e.finalizedHeightPoller
 	ticker := time.NewTicker(finalityPollInterval)
 	defer ticker.Stop()
@@ -339,7 +339,7 @@ func (e *Eth) pollFinalizedHeight(ctx context.Context, log *slog.Logger) {
 
 		if newFinalized > currentFinalized {
 			p.currentFinalizedHeight.Store(newFinalized)
-			log.Debug("finalized height updated", "height", newFinalized)
+			log.Info("finalized height updated", "height", newFinalized)
 
 			p.mu.Lock()
 			for sub := range p.subscribers {
@@ -364,7 +364,7 @@ func (e *Eth) pollFinalizedHeight(ctx context.Context, log *slog.Logger) {
 		case <-ctx.Done():
 			return
 		case <-doneCh:
-			log.Debug("no subscribers remain, stopping finalized height poller")
+			log.Info("stopping finalized height poller; all observed events finalized")
 			return
 		case <-ticker.C:
 			updateHeight()
