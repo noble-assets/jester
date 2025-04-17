@@ -80,6 +80,10 @@ You can override contracts and configurations with the relevant "override" flags
 				log.Warn("prometheus metrics server disabled")
 			}
 
+			g.Go(func() error {
+				return a.Eth.Start(ctx, log)
+			})
+
 			w := wormhole.NewWormhole(log, a.Config.Testnet, a.Metrics, wormholeOverrides)
 			g.Go(func() error {
 				return w.Start(ctx, log, a.Eth, a.Metrics)
