@@ -102,6 +102,7 @@ You can override contracts and configurations with the relevant "override" flags
 					case <-ctx.Done():
 						return
 					case <-a.Eth.Redial.GetHistory:
+						// out of precaution, look back an extra 2 minutes worth of blocks
 						twoMinOfBlocks := (time.Duration(2) * time.Minute) / a.Eth.GetAverageBlockTime()
 						lookBackStart := a.Eth.Redial.LastObservedBlock - int64(twoMinOfBlocks)
 
