@@ -117,7 +117,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Help: "Summary of the time it takes for a block to reach finality in seconds.",
 		}),
 		AverageBlockIntervalGauge: factory.NewGauge(prometheus.GaugeOpts{
-			Name: "average_block_interval_seconds_guage",
+			Name: "average_block_interval_seconds_gauge",
 			Help: "The average time it takes for a block to be produced in seconds.",
 		}),
 	}
