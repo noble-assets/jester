@@ -28,6 +28,7 @@ type PrometheusMetrics struct {
 	// Misc
 	EthSubInterruptionCounter prometheus.Counter
 	GetVoteExtensionCounter   prometheus.Counter
+	AverageBlockIntervalGauge prometheus.Gauge
 
 	// Ethereum
 	ReorgDetectedCounter          prometheus.Counter
@@ -114,6 +115,10 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		FinalityReachedSecondsSummary: factory.NewSummary(prometheus.SummaryOpts{
 			Name: "finality_reached_seconds_summary",
 			Help: "Summary of the time it takes for a block to reach finality in seconds.",
+		}),
+		AverageBlockIntervalGauge: factory.NewGauge(prometheus.GaugeOpts{
+			Name: "average_block_interval_seconds_guage",
+			Help: "The average time it takes for a block to be produced in seconds.",
 		}),
 	}
 }
@@ -246,5 +251,12 @@ func (m *PrometheusMetrics) IncReorgEventLostCounter() {
 func (m *PrometheusMetrics) ObserveFinalityReachedSeconds(duration float64) {
 	if m.enabled {
 		m.FinalityReachedSecondsSummary.Observe(duration)
+	}
+}
+
+// SetAverageBlockIntervalGauge sets the average time it takes for a block to be produced in seconds.
+func (m *PrometheusMetrics) SetAverageBlockIntervalGauge(value float64) {
+	if m.enabled {
+		m.AverageBlockIntervalGauge.Set(value)
 	}
 }

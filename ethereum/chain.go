@@ -208,11 +208,11 @@ func (e *Eth) trackAverageBlockTime(ctx context.Context, log *slog.Logger) error
 		e.averageBlockTime = averageBlockTime
 		e.averageBlockTimeMutex.Unlock()
 
-		log.Info("updated average block time",
+		log.Debug("updated average block time",
 			"blockTime", averageBlockTime,
 		)
 
-		// TODO: metrics
+		e.metrics.SetAverageBlockIntervalGauge(averageBlockTime.Seconds())
 
 		return nil
 	}
