@@ -32,7 +32,7 @@ func (e *Eth) Start(ctx context.Context, log *slog.Logger) error {
 	})
 
 	g.Go(func() error {
-		return e.trackAverageBlockTime(ctx, log)
+		return e.trackAverageBlockInterval(ctx, log)
 	})
 
 	g.Go(func() error {

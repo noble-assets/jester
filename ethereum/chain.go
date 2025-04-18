@@ -40,9 +40,9 @@ type Eth struct {
 	websocketClientMutex sync.Mutex
 	RPCClient            *ethclient.Client
 
-	currentHeight         atomic.Int64
-	averageBlockTime      time.Duration
-	averageBlockTimeMutex sync.Mutex
+	currentHeight             atomic.Int64
+	averageBlockInterval      time.Duration
+	averageBlockIntervalMutex sync.Mutex
 
 	ensureFinalityCh      chan *ethEventForFinality
 	finalizedHeightPoller *finalizedHeightPoller
@@ -175,15 +175,15 @@ func (e *Eth) GetCurrentHeight() int64 {
 	return e.currentHeight.Load()
 }
 
-const blockTimeWindow = 20
+const blockIntervalWindow = 20
 
-// trackAverageBlockTime calculates and tracks the average block time over the last blockTimeWindow blocks.
+// trackAverageBlockInterval calculates and tracks the average block time over the last blockIntervalWindow blocks.
 // It updates the average block time every hour.
-func (e *Eth) trackAverageBlockTime(ctx context.Context, log *slog.Logger) error {
+func (e *Eth) trackAverageBlockInterval(ctx context.Context, log *slog.Logger) error {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
-	blockDiff := big.NewInt(blockTimeWindow)
+	blockDiff := big.NewInt(blockIntervalWindow)
 
 	calcAvg := func() error {
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -202,17 +202,17 @@ func (e *Eth) trackAverageBlockTime(ctx context.Context, log *slog.Logger) error
 		}
 
 		timeDiff := time.Duration(latestHeader.Time-oldHeader.Time) * time.Second
-		averageBlockTime := timeDiff / time.Duration(blockTimeWindow)
+		averageBlockInterval := timeDiff / time.Duration(blockIntervalWindow)
 
-		e.averageBlockTimeMutex.Lock()
-		e.averageBlockTime = averageBlockTime
-		e.averageBlockTimeMutex.Unlock()
+		e.averageBlockIntervalMutex.Lock()
+		e.averageBlockInterval = averageBlockInterval
+		e.averageBlockIntervalMutex.Unlock()
 
-		log.Debug("updated average block time",
-			"blockTime", averageBlockTime,
+		log.Debug("updated average block interval",
+			"blockInterval", averageBlockInterval,
 		)
 
-		e.metrics.SetAverageBlockIntervalGauge(averageBlockTime.Seconds())
+		e.metrics.SetAverageBlockIntervalGauge(averageBlockInterval.Seconds())
 
 		return nil
 	}
@@ -231,8 +231,8 @@ func (e *Eth) trackAverageBlockTime(ctx context.Context, log *slog.Logger) error
 	}
 }
 
-func (e *Eth) GetAverageBlockTime() time.Duration {
-	e.averageBlockTimeMutex.Lock()
-	defer e.averageBlockTimeMutex.Unlock()
-	return e.averageBlockTime
+func (e *Eth) GetAverageBlockInterval() time.Duration {
+	e.averageBlockIntervalMutex.Lock()
+	defer e.averageBlockIntervalMutex.Unlock()
+	return e.averageBlockInterval
 }
