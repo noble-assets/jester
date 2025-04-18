@@ -107,25 +107,42 @@ func (e *Eth) startFinalityRoutine(ctx context.Context, log *slog.Logger) error 
 }
 
 // waitForFinality checks and/or waits for the event to be finalized.
-func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *ethEventForFinality) (err error) {
-	var finalized, lostInReorg bool
+// Returning an error will ultimately cause Jester to quit.
+func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *ethEventForFinality) error {
 
-	// first, check if the event is already finalized. This will be the case for historical events.
-	finalized, lostInReorg, event.ethLogs, err = e.checkForFinality(ctx, log, event)
-	if err != nil {
-		return fmt.Errorf("failed to check for finality: %w", err)
+	// Helper function to check finality and handle the result
+	// Returning true indicates the event is either:
+	// 	a) finalized and the event has been passed to the callback for processing.
+	// 	b) lost in a re-org and the event should be ignored.
+	checkAndHandleFinality := func(recordMetric bool) (bool, error) {
+		finalized, lostInReorg, newLog, err := e.checkForFinality(ctx, log, event)
+		if err != nil {
+			return false, fmt.Errorf("failed to check for finality: %w", err)
+		}
+		event.ethLogs = newLog
+
+		if lostInReorg {
+			return true, nil
+		}
+
+		if finalized {
+			event.routeAfterFinality(event.ethLogs)
+			if recordMetric && event.timeObserved != (time.Time{}) {
+				e.metrics.ObserveFinalityReachedSeconds(time.Since(event.timeObserved).Seconds())
+			}
+			return true, nil
+		}
+
+		return false, nil
 	}
 
-	if lostInReorg {
-		return nil
+	// First check if already finalized (don't record metric for historical events)
+	done, err := checkAndHandleFinality(false)
+	if err != nil || done {
+		return err
 	}
 
-	if finalized {
-		event.routeAfterFinality(event.ethLogs)
-		return nil
-	}
-
-	// if not yet finalized, subscribe to finalized blocks and wait for event to be finalized.
+	// If not finalized, subscribe to finalized blocks and wait
 	subFinalizedBlock, unsub := e.subToFinalizedBlocks(ctx, log)
 	defer unsub()
 
@@ -134,19 +151,9 @@ func (e *Eth) waitForFinality(ctx context.Context, log *slog.Logger, event *ethE
 		case <-ctx.Done():
 			return nil
 		case <-subFinalizedBlock:
-			finalized, lostInReorg, event.ethLogs, err = e.checkForFinality(ctx, log, event)
-			if err != nil {
-				return fmt.Errorf("failed to check for finality: %w", err)
-			}
-
-			if lostInReorg {
-				return nil
-			}
-
-			if finalized {
-				event.routeAfterFinality(event.ethLogs)
-				e.metrics.ObserveFinalityReachedSeconds(time.Since(event.timeObserved).Seconds())
-				return nil
+			done, err := checkAndHandleFinality(true)
+			if err != nil || done {
+				return err
 			}
 		}
 	}
@@ -161,6 +168,7 @@ func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *eth
 	// first check for re-org by comparing the block hash of the event with the canonical block hash.
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
+
 	canonicalBlock, err := e.headerByNumber(ctxWithTimeout, log, big.NewInt(int64(event.ethLogs.BlockNumber)))
 	if err != nil {
 		return false, false, ethTypes.Log{}, err
@@ -179,7 +187,7 @@ func (e *Eth) checkForFinality(ctx context.Context, log *slog.Logger, event *eth
 
 		success, newLog, err := e.attemptEventRecovery(ctx, log, event.ethLogs)
 		if err != nil {
-			return false, false, ethTypes.Log{}, err
+			return false, false, ethTypes.Log{}, fmt.Errorf("failed to attempt event recovery: %w", err)
 		}
 
 		if !success {
@@ -228,7 +236,7 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 		},
 	)
 	if err != nil {
-		return false, ethTypes.Log{}, fmt.Errorf("failed to filter logs in event recovery: %w", err)
+		return false, ethTypes.Log{}, fmt.Errorf("failed to filter logs: %w", err)
 	}
 
 	for _, vLog := range logs {
