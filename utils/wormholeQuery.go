@@ -149,7 +149,7 @@ func fetchVaa(
 				return true
 			}
 
-			// saftey net to catch and retry in the case of any other network timouts
+			// safety net to catch and retry in the case of any other network timeouts
 			var netErr net.Error
 			if errors.As(err, &netErr) && netErr.Timeout() {
 				return true
