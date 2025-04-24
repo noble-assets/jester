@@ -1,0 +1,1 @@
+- Add more Prometheus metrics and a no-op developer mode to assist in running Jester when you are not a validator ([#16](https://github.com/noble-assets/jester/pull/16))
