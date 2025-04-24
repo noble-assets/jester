@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -90,14 +91,17 @@ func (w *Wormhole) fetchVaa(
 
 	err := retry.Do(
 		func() error {
-			req, err := http.NewRequest("GET", url, nil)
+			reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			defer cancel()
+
+			req, err := http.NewRequestWithContext(reqCtx, "GET", url, nil)
 			if err != nil {
 				return fmt.Errorf("failed to create request: %w", err)
 			}
 
 			req.Header.Set("accept", "application/json")
 
-			client := &http.Client{Timeout: 10 * time.Second}
+			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
 				return fmt.Errorf("request failed: %w", err)
@@ -129,9 +133,18 @@ func (w *Wormhole) fetchVaa(
 			return nil
 		},
 		retry.RetryIf(func(err error) bool {
+
+			// retry if wormholes api takes too long to respond
 			if errors.Is(err, context.DeadlineExceeded) {
 				return true
 			}
+
+			// safety net to catch and retry in the case of any other network timeouts
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
+				return true
+			}
+
 			switch err {
 			case errServerError, errTooManyRequests, errNotFound:
 				return true
@@ -157,9 +170,9 @@ func (w *Wormhole) fetchVaa(
 	if err != nil {
 		if currentAttempt == w.config.fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
-			m.VAAFailedMaxAttemptsReached.Inc()
+			m.IncVAAFailedMaxAttemptsReached()
 		}
-		m.VAAFailedTotal.Inc()
+		m.IncVAAFailedTotal()
 		return WormholeResp{}, fmt.Errorf("query URL: %s: %w", url, err)
 	}
 
@@ -169,6 +182,6 @@ func (w *Wormhole) fetchVaa(
 		m.VAAReceiveDuration.Observe(float64(elapsed.Minutes()))
 	}
 
-	m.VAAFoundTotal.Inc()
+	m.IncVAAFoundTotal()
 	return wormholeResp, nil
 }
