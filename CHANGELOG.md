@@ -6,13 +6,13 @@
 
 ### FEATURES
 
-- Add more Prometheus metrics and a no-op developer mode to assist in running Jester when you are not a validator ([#16](https://github.com/noble-assets/jester/pull/16))
-- Increase the default max attempts to fetch a VAA and add `--override-fetch-vaa-attempts` flag ([#17](https://github.com/noble-assets/jester/pull/17))
+- Add more Prometheus metrics and a no-op developer mode to assist in running Jester when you are not a validator. ([#16](https://github.com/noble-assets/jester/pull/16))
+- Increase the default max attempts to fetch a VAA and add a `--override-fetch-vaa-attempts` flag. ([#17](https://github.com/noble-assets/jester/pull/17))
 
 ### FIX
 
-- Add context to network request and catch all timeouts in retry logic.([#25](https://github.com/noble-assets/jester/pull/25))
-- Fixes an issue where Jester could crash if the user disables the metrics server. ([#26](https://github.com/noble-assets/jester/pull/26))
+- Add context to network requests and catch all timeout errors in retry logic.([#25](https://github.com/noble-assets/jester/pull/25))
+- Fix an issue where Jester could crash if the user disables the metrics server. ([#26](https://github.com/noble-assets/jester/pull/26))
 
 ## v1.0.1
 
