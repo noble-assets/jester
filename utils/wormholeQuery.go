@@ -99,17 +99,15 @@ func fetchVaa(
 
 	err := retry.Do(
 		func() error {
-			req, err := http.NewRequest("GET", url, nil)
+			reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			defer cancel()
+
+			req, err := http.NewRequestWithContext(reqCtx, "GET", url, nil)
 			if err != nil {
 				return fmt.Errorf("failed to create request: %w", err)
 			}
 
 			req.Header.Set("accept", "application/json")
-
-			reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-			defer cancel()
-
-			req = req.WithContext(reqCtx)
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
