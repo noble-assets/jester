@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -98,14 +99,17 @@ func fetchVaa(
 
 	err := retry.Do(
 		func() error {
-			req, err := http.NewRequest("GET", url, nil)
+			reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			defer cancel()
+
+			req, err := http.NewRequestWithContext(reqCtx, "GET", url, nil)
 			if err != nil {
 				return fmt.Errorf("failed to create request: %w", err)
 			}
 
 			req.Header.Set("accept", "application/json")
 
-			client := &http.Client{Timeout: 10 * time.Second}
+			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
 				return fmt.Errorf("request failed: %w", err)
@@ -137,9 +141,18 @@ func fetchVaa(
 			return nil
 		},
 		retry.RetryIf(func(err error) bool {
+
+			// retry if wormholes api takes too long to respond
 			if errors.Is(err, context.DeadlineExceeded) {
 				return true
 			}
+
+			// safety net to catch and retry in the case of any other network timeouts
+			var netErr net.Error
+			if errors.As(err, &netErr) && netErr.Timeout() {
+				return true
+			}
+
 			switch err {
 			case errServerError, errTooManyRequests, errNotFound:
 				return true
