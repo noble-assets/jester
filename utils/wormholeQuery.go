@@ -165,9 +165,9 @@ func fetchVaa(
 	if err != nil {
 		if currentAttempt == fetchVAAAttempts-1 {
 			err = fmt.Errorf("max VAA lookup attempts reached: %w", err)
-			m.VAAFailedMaxAttemptsReached.Inc()
+			m.IncVAAFailedMaxAttemptsReached()
 		}
-		m.VAAFailedTotal.Inc()
+		m.IncVAAFailedTotal()
 		return WormholeResp{}, fmt.Errorf("query URL: %s: %w", url, err)
 	}
 
@@ -177,6 +177,6 @@ func fetchVaa(
 		m.VAAReceiveDuration.Observe(float64(elapsed.Minutes()))
 	}
 
-	m.VAAFoundTotal.Inc()
+	m.IncVAAFoundTotal()
 	return wormholeResp, nil
 }
