@@ -22,10 +22,13 @@ import (
 	"log/slog"
 	"math/big"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rpc"
 	"jester.noble.xyz/v2/metrics"
 )
@@ -36,6 +39,10 @@ type Eth struct {
 	WebsocketClient      *ethclient.Client
 	websocketClientMutex sync.Mutex
 	RPCClient            *ethclient.Client
+
+	currentHeight             atomic.Int64
+	averageBlockInterval      time.Duration
+	averageBlockIntervalMutex sync.Mutex
 
 	ensureFinalityCh      chan *ethEventForFinality
 	finalizedHeightPoller *finalizedHeightPoller
@@ -51,11 +58,12 @@ type config struct {
 // redial is used to manage the redial state between one gRPC client
 // and multiple websockets.
 type Redial struct {
-	inProgressMutex sync.Mutex
-	inProgress      bool
-	cond            *sync.Cond
-	err             error
-	GetHistory      chan struct{} // redial done, trigger historical lookup
+	inProgressMutex   sync.Mutex
+	inProgress        bool
+	LastObservedBlock int64
+	cond              *sync.Cond
+	err               error
+	GetHistory        chan struct{} // redial done, trigger historical lookup
 }
 
 type clientType string
@@ -147,4 +155,84 @@ func (e *Eth) CloseClients() {
 	if e.RPCClient != nil {
 		e.RPCClient.Close()
 	}
+}
+
+// trackCurrentHeight tracks the current Ethereum block height.
+func (e *Eth) trackCurrentHeight(ctx context.Context, log *slog.Logger) error {
+	return StartEventListener(
+		ctx, log, e, "newHeads", "NewHead",
+		func(ctx context.Context, sink chan *ethTypes.Header) (event.Subscription, error) {
+			return e.WebsocketClient.SubscribeNewHead(ctx, sink)
+		},
+		func(ctx context.Context, log *slog.Logger, event *ethTypes.Header) {
+			e.currentHeight.Store(event.Number.Int64())
+		},
+	)
+}
+
+// GetCurrentHeight returns the current Ethereum block height.
+func (e *Eth) GetCurrentHeight() int64 {
+	return e.currentHeight.Load()
+}
+
+const blockIntervalWindow = 20
+
+// trackAverageBlockInterval calculates and tracks the average block time over the last blockIntervalWindow blocks.
+// It updates the average block time every hour.
+func (e *Eth) trackAverageBlockInterval(ctx context.Context, log *slog.Logger) error {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	blockDiff := big.NewInt(blockIntervalWindow)
+
+	calcAvg := func() error {
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		latestHeader, err := e.headerByNumber(ctxWithTimeout, log, nil)
+		if err != nil {
+			return fmt.Errorf("failed to get latest block header when calculating average block time: %w", err)
+		}
+
+		oldBlockNum := new(big.Int).Sub(latestHeader.Number, blockDiff)
+
+		oldHeader, err := e.headerByNumber(ctxWithTimeout, log, oldBlockNum)
+		if err != nil {
+			return fmt.Errorf("failed to get historical block header when calculating average block time: %w", err)
+		}
+
+		timeDiff := time.Duration(latestHeader.Time-oldHeader.Time) * time.Second
+		averageBlockInterval := timeDiff / time.Duration(blockIntervalWindow)
+
+		e.averageBlockIntervalMutex.Lock()
+		e.averageBlockInterval = averageBlockInterval
+		e.averageBlockIntervalMutex.Unlock()
+
+		log.Debug("updated average block interval",
+			"blockInterval", averageBlockInterval,
+		)
+
+		e.metrics.SetAverageBlockIntervalGauge(averageBlockInterval.Seconds())
+
+		return nil
+	}
+
+	calcAvg()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-ticker.C:
+			if err := calcAvg(); err != nil {
+				return fmt.Errorf("failed to calculate average block time: %w", err)
+			}
+		}
+	}
+}
+
+func (e *Eth) GetAverageBlockInterval() time.Duration {
+	e.averageBlockIntervalMutex.Lock()
+	defer e.averageBlockIntervalMutex.Unlock()
+	return e.averageBlockInterval
 }

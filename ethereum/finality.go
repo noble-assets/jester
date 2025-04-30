@@ -236,7 +236,7 @@ func (e *Eth) attemptEventRecovery(ctx context.Context, log *slog.Logger, ethLog
 		},
 	)
 	if err != nil {
-		return false, ethTypes.Log{}, fmt.Errorf("failed to filter logs: %w", err)
+		return false, ethTypes.Log{}, fmt.Errorf("failed to filter logs in event recovery: %w", err)
 	}
 
 	for _, vLog := range logs {

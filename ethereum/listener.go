@@ -165,6 +165,7 @@ func (e *Eth) handleRedial(ctx context.Context, log *slog.Logger) (err error) {
 
 	// Mark redial as in progress and prepare a new signal channel
 	redial.inProgress = true
+	redial.LastObservedBlock = e.GetCurrentHeight()
 	redial.cond = sync.NewCond(&redial.inProgressMutex)
 	redial.inProgressMutex.Unlock()
 
