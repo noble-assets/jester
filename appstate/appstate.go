@@ -27,8 +27,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"jester.noble.xyz/ethereum"
-	"jester.noble.xyz/metrics"
+	"jester.noble.xyz/v2/ethereum"
+	"jester.noble.xyz/v2/metrics"
 )
 
 // appState is the modifiable state of the application.

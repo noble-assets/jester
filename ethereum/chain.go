@@ -27,7 +27,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"jester.noble.xyz/metrics"
+	"jester.noble.xyz/v2/metrics"
 )
 
 type Eth struct {
