@@ -1,1 +1,0 @@
-- Increase the default max attempts to fetch a VAA and add `--override-fetch-vaa-attempts` flag ([#17](https://github.com/noble-assets/jester/pull/17))
