@@ -21,6 +21,11 @@ build:
 	@go build -ldflags '$(ldflags)' -o "$(PWD)/build/" ./cmd/jesterd
 	@echo "✅ Completed build!"
 
+build-race:
+	@echo "🤖 Building jester..."
+	@go build -ldflags '$(ldflags)' -race -o "$(PWD)/build/" ./cmd/jesterd
+	@echo "✅ Completed build!"
+
 ###############################################################################
 ###                                 Docker                                  ###
 ###############################################################################

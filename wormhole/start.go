@@ -33,7 +33,6 @@ func (w *Wormhole) Start(
 	ctx context.Context, log *slog.Logger, Eth *eth.Eth,
 	metrics *metrics.PrometheusMetrics,
 ) error {
-
 	// Event subscription logic:
 	// 	We watch for three Ethereum events:
 	//  	1. `LogMessagePublished` from wormhole

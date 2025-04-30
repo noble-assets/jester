@@ -22,12 +22,11 @@ import (
 	"log/slog"
 	"math/big"
 	"sync"
+	"time"
 
 	"github.com/avast/retry-go/v4"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"jester.noble.xyz/v2/metrics"
 )
 
@@ -37,6 +36,9 @@ type Eth struct {
 	WebsocketClient      *ethclient.Client
 	websocketClientMutex sync.Mutex
 	RPCClient            *ethclient.Client
+
+	ensureFinalityCh      chan *ethEventForFinality
+	finalizedHeightPoller *finalizedHeightPoller
 
 	Redial *Redial
 }
@@ -86,13 +88,25 @@ func NewEth(
 		rpcURL:       rpcURL,
 	}
 
-	return &Eth{
-		metrics:         m,
-		config:          config,
-		WebsocketClient: webSocketClient,
-		RPCClient:       rpcClient,
-		Redial:          newRedial(),
-	}, nil
+	e := Eth{
+		metrics:               m,
+		config:                config,
+		WebsocketClient:       webSocketClient,
+		RPCClient:             rpcClient,
+		Redial:                newRedial(),
+		ensureFinalityCh:      make(chan *ethEventForFinality, 10000),
+		finalizedHeightPoller: newFinalizedHeightPoller(),
+	}
+
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	header, err := e.headerByNumber(ctxWithTimeout, log, big.NewInt(rpc.FinalizedBlockNumber.Int64()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get finalized block header: %v", err)
+	}
+	e.finalizedHeightPoller.currentFinalizedHeight.Store(header.Number.Uint64())
+
+	return &e, nil
 }
 
 func newRedial() *Redial {
@@ -123,18 +137,6 @@ func dialClient(ctx context.Context, log *slog.Logger, url string, clientType cl
 	log.Info(fmt.Sprintf("successfully dialed Ethereum %s", clientType))
 
 	return client, nil
-}
-
-// FilterLogs uses an RPC client to query Ethereum within a specified block range.
-// It returns filtered logs based on contract address and topics.
-func (e *Eth) FilterLogs(ctx context.Context, start, end *big.Int, contractAddress string, topics [][]common.Hash) ([]ethTypes.Log, error) {
-	query := ethereum.FilterQuery{
-		FromBlock: start,
-		ToBlock:   end,
-		Addresses: []common.Address{common.HexToAddress(contractAddress)},
-		Topics:    topics,
-	}
-	return e.RPCClient.FilterLogs(ctx, query)
 }
 
 // CloseClients closes the websocket and RPC clients.

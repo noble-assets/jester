@@ -22,6 +22,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
@@ -47,7 +48,7 @@ func (w *Wormhole) GetHistory(
 
 	log = log.With(slog.String("interop-framework", "wormhole"), slog.Int64("start-block", startBlock), slog.Int64("end-block", endBlock))
 
-	log.Info("starting historical query", "start-block", startBlock, "end-block", endBlock)
+	log.Info("starting historical query")
 
 	var totalVaas int
 	defer func() {
@@ -62,9 +63,13 @@ func (w *Wormhole) GetHistory(
 	}
 
 	mTokenSentLogs, err := e.FilterLogs(
-		ctx, start, end,
-		w.config.hubPortal,
-		[][]common.Hash{{mPortalAbi.Events["MTokenSent"].ID}},
+		ctx, log,
+		ethereum.FilterQuery{
+			FromBlock: start,
+			ToBlock:   end,
+			Addresses: []common.Address{common.HexToAddress(w.config.hubPortal)},
+			Topics:    [][]common.Hash{{mPortalAbi.Events["MTokenSent"].ID}},
+		},
 	)
 	if err != nil {
 		log.Error("unable to filter `mTokenSent` logs when querying history", "error", err)
@@ -88,9 +93,13 @@ func (w *Wormhole) GetHistory(
 	mTokenIndexSentSig := mPortalAbi.Events["MTokenIndexSent"].ID
 	nobleChainIDHash := common.BigToHash(big.NewInt(int64(w.config.wormholeNobleChainID)))
 	mTokenIndexSentLogs, err := e.FilterLogs(
-		ctx, start, end,
-		w.config.hubPortal,
-		[][]common.Hash{{mTokenIndexSentSig}, {nobleChainIDHash}},
+		ctx, log,
+		ethereum.FilterQuery{
+			FromBlock: start,
+			ToBlock:   end,
+			Addresses: []common.Address{common.HexToAddress(w.config.hubPortal)},
+			Topics:    [][]common.Hash{{mTokenIndexSentSig}, {nobleChainIDHash}},
+		},
 	)
 	if err != nil {
 		log.Error("unable to filter `mTokenIndexSent` logs when querying history", "error", err)
@@ -114,9 +123,13 @@ func (w *Wormhole) GetHistory(
 
 	logMessagePublishedFuncSig := wormholeAbi.Events["LogMessagePublished"].ID
 	logMessagePublishedLogs, err := e.FilterLogs(
-		ctx, start, end,
-		w.config.wormholeCore,
-		[][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(w.config.wormholeTransceiver)}},
+		ctx, log,
+		ethereum.FilterQuery{
+			FromBlock: start,
+			ToBlock:   end,
+			Addresses: []common.Address{common.HexToAddress(w.config.wormholeCore)},
+			Topics:    [][]common.Hash{{logMessagePublishedFuncSig}, {common.HexToHash(w.config.wormholeTransceiver)}},
+		},
 	)
 	if err != nil {
 		log.Error("unable to filter `logMessagePublished` logs when querying history", "error", err)

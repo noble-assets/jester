@@ -1,0 +1,1 @@
+- Adds Ethereum finality check process and implements the Hyperlane Dispatch event listener. ([#20](https://github.com/noble-assets/jester/pull/20))
