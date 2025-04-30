@@ -23,6 +23,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/phsym/console-slog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -33,11 +35,14 @@ import (
 
 // appState is the modifiable state of the application.
 type AppState struct {
+	Home    string
 	Log     *slog.Logger
 	Viper   *viper.Viper
 	Mux     *http.ServeMux
 	Metrics *metrics.PrometheusMetrics
 	Config  *Config
+	Key     keyring.Keyring
+	cdc     *codec.ProtoCodec
 
 	*ethereum.Eth
 }
@@ -91,9 +96,9 @@ func (a *AppState) ConfigureViper(cmd *cobra.Command) {
 		}
 	})
 
-	home := viper.GetString(FlagHome)
+	a.Home = viper.GetString(FlagHome)
 
-	viper.AddConfigPath(home)
+	viper.AddConfigPath(a.Home)
 	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
 
