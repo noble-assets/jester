@@ -20,7 +20,7 @@ import (
 	"log/slog"
 
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"jester.noble.xyz/metrics"
+	"jester.noble.xyz/v2/metrics"
 )
 
 type Hyperlane struct {
