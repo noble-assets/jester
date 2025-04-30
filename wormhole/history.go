@@ -26,9 +26,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	eth "jester.noble.xyz/ethereum"
-	"jester.noble.xyz/wormhole/abi/mportal"
-	wormholeabi "jester.noble.xyz/wormhole/abi/wormhole"
+	eth "jester.noble.xyz/v2/ethereum"
+	"jester.noble.xyz/v2/wormhole/abi/mportal"
+	wormholeabi "jester.noble.xyz/v2/wormhole/abi/wormhole"
 )
 
 // GetHistory queries historical data.

@@ -30,7 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rpc"
-	"jester.noble.xyz/metrics"
+	"jester.noble.xyz/v2/metrics"
 )
 
 type Eth struct {

@@ -25,8 +25,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
-	eth "jester.noble.xyz/ethereum"
-	hyperlaneabi "jester.noble.xyz/hyperlane/abi"
+	eth "jester.noble.xyz/v2/ethereum"
+	hyperlaneabi "jester.noble.xyz/v2/hyperlane/abi"
 )
 
 // hyperlaneDispatchRouter routes finalized `Dispatch` events to the processing queue.

@@ -25,8 +25,8 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	eth "jester.noble.xyz/ethereum"
-	hyperlaneabi "jester.noble.xyz/hyperlane/abi"
+	eth "jester.noble.xyz/v2/ethereum"
+	hyperlaneabi "jester.noble.xyz/v2/hyperlane/abi"
 )
 
 func (h *Hyperlane) GetHistory(

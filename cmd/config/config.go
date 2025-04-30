@@ -18,7 +18,7 @@ package config
 
 import (
 	"github.com/spf13/cobra"
-	"jester.noble.xyz/appstate"
+	"jester.noble.xyz/v2/appstate"
 )
 
 // configCmd represents the config command
